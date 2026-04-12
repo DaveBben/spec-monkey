@@ -1,7 +1,7 @@
 ---
 name: deep-review
 description: >
-  Use when the user explicitly requests a thorough, deep, or comprehensive review of large diffs or changes touching multiple files. Dispatches 4 specialized Opus review agents in parallel (security, reliability, maintainability, performance) and consolidates their findings into a unified report with a verdict. Do NOT use for general code writing guidance, refactoring advice, or spec/design reviews. For a faster single-agent review, use /light-review instead.
+  Use when the user explicitly requests a thorough, deep, or comprehensive review of large diffs or changes touching multiple files. Dispatches 4 specialized Opus review agents in parallel (security, reliability, maintainability, performance) and consolidates their findings into a unified report with a verdict. Do NOT use for general code writing guidance, refactoring advice, or spec/design reviews. For a faster single-agent review, use /cks:light-review instead.
 argument-hint: "<base-branch-or-commit>"
 effort: high
 model: opus

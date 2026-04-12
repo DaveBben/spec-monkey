@@ -1,6 +1,6 @@
 # Bug Artifact Templates
 
-Templates for the markdown artifacts produced by `/bug`. Each template
+Templates for the markdown artifacts produced by `/cks:bug`. Each template
 shows the expected structure — replace bracketed placeholders with real content.
 
 ---

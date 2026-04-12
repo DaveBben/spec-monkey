@@ -8,8 +8,8 @@ description: >
   Standalone feature planning skill. Takes a free-form feature or change
   request, deeply researches the codebase, produces an impact map and
   implementation plan with real code snippets, then decomposes into tasks
-  compatible with /execute. Human reviews via annotation cycle at each phase.
-  Do NOT use for bugs (use /bug).
+  compatible with /cks:execute. Human reviews via annotation cycle at each phase.
+  Do NOT use for bugs (use /cks:bug).
   Do NOT use for trivial one-line changes (just make the change).
 ---
 
@@ -23,7 +23,7 @@ description: >
 ```
 User describes feature
     |
-/feature (this skill)
+/cks:feature (this skill)
     |
     |-- Phase 0: Clarify intent → deep research → research.md
     |-- Phase 1: Impact map → impact-map.md
@@ -32,7 +32,7 @@ User describes feature
     |-- Phase 4: Task breakdown → tasks.md + task JSON files
     |
     v
-/execute .claude/features/{slug}/
+/cks:execute .claude/features/{slug}/
 ```
 
 All artifacts are written to `.claude/features/{slug}/` in the project root.
@@ -44,13 +44,13 @@ Task JSON files live under `tasks/` within that directory.
 - [Implementation Guidance](references/implementation-guidance.md) — Reference for effective execution
 - [Common Failure Patterns](references/failure-patterns.md) — Known pitfalls and how to avoid them
 
-### /execute Compatibility
+### /cks:execute Compatibility
 
 This skill writes task JSON files to `.claude/features/{slug}/tasks/` so
-`/execute` can pick them up. Pass the feature directory path to `/execute`:
+`/cks:execute` can pick them up. Pass the feature directory path to `/cks:execute`:
 
 ```
-/execute .claude/features/{slug}/
+/cks:execute .claude/features/{slug}/
 ```
 
 ---
@@ -68,7 +68,7 @@ If `$ARGUMENTS` were provided, classify them:
    - Has `plan.md` with `Status: Draft` → start at Phase 3 (annotation cycle)
    - Has `plan.md` with `Status: Approved` but no `tasks.md` → start at Phase 4
    - Has `tasks.md` → tell the user: "This feature is fully planned. Run
-     `/execute .claude/features/{slug}/` to implement."
+     `/cks:execute .claude/features/{slug}/` to implement."
 
 2. **Free-form text description**: Use as the feature description. Generate a
    URL-safe slug from the first 3-5 significant words (e.g., "add webhook retry
@@ -552,7 +552,7 @@ Present the task breakdown to the user:
 > Review the tasks. You can request changes or approve. When ready to
 > implement, run:
 >
-> `/execute .claude/features/{slug}/`"
+> `/cks:execute .claude/features/{slug}/`"
 
 ---
 

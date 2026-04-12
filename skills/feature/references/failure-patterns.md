@@ -1,6 +1,6 @@
 # Common Failure Patterns
 
-Known failure modes in the `/feature` workflow and how to avoid them.
+Known failure modes in the `/cks:feature` workflow and how to avoid them.
 
 ---
 

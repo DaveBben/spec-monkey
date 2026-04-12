@@ -9,8 +9,8 @@ description: >
   a well-formed symptom report, deeply researches the codebase to trace the
   bug's code path, attempts to reproduce the bug programmatically, then
   produces an impact map and implementation plan with tasks compatible with
-  /execute. Human reviews via annotation cycle.
-  Do NOT use for feature requests (use /feature).
+  /cks:execute. Human reviews via annotation cycle.
+  Do NOT use for feature requests (use /cks:feature).
   Do NOT use for trivial one-line fixes (just make the change).
 ---
 
@@ -26,13 +26,13 @@ description: >
 - [Templates](references/templates.md) — Markdown and JSON templates for all artifacts
 - [Anti-Patterns](references/anti-patterns.md) — Common mistakes to catch during symptom capture
 
-### /execute Compatibility
+### /cks:execute Compatibility
 
 This skill writes task JSON files to `.claude/bugs/{slug}/tasks/` so
-`/execute` can pick them up:
+`/cks:execute` can pick them up:
 
 ```
-/execute .claude/bugs/{slug}/
+/cks:execute .claude/bugs/{slug}/
 ```
 
 ---
@@ -51,7 +51,7 @@ If `$ARGUMENTS` were provided, classify them:
    - Has `plan.md` with `Status: Approved` but no `tasks.md` → start at Phase 6
    - Has `tasks.md` → tell the user: "This bug is fully planned. Use the
      implementation command at the bottom of tasks.md to implement, or run
-     `/execute .claude/bugs/{slug}/`."
+     `/cks:execute .claude/bugs/{slug}/`."
 
 2. **Free-form text description**: Use as the symptom seed. Generate a
    URL-safe slug from the first 3-5 significant words of the symptom (e.g.,
@@ -268,7 +268,7 @@ Before any planning, answer these in writing based on the exploration:
 
 ## Phase 2: Bug Reproduction Attempt
 
-**This is the key differentiator from `/feature`.** Before planning a fix,
+**This is the key differentiator from `/cks:feature`.** Before planning a fix,
 attempt to reproduce the bug programmatically. This validates the symptom
 and provides concrete evidence for the research.
 
@@ -392,7 +392,7 @@ Present the plan to the user and transition to the annotation cycle:
 
 ## Phase 5: Annotation Cycle
 
-Same mechanism as `/feature` but lighter — bug fixes are smaller scope and
+Same mechanism as `/cks:feature` but lighter — bug fixes are smaller scope and
 should need fewer rounds.
 
 ### How Inline Annotations Work
@@ -501,7 +501,7 @@ Present the task breakdown to the user:
 >
 > Review the tasks. When ready to implement, run:
 >
-> `/execute .claude/bugs/{slug}/`"
+> `/cks:execute .claude/bugs/{slug}/`"
 
 ---
 

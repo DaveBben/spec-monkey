@@ -1,7 +1,7 @@
 ---
 name: light-review
 description: >
-  Use proactively when the user requests a review of their code changes. Launches a single-agent code review covering security, reliability, performance, and maintainability in one pass. Appropriate for any code change — cost-efficient alternative to /deep-review. For a thorough 4-agent Opus review, use /deep-review instead. Do NOT use for reviewing existing code without a diff context.
+  Use proactively when the user requests a review of their code changes. Launches a single-agent code review covering security, reliability, performance, and maintainability in one pass. Appropriate for any code change — cost-efficient alternative to /cks:deep-review. For a thorough 4-agent Opus review, use /cks:deep-review instead. Do NOT use for reviewing existing code without a diff context.
 argument-hint: "<base-branch-or-commit>"
 effort: medium
 disable-model-invocation: false

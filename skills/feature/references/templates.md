@@ -1,6 +1,6 @@
 # Feature Artifact Templates
 
-Templates for the markdown artifacts produced by `/feature`. Each template
+Templates for the markdown artifacts produced by `/cks:feature`. Each template
 shows the expected structure — replace bracketed placeholders with real content.
 
 ## Contents

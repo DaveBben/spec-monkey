@@ -6,20 +6,20 @@ argument-hint: "[feature or bug directory path or slug, e.g. .claude/features/ad
 description: >
   Use when the user asks to "execute", "implement", "start building", "run
   the tasks", or "build this feature/fix" — any request to implement approved
-  tasks from a /feature or /bug plan. Input is a feature or bug directory path
+  tasks from a /cks:feature or /cks:bug plan. Input is a feature or bug directory path
   (.claude/features/{slug}/ or .claude/bugs/{slug}/) or a slug name. Reads
   task JSON files, executes each through a 3-agent TDD cycle (test-writer →
-  implementor → refactor), runs /light-review after each task, runs /deep-review
+  implementor → refactor), runs /cks:light-review after each task, runs /cks:deep-review
   after all tasks, and creates a PR.
-  Not applicable for plan creation (use /feature or /bug).
+  Not applicable for plan creation (use /cks:feature or /cks:bug).
 ---
 
 # Plan Executor
 
-Execute approved implementation tasks from a `/feature` or `/bug` plan. For
+Execute approved implementation tasks from a `/cks:feature` or `/cks:bug` plan. For
 each task: run a 3-agent TDD cycle (RED → GREEN → REFACTOR), commit, run
-`/light-review`, fix findings, then proceed. After all tasks: run full tests and
-lint, run `/deep-review`, fix findings, record tech debt, and create a PR.
+`/cks:light-review`, fix findings, then proceed. After all tasks: run full tests and
+lint, run `/cks:deep-review`, fix findings, record tech debt, and create a PR.
 
 ### Supporting Files
 
@@ -39,10 +39,10 @@ Main session:
   │   ├── tdd-code-implementor agent (GREEN — minimal passing code)
   │   ├── tdd-code-refactor agent (REFACTOR — improve or skip)
   │   ├── Commit: "Task N: [title]"
-  │   ├── /light-review → fix BLOCKING/SHOULD_FIX → commit fixes
+  │   ├── /cks:light-review → fix BLOCKING/SHOULD_FIX → commit fixes
   │   └── Update task status → next task
   ├── Full test suite + lint → fix issues
-  ├── /deep-review (max 2 iterations) → fix findings
+  ├── /cks:deep-review (max 2 iterations) → fix findings
   ├── Record unfixed items in spec.md tech debt
   ├── Push + create PR
   └── Complete
@@ -57,8 +57,8 @@ fresh eyes. This context isolation is the core design principle.
 **Why sequential:** Each task builds on the previous. Simpler to debug, and
 context isolation is maintained by dispatching fresh agents for each phase.
 
-**Two-tier review:** `/light-review` after each task catches issues while context is
-fresh. `/deep-review` after all tasks catches cross-task issues and
+**Two-tier review:** `/cks:light-review` after each task catches issues while context is
+fresh. `/cks:deep-review` after all tasks catches cross-task issues and
 architectural problems.
 
 ---
@@ -165,10 +165,9 @@ Never execute tasks on `main` or `master`. This is a hard stop.
 3. **Check git state** — `git status`. Warn about uncommitted changes.
 4. **Verify gh CLI** — run `gh --version`. If not found, warn the user that
    PR creation will fail at the end.
-5. **Verify review skills** — check that `skills/light-review/SKILL.md` and
-   `skills/deep-review/SKILL.md` exist. If either is missing, stop and report
-   before any tasks are executed — a missing review skill causes mid-pipeline
-   failure after commits.
+5. **Verify review skills** — invoke `/cks:light-review` and `/cks:deep-review`
+   with a dry-run or confirm they are available. If either skill is not found,
+   stop and report before any tasks are executed.
 
 ### Task JSON Validation
 
@@ -210,7 +209,7 @@ via `git log -1 --format="%ci" -- spec.md`. If it is older than 30 days or
 the last 50 commits (whichever comes first), warn the user:
 
 > "spec.md hasn't been updated in a while (last modified: {date}). Consider
-> running `/onboard --update` after this feature to keep it current."
+> running `/cks:onboard --update` after this feature to keep it current."
 
 This is a warning, not a blocker — proceed regardless.
 
@@ -257,7 +256,7 @@ cycle: branch → tasks → post-implementation → PR.
 
 Multi-repo support works best with monorepos (multiple packages in one
 repo) or co-located repos. For truly separate repositories with
-independent CI/CD, consider running `/execute` independently per repo.
+independent CI/CD, consider running `/cks:execute` independently per repo.
 
 If plan.json has `repositories` with more than one entry, group tasks by
 their `repository` field. Process each repository sequentially:
@@ -393,16 +392,16 @@ git diff --stat HEAD~1
   the user that the slice is growing large and reviewability may suffer. Ask
   whether to continue, split remaining tasks into a new slice, or stop.
 
-#### Step 6: /light-review
+#### Step 6: /cks:light-review
 
-Run `/light-review` against the latest commit.
+Run `/cks:light-review` against the latest commit.
 
 - If BLOCKING or SHOULD_FIX findings: fix them in the main session,
   scoped to the task's declared files. Commit: `"Task N: check fixes"`
-- If a second `/light-review` still has BLOCKING findings: do NOT loop further.
+- If a second `/cks:light-review` still has BLOCKING findings: do NOT loop further.
   Record the unresolved findings in the task's `executionNotes`, increment
   `consecutiveReviewFailures` in execution-state.json, and inform the user:
-  > "Task N: `/light-review` still has BLOCKING findings after fix attempt.
+  > "Task N: `/cks:light-review` still has BLOCKING findings after fix attempt.
   > Human review required. Findings: [list]"
   Ask whether to continue with remaining tasks or stop entirely.
 
@@ -452,7 +451,7 @@ problems before they compound across more tasks.
 #### Step 9: Context Pause Gate (dispatch-count based)
 
 Track the total number of agent dispatches in this session. Each
-RED/GREEN/REFACTOR phase is 1 dispatch. Each /light-review is 1 dispatch.
+RED/GREEN/REFACTOR phase is 1 dispatch. Each /cks:light-review is 1 dispatch.
 Review fix iterations add additional dispatches. A simple task with no
 review fixes = 4 dispatches. A complex task with review fixes = 6+.
 
@@ -467,7 +466,7 @@ review fixes = 4 dispatches. A complex task with review fixes = 6+.
 > - If context is **approaching 50%** or you notice quality degrading,
 >   start a fresh session for best results:
 >
-> `/execute {feature-or-bug-directory-path}`
+> `/cks:execute {feature-or-bug-directory-path}`
 >
 > The workflow picks up exactly where it left off — all {N} completed
 > tasks are recorded in the task JSON files. Deep review and PR creation
@@ -508,13 +507,13 @@ Run the project's full test suite and linting/type checking.
 
 ### Step 2: Deep Review (max 2 iterations)
 
-1. Run `/deep-review` against the full branch diff (diff from base branch)
+1. Run `/cks:deep-review` against the full branch diff (diff from base branch)
 2. Review the consolidated findings:
    - **BLOCKING**: MUST fix
    - **SHOULD_FIX**: MUST fix
    - **SUGGESTIONS**: fix high-value ones that clearly improve code quality
 3. Fix findings, commit: `"Deep review fixes"`
-4. If the first pass had BLOCKING findings: run `/deep-review` one more time
+4. If the first pass had BLOCKING findings: run `/cks:deep-review` one more time
    (single retry, not a loop)
 5. If the second pass still has BLOCKING findings: **do NOT create a PR.**
    Proceed to Step 3.
@@ -531,7 +530,7 @@ Do NOT create the PR. Present the unresolved findings to the user:
 > [list of BLOCKING findings with file:line]
 >
 > Options:
-> 1. Fix these manually, then run `/execute {path}` to resume (it will
+> 1. Fix these manually, then run `/cks:execute {path}` to resume (it will
 >    re-run deep review and create the PR)
 > 2. If you've reviewed and determined these are false positives, say
 >    'override' to create the PR anyway"
@@ -597,8 +596,8 @@ Commits: X (N tasks + Y review fixes)
 - Task 2: [title] — BLOCKED (reason)
 
 ### Review
-- /light-review: N issues found, N fixed
-- /deep-review: N issues found, N fixed, N recorded as tech debt
+- /cks:light-review: N issues found, N fixed
+- /cks:deep-review: N issues found, N fixed, N recorded as tech debt
 
 ### Next Steps
 [Any unfixed items, human review items, or "Ready for review"]
@@ -617,7 +616,7 @@ Commits: X (N tasks + Y review fixes)
 - **Stay within declared scope.** Each agent touches only files declared
   in the task.
 - **Never execute on main.** Branch safety is a hard stop.
-- **Two-tier review.** `/light-review` per task (fast). `/deep-review` for the
+- **Two-tier review.** `/cks:light-review` per task (fast). `/cks:deep-review` for the
   whole branch (thorough).
 - **Always in a working state.** Every commit, every task completion, every
   slice — the project builds, all existing tests pass, and no runtime errors
@@ -644,7 +643,7 @@ Commits: X (N tasks + Y review fixes)
 - **Tests require unmerged work**: If the current task's tests cannot pass
   without uncommitted changes from a future task, the task ordering or
   boundaries are wrong. STOP and report — this indicates a planning error.
-- **Task contradiction**: STOP. Back to `/feature` or `/bug` for revision.
+- **Task contradiction**: STOP. Back to `/cks:feature` or `/cks:bug` for revision.
 
 For minor deviations (slightly different import path), adapt and note. For
 scope or acceptance criteria changes, stop.

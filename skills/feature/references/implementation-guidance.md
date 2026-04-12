@@ -1,8 +1,8 @@
 # During Implementation
 
 Reference guidance for when the user runs implementation, either via
-`/execute` or manually using the implementation command from tasks.md.
-These are not phases the `/feature` skill executes — they are patterns
+`/cks:execute` or manually using the implementation command from tasks.md.
+These are not phases the `/cks:feature` skill executes — they are patterns
 for effective execution.
 
 ---

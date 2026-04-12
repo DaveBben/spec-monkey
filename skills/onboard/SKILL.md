@@ -181,9 +181,9 @@ Iterate until the user approves.
 - **Leave human-judgment sections as placeholders** — Project Identity and Critical Constraints require human input. Do not fill these with generic advice.
 - **Keep CLAUDE.md under 200 lines** — A CLAUDE.md that's too long defeats its purpose as quick-reference context.
 - **Don't skip discovery for existing projects** — Even when the user describes the project verbally, explore the codebase first — the code is the source of truth.
-- **Don't describe what will be built** — spec.md captures current state only. Redirect future plans to `/feature`.
+- **Don't describe what will be built** — spec.md captures current state only. Redirect future plans to `/cks:feature`.
 - **Specs balloon quickly** — If a section restates what the code already shows, cut it.
-- **Don't confuse project spec with change spec** — If the user starts describing a specific feature or bug fix mid-interview, redirect them to `/feature` for that work.
+- **Don't confuse project spec with change spec** — If the user starts describing a specific feature or bug fix mid-interview, redirect them to `/cks:feature` for that work.
 - **Keep cross-references in sync** — When writing or moving files, verify CLAUDE.md's pointer to spec.md is correct.
 - **This skill targets the root CLAUDE.md** — For subdirectory CLAUDE.md files in a monorepo, scope content to that package's domain.
 
@@ -220,7 +220,7 @@ After writing both files, suggest a lightweight drift detection approach:
 > 'This PR touches areas documented in spec.md — please verify the docs
 > are still accurate.'
 >
-> `/execute` also checks spec.md freshness during pre-flight and will
+> `/cks:execute` also checks spec.md freshness during pre-flight and will
 > remind you if it hasn't been updated recently."
 
 This is a suggestion, not an automated installation — the user decides
@@ -239,8 +239,8 @@ After writing both files, also suggest adding a rule file:
 > it no longer matches reality.
 > ```
 >
-> This activates in every Claude session (not just /execute), catching
-> drift from manual changes too. `/execute` also updates spec.md
+> This activates in every Claude session (not just /cks:execute), catching
+> drift from manual changes too. `/cks:execute` also updates spec.md
 > automatically after completing all tasks."
 
 ---

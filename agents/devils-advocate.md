@@ -103,23 +103,23 @@ Structure your output exactly as follows:
 ## Devil's Advocate Challenge
 
 ### Assumptions (verify before planning)
-1. **[Assumption]**: [Why this might be wrong] — see `file:line`
+1. `[BLOCKING]` **[Assumption]**: [Why this might be wrong] — see `file:line`
    > Response:
-2. **[Assumption]**: [Why this might be wrong] — see `file:line`
+2. `[ADVISORY]` **[Assumption]**: [Why this might be wrong] — see `file:line`
    > Response:
 
 ### Ambiguities (clarify before planning)
-3. **[Term or behavior]**: Could mean [A] or [B]. This matters because
-   [consequence] — see `file:line`
+3. `[BLOCKING]` **[Term or behavior]**: Could mean [A] or [B]. This matters
+   because [consequence] — see `file:line`
    > Response:
 
 ### Edge Cases (address in plan or explicitly defer)
-4. **[Scenario]**: [What happens and why] — see `file:line`
+4. `[ADVISORY]` **[Scenario]**: [What happens and why] — see `file:line`
    > Response:
 
 ### Scope Creep Risks (draw the line now)
-5. **[Adjacent concern]**: Tempting because [reason]. Dangerous because
-   [consequence] — see `file:line`
+5. `[ADVISORY]` **[Adjacent concern]**: Tempting because [reason]. Dangerous
+   because [consequence] — see `file:line`
    > Response:
 
 ### Pre-Mortem
@@ -127,8 +127,17 @@ Structure your output exactly as follows:
 ```
 
 **Numbering is required.** Each item gets a unique number across all sections.
-The `> Response:` placeholder is filled in by the user during review — they
-must respond to each item individually (not a blanket "approve").
+
+**Tiering is required.** Mark each challenge as `[BLOCKING]` or `[ADVISORY]`:
+- **[BLOCKING]**: Data integrity, security, architectural assumptions, or
+  anything that would be very expensive to fix after implementation. These
+  require an explicit per-item response from the user.
+- **[ADVISORY]**: Edge cases, scope creep risks, and nice-to-address items.
+  These can be blanket-acknowledged.
+
+The `> Response:` placeholder is filled in by the user during review.
+BLOCKING items must have individual responses. ADVISORY items can be
+acknowledged as a group.
 
 Keep each section to 3-5 items. More than that dilutes signal. Pick the challenges
 that would be most expensive to discover later.

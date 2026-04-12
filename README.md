@@ -63,7 +63,7 @@ Investigative conversation that clarifies scope, constraints, and acceptance cri
 
 A `devils-advocate` agent challenges the plan before it is finalized.
 
-Multi-repo: when a feature spans multiple repositories, `/feature` records all repository paths and tags each task with its target repository via the `repository` field in task JSON.
+Multi-repo: when a feature spans multiple repositories, `/feature` records all repository paths and tags each task with its target repository. Works best with monorepos or co-located repos. For separate repos, contract stubs decouple execution — see `/execute` docs.
 
 ### `/bug`
 
@@ -84,7 +84,7 @@ Takes a feature or bug plan directory and processes all tasks:
 4. `/deep-review` after all tasks — thorough cross-cutting review, findings fixed
 5. Push branch + create PR using `gh`
 
-Multi-repo: tasks are tagged with their target repository via the `repository` field. Each repo is processed sequentially: `cd` to repo → branch → tasks → light review per task → deep review → PR.
+Multi-repo: tasks are tagged with their target repository. Each repo is processed sequentially with contract stubs to decouple cross-repo dependencies.
 
 ### `/light-review`
 
@@ -187,6 +187,15 @@ claude-kiss/
 
 ---
 
+## Examples
+
+See [examples/WALKTHROUGH.md](examples/WALKTHROUGH.md) for a narrated
+end-to-end session showing `/feature` → `/execute` on a sample Express
+API. The [examples/sample-feature/](examples/sample-feature/) directory
+contains the actual artifacts produced at each phase.
+
+---
+
 ## Design Principles
 
 **Onboard first, question less.** `/onboard` front-loads context gathering. Every downstream skill benefits: `/feature` asks fewer questions when `CLAUDE.md` and `spec.md` already exist.
@@ -203,7 +212,7 @@ claude-kiss/
 
 **One branch, one PR per repo.** All tasks for a repo commit to a single branch. Deep review covers the full change set.
 
-**Multi-repo in one invocation.** `/execute` groups tasks by repository and processes each sequentially: branch → tasks → reviews → PR.
+**Multi-repo support.** `/execute` groups tasks by repository. Cross-repo dependencies use contract stubs for decoupled execution. Works best with monorepos or co-located repos.
 
 **Bugs use the same execution path.** `/bug` creates the plan. `/execute` implements it. Identical TDD cycle, identical review gates.
 

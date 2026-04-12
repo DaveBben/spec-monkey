@@ -247,19 +247,23 @@ the user together. Highlight:
   that need verification and ambiguities that need clarification
 
 > "Review the research and devil's advocate challenges above. Each challenge
-> has a `> Response:` field — please respond to each one:
-> - **Acknowledged** — will address in the plan
-> - **Out of scope** — with reason
-> - **Disagree** — with explanation
+> is marked `[BLOCKING]` or `[ADVISORY]`:
+>
+> - **[BLOCKING]** items need an individual response: 'acknowledged',
+>   'out of scope — reason', or 'disagree — explanation'
+> - **[ADVISORY]** items can be acknowledged as a group
 >
 > You can respond in chat or edit the `> Response:` lines directly in
-> `research.md`. Once all challenges have responses, I'll continue to
-> the impact map."
+> `research.md`."
 
 Update `research.md` with the user's responses next to each numbered item.
-**Only block if challenges remain without responses.** If the user provides
-blanket acknowledgment ("all look fine"), fill in "Acknowledged" for each
-item and proceed.
+**Block until all [BLOCKING] items have individual responses.** If the user
+provides blanket acknowledgment ("all look fine"), accept it for ADVISORY
+items but prompt for specific responses on any BLOCKING items:
+
+> "[N] BLOCKING challenges still need individual responses: items [list].
+> These cover [data integrity / security / architectural assumptions] —
+> a brief response for each ensures nothing critical is missed."
 
 ---
 
@@ -519,7 +523,27 @@ the [task JSON schemas](references/templates.md#task-json-schemas):
 - `tasks/plan.json` — plan-level information
 - `tasks/task_{N}.json` — one per task (e.g. `task_0.json`, `task_1.json`)
 
-### Step 3: Present Tasks for Review
+### Step 3: Validate Task JSONs
+
+After writing all task JSONs, validate each one:
+
+1. **File paths**: every path in `files`, `testContext`, and
+   `implementationContext` either exists on disk or has a matching
+   `relevantFiles` entry with `action: "create"`
+2. **Required fields non-empty**: `doNot` has at least one entry,
+   `acceptanceCriteria` has at least one entry, `doneWhen` is non-empty
+3. **Context separation**: no path appears in both `testContext` and
+   `implementationContext` (they serve different agents)
+4. **Verification command**: `verificationCommand` is syntactically valid
+   (contains a recognizable test runner command)
+5. **Environment check**: if `environmentCheck` is set, verify the command
+   is syntactically valid
+
+Fix any violations before presenting to the user. If a path doesn't exist
+and isn't marked as `create`, flag it as a planning error and correct the
+task or ask the user.
+
+### Step 4: Present Tasks for Review
 
 Present the task breakdown to the user:
 

@@ -55,21 +55,21 @@ Every claim must include a file:line reference.]
 Each item is numbered and has a `> Response:` field the user must fill in.]
 
 ### Assumptions (verify before planning)
-1. **[Assumption]**: [Why this might be wrong] — see `file:line`
+1. `[BLOCKING]` **[Assumption]**: [Why this might be wrong] — see `file:line`
    > Response:
 
 ### Ambiguities (clarify before planning)
-2. **[Term or behavior]**: Could mean [A] or [B]. This matters because
-   [consequence] — see `file:line`
+2. `[BLOCKING]` **[Term or behavior]**: Could mean [A] or [B]. This matters
+   because [consequence] — see `file:line`
    > Response:
 
 ### Edge Cases (address in plan or explicitly defer)
-3. **[Scenario]**: [What happens and why] — see `file:line`
+3. `[ADVISORY]` **[Scenario]**: [What happens and why] — see `file:line`
    > Response:
 
 ### Scope Creep Risks (draw the line now)
-4. **[Adjacent concern]**: Tempting because [reason]. Dangerous because
-   [consequence] — see `file:line`
+4. `[ADVISORY]` **[Adjacent concern]**: Tempting because [reason]. Dangerous
+   because [consequence] — see `file:line`
    > Response:
 
 ### Pre-Mortem

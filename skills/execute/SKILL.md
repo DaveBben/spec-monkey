@@ -89,27 +89,52 @@ The source type determines branch naming and PR template (see below).
 - **All task_N.json files** — glob `tasks/task_*.json`, sort by numeric ID
   (task_0, task_1, task_2, ...)
 
+### Execution State Checkpoint
+
+After each task completes, write (or update) a checkpoint file at
+`.claude/{features|bugs}/{slug}/execution-state.json`:
+
+```json
+{
+  "lastCompletedTask": "task_3",
+  "branch": "feature/{slug}",
+  "baseBranch": "main",
+  "dispatchCount": 16,
+  "testBaseline": {
+    "totalPassing": 142,
+    "knownFailures": ["test_flaky_timeout"]
+  },
+  "consecutiveReviewFailures": 0,
+  "timestamp": "2026-04-12T14:30:00Z"
+}
+```
+
+This file is the single source of truth for resumption — no git log
+parsing or commit message matching needed.
+
 ### Resumption
 
-If any task JSON has `status: "DONE"`:
+If `execution-state.json` exists:
 
-1. Cross-reference with `git log` to verify each DONE task was actually
-   committed. For each DONE task, search for a commit message matching
-   `"Task N:"`. If a task is marked DONE but has no matching commit,
-   reset its status to `PENDING` — the previous session may have crashed
-   after updating the JSON but before committing.
-2. Check `git status` — if there are uncommitted changes from a previous
+1. Read it to determine the last completed task, branch, dispatch count,
+   and test baseline
+2. Verify the branch exists and check it out
+3. Check `git status` — if there are uncommitted changes from a previous
    session, stash them: `git stash push -m "recovered-uncommitted-work"`.
    Warn the user about the stash.
-3. Identify complete vs. remaining tasks
-4. Re-read plan.json constraints (the new session has no memory of them)
-5. Re-establish the test baseline if one wasn't recorded, or verify the
-   previous baseline is still valid
+4. **Run the full test suite** to verify the branch is in a consistent
+   state. If tests fail unexpectedly (beyond the known baseline), warn
+   the user before resuming.
+5. Re-read plan.json constraints (the new session has no memory of them)
 6. Present: "Tasks 0-N complete. Tasks N+1 through M remaining. Resuming
    from task N+1."
 7. Skip completed tasks and begin from the first incomplete one
-8. **Skip Phase 0 pre-flight checks** that have already passed (branch
-   exists, environment verified). Only re-check git state and branch.
+8. Restore the dispatch count from the checkpoint (for context gate tracking)
+
+If `execution-state.json` does not exist but task JSONs have `status: "DONE"`:
+fall back to verifying against `git log` — search for commits matching
+`"Task N:"`. If a task is marked DONE but has no matching commit, reset
+its status to `PENDING`.
 
 ---
 
@@ -144,6 +169,24 @@ Never execute tasks on `main` or `master`. This is a hard stop.
    `skills/deep-review/SKILL.md` exist. If either is missing, stop and report
    before any tasks are executed — a missing review skill causes mid-pipeline
    failure after commits.
+
+### Task JSON Validation
+
+Before executing, validate every task JSON:
+
+1. **File paths**: every path in `files` either exists (for `modify`) or
+   doesn't exist (for `create`). Paths in `testContext` and
+   `implementationContext` must exist.
+2. **Required fields non-empty**: `doNot`, `acceptanceCriteria`, and
+   `doneWhen` must be non-empty. Flag empty fields as a planning deficiency.
+3. **Verification command**: `verificationCommand` must be syntactically
+   valid. Spot-check 2-3 by running them with `--help` or `--version`.
+4. **Environment check**: if `environmentCheck` is set, run it now to
+   verify the environment is ready before any tasks begin.
+
+If critical violations are found (missing files that should exist, broken
+verification commands), report them and ask the user before proceeding.
+Minor issues (empty `doNot`) get a warning but don't block.
 
 ### Test Baseline
 
@@ -212,6 +255,10 @@ cycle: branch → tasks → post-implementation → PR.
 
 ### Multi-Repository Execution
 
+Multi-repo support works best with monorepos (multiple packages in one
+repo) or co-located repos. For truly separate repositories with
+independent CI/CD, consider running `/execute` independently per repo.
+
 If plan.json has `repositories` with more than one entry, group tasks by
 their `repository` field. Process each repository sequentially:
 
@@ -220,26 +267,30 @@ their `repository` field. Process each repository sequentially:
 3. Execute all tasks for this repository (following the per-task loop below)
 4. Run post-implementation (Phase 2) for this repository
 5. Create PR (Phase 3) for this repository
-6. **Pause before next repository** — present the PR URL and ask:
-   > "Repo A's PR is ready. Repo B's tasks depend on these changes.
-   > Recommended: merge repo A's PR first, then continue. Or say
-   > 'continue' to proceed against the unmerged branch."
-7. Return to next repository
+6. Return to next repository
 
 For single-repo features (repository is `"."`), skip this grouping.
 
-#### Contract Validation (multi-repo only)
+#### Contract Stubs (multi-repo only)
 
-If plan.json has a `contracts` field with entries (OpenAPI specs, protobuf
-definitions, TypeScript interface files), verify them before executing
-tasks in dependent repositories:
+When repo B depends on changes from repo A (e.g., new API endpoints,
+shared types), repo B's tests can't hit repo A's unmerged changes. Use
+contract stubs to decouple execution:
 
-1. Read each contract file
-2. Verify that types/endpoints referenced by the dependent repo's tasks
-   match the contract
-3. If a contract file was created/modified by the previous repo's tasks,
-   verify it exists on the branch (not just in an unmerged PR)
-4. If contract validation fails, STOP and report the mismatch
+1. After completing repo A's tasks, extract the contract surface: type
+   definitions, API schemas, or interface files that repo B depends on
+2. Place these as stub files in repo B's test fixtures directory (e.g.,
+   `tests/fixtures/contracts/repo-a-types.ts`)
+3. Repo B's tests run against the stubs, not the live endpoints
+4. Include a `TODO: replace stub with real import after repo A merges`
+   comment in each stub file
+
+If plan.json has a `contracts` field listing shared specs (OpenAPI,
+protobuf, TypeScript interfaces), use those directly as the stubs rather
+than extracting them.
+
+This mirrors consumer-driven contract testing: both repos agree on the
+contract, implement independently, and validate on merge.
 
 **For each slice** (or once if single-slice):
 
@@ -267,45 +318,60 @@ Before dispatching agents, verify:
 
 If assumptions are violated, ask the user how to proceed.
 
+#### Phase Checkpoints (temporary branches)
+
+Each TDD phase creates a temporary branch as a checkpoint before starting.
+This is safer than `git stash` — no merge conflicts on restore, no opaque
+stash stack, no confusion with user stashes. Temp branches are named and
+visible in `git branch`.
+
+Pattern for each phase:
+1. Before phase: `git checkout -b tmp/pre-{PHASE}-task-{N}`
+2. Switch back: `git checkout -` (return to the working branch)
+3. If phase fails: `git reset --hard tmp/pre-{PHASE}-task-{N}` (restore)
+4. If phase succeeds: `git branch -D tmp/pre-{PHASE}-task-{N}` (cleanup)
+
 #### Step 2: RED — Dispatch tdd-test-writer
 
-**Checkpoint**: Run `git stash push -m "pre-RED-task-{N}"` to save clean
-state before the phase begins.
+**Checkpoint**: `git checkout -b tmp/pre-RED-task-{N} && git checkout -`
 
 Dispatch via the Agent tool using the RED prompt in
 [references/agent-prompts.md](references/agent-prompts.md).
 
-Collect the result. If STOPPED: run `git stash pop` to restore clean
-state, mark the task `BLOCKED` in its JSON, record the reason in
-`executionNotes`, ask the user how to proceed, and skip to the next task.
+Collect the result. If STOPPED: `git reset --hard tmp/pre-RED-task-{N}`
+to restore clean state, then `git branch -D tmp/pre-RED-task-{N}`. Mark
+the task `BLOCKED` in its JSON, record the reason in `executionNotes`,
+ask the user how to proceed, and skip to the next task.
 
-If RED succeeded, drop the stash: `git stash drop`.
+If RED succeeded: `git branch -D tmp/pre-RED-task-{N}`.
 
 #### Step 3: GREEN — Dispatch tdd-code-implementor
 
-**Checkpoint**: Run `git stash push -m "pre-GREEN-task-{N}"` to save the
-post-RED state before the implementation phase begins.
+**Checkpoint**: `git checkout -b tmp/pre-GREEN-task-{N} && git checkout -`
 
 Dispatch via the Agent tool using the GREEN prompt in
 [references/agent-prompts.md](references/agent-prompts.md).
 
-Collect the result. If STOPPED: run `git stash pop` to restore the
-post-RED state (tests exist but no partial implementation), mark task
-`BLOCKED`, record the reason, ask user how to proceed, skip to next task.
+Collect the result. If STOPPED: `git reset --hard tmp/pre-GREEN-task-{N}`
+to restore the post-RED state (tests exist but no partial implementation).
+Then `git branch -D tmp/pre-GREEN-task-{N}`. Mark task `BLOCKED`, record
+the reason, ask user how to proceed, skip to next task.
 
-If GREEN succeeded, drop the stash: `git stash drop`.
+If GREEN succeeded: `git branch -D tmp/pre-GREEN-task-{N}`.
 
 #### Step 4: REFACTOR — Dispatch tdd-code-refactor
 
-**Checkpoint**: Run `git stash push -m "pre-REFACTOR-task-{N}"` to save
-the post-GREEN state before refactoring begins.
+**Checkpoint**: `git checkout -b tmp/pre-REFACTOR-task-{N} && git checkout -`
 
 Dispatch via the Agent tool using the REFACTOR prompt in
 [references/agent-prompts.md](references/agent-prompts.md).
 
-If REFACTOR makes things worse (tests fail after refactoring), run
-`git stash pop` to restore the working post-GREEN state. Otherwise drop
-the stash: `git stash drop`.
+If REFACTOR makes things worse (tests fail after refactoring):
+`git reset --hard tmp/pre-REFACTOR-task-{N}` to restore the working
+post-GREEN state. Then `git branch -D tmp/pre-REFACTOR-task-{N}`.
+
+If REFACTOR succeeded or was skipped:
+`git branch -D tmp/pre-REFACTOR-task-{N}`.
 
 #### Step 5: Commit
 
@@ -334,19 +400,56 @@ Run `/light-review` against the latest commit.
 - If BLOCKING or SHOULD_FIX findings: fix them in the main session,
   scoped to the task's declared files. Commit: `"Task N: check fixes"`
 - If a second `/light-review` still has BLOCKING findings: do NOT loop further.
-  Record the unresolved findings in the task's `executionNotes`, inform the
-  user:
+  Record the unresolved findings in the task's `executionNotes`, increment
+  `consecutiveReviewFailures` in execution-state.json, and inform the user:
   > "Task N: `/light-review` still has BLOCKING findings after fix attempt.
   > Human review required. Findings: [list]"
   Ask whether to continue with remaining tasks or stop entirely.
 
+**Circuit breaker**: If `consecutiveReviewFailures` reaches 2 (two
+consecutive tasks with unresolved findings), STOP execution entirely:
+
+> "Two consecutive tasks have unresolved review findings. This may
+> indicate a systemic issue. Options:
+> 1. **Revert to last clean task** — reset to the commit before these
+>    failures and re-plan the affected tasks
+> 2. **Continue accepting the findings** — proceed with remaining tasks
+> 3. **Abandon and re-plan** — the implementation approach may need revision"
+
+Reset `consecutiveReviewFailures` to 0 whenever a task passes light-review
+cleanly.
+
 #### Step 7: Update Task Status
 
 1. Set `status` to `DONE` in task_N.json (or `BLOCKED` if step 6 triggered)
-2. Mark TodoWrite entry as `completed`
-3. Proceed to next task
+2. Update `execution-state.json` with the current task ID, dispatch count,
+   and timestamp
+3. Mark TodoWrite entry as `completed`
+4. Proceed to next task
 
-#### Step 8: Context Pause Gate (dispatch-count based)
+#### Step 8: Architectural Drift Check (every 4 tasks)
+
+After every 4th completed task, run a quick sanity check against the plan:
+
+1. Compare the files actually changed so far (`git diff --name-only` from
+   base branch) against the impact map's expected files. Flag any files
+   changed that weren't in the plan.
+2. Check if any file has grown significantly beyond what the plan
+   anticipated (e.g., a task that was supposed to add 30 lines added 200).
+3. Check for imports or dependencies introduced that weren't in the plan.
+
+If drift is detected, inform the user:
+
+> "Architectural drift detected after {N} tasks:
+> - [unexpected files changed / oversized files / unexpected dependencies]
+>
+> This may indicate the implementation is diverging from the plan.
+> Continue, or pause to review?"
+
+This catches "bypassed the service layer" and "quietly added a dependency"
+problems before they compound across more tasks.
+
+#### Step 9: Context Pause Gate (dispatch-count based)
 
 Track the total number of agent dispatches in this session. Each
 RED/GREEN/REFACTOR phase is 1 dispatch. Each /light-review is 1 dispatch.

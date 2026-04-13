@@ -566,11 +566,23 @@ the [task JSON schemas](references/templates.md#task-json-schemas):
 - `tasks/plan.json` — plan-level information (includes `"type": "bugfix"`)
 - `tasks/task_{N}.json` — one per task (e.g. `task_0.json`, `task_1.json`)
 
-### Step 3: Present Tasks
+### Step 3: Generate Human Plan
+
+Launch the `human-plan-synthesizer` agent via the Agent tool. Pass it the
+bug directory path: `.claude/bugs/{slug}`.
+
+The agent reads all artifacts in the directory and writes
+`.claude/bugs/{slug}/human_plan.md` — a synthesis document for developers
+who want to fix the bug themselves without AI execution.
+
+### Step 4: Present Tasks
 
 Present the task breakdown to the user:
 
 > "Task breakdown complete — {N} tasks in `.claude/bugs/{slug}/tasks.md`.
+>
+> I've also generated `human_plan.md` — a synthesis document if you prefer
+> to fix this yourself without AI execution.
 >
 > Review the tasks. When ready to implement, run:
 >

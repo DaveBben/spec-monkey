@@ -29,7 +29,7 @@ User describes feature
     |-- Phase 1: Impact map → impact-map.md
     |-- Phase 2: Plan with code snippets → plan.md
     |-- Phase 3: Annotation cycle (1-6 rounds)
-    |-- Phase 4: Task breakdown → tasks.md + task JSON files
+    |-- Phase 4: Task breakdown → tasks.md + task JSON files + human_plan.md
     |
     v
 /cks:execute .claude/features/{slug}
@@ -390,11 +390,23 @@ Fix any violations before presenting to the user. If a path doesn't exist
 and isn't marked as `create`, flag it as a planning error and correct the
 task or ask the user.
 
-### Step 4: Present Tasks for Review
+### Step 4: Generate Human Plan
+
+Launch the `human-plan-synthesizer` agent via the Agent tool. Pass it the
+feature directory path: `.claude/features/{slug}`.
+
+The agent reads all artifacts in the directory and writes
+`.claude/features/{slug}/human_plan.md` — a synthesis document for
+developers who want to implement the feature themselves without AI execution.
+
+### Step 5: Present Tasks for Review
 
 Present the task breakdown to the user:
 
 > "Task breakdown complete — {N} tasks in `.claude/features/{slug}/tasks.md`.
+>
+> I've also generated `human_plan.md` — a synthesis document if you prefer
+> to implement this yourself without AI execution.
 >
 > Review the tasks. You can request changes or approve. When ready to
 > implement, run:

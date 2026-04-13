@@ -57,8 +57,8 @@ Not every change needs the full pipeline. Pick the depth that matches your situa
 | Skill | What it does | Artifacts produced |
 |---|---|---|
 | `/cks:onboard` | Sets up context for a new or existing codebase | `CLAUDE.md`, `spec.md` |
-| `/cks:feature` | Investigates scope, produces a plan and TDD task files | `.claude/features/{slug}/plan.md`, `.claude/features/{slug}/tasks/task_N.md` |
-| `/cks:bug` | Captures symptom, root cause, and fix tasks | `.claude/bugs/{slug}/plan.md`, `.claude/bugs/{slug}/tasks/task_N.md` |
+| `/cks:feature` | Investigates scope, produces a plan and TDD task files | `.claude/features/{slug}/plan.md`, `.claude/features/{slug}/tasks/task_N.md`, `.claude/features/{slug}/human_plan.md` |
+| `/cks:bug` | Captures symptom, root cause, and fix tasks | `.claude/bugs/{slug}/plan.md`, `.claude/bugs/{slug}/tasks/task_N.md`, `.claude/bugs/{slug}/human_plan.md` |
 | `/cks:execute` | Implements tasks: TDD cycle + two-tier review + PR | Branch, commits, PR |
 | `/cks:light-review` | Single-agent code review across all dimensions | Review report |
 | `/cks:deep-review` | Four-agent parallel review (security, reliability, maintainability, performance) | Consolidated review report |
@@ -82,6 +82,7 @@ Investigative conversation that clarifies scope, constraints, and acceptance cri
 
 - **`plan.md`** — what is being built, why, constraints, and scope boundaries
 - **`task_N.md` files** — one per task, each with: relevant files (strict boundary for the executor), acceptance criteria (GIVEN/WHEN/THEN), verification description, and explicit anti-scope (Do NOT list)
+- **`human_plan.md`** — concise synthesis of all artifacts for developers who want to implement the feature themselves rather than using `/cks:execute`
 
 A `devils-advocate` agent challenges the plan before it is finalized.
 
@@ -93,6 +94,7 @@ Guides the user through: symptom description, environment, reproduction steps, e
 
 - **`plan.md`** — bug context, root cause, severity
 - **`task_N.md` files** — fix tasks with the same TDD structure as feature tasks
+- **`human_plan.md`** — concise synthesis of all artifacts for developers who want to fix the bug themselves rather than using `/cks:execute`
 
 Execute with `/cks:execute`.
 
@@ -133,6 +135,7 @@ Results are consolidated into a single report. Used automatically by `/cks:execu
 |---|---|---|
 | `devils-advocate` | Challenges feature plan scope, criteria, and assumptions | `/cks:feature` |
 | `plan-verifier` | Fact-checks plan.md references against the codebase | `/cks:feature` |
+| `human-plan-synthesizer` | Synthesizes artifacts into a human-readable implementation guide | `/cks:feature`, `/cks:bug` |
 | `tdd-test-writer` | RED phase — writes failing tests from acceptance criteria | `/cks:execute` |
 | `tdd-code-implementor` | GREEN phase — minimum code to make tests pass | `/cks:execute` |
 | `tdd-code-refactor` | REFACTOR phase — improves code while keeping tests green | `/cks:execute` |
@@ -154,12 +157,14 @@ Plans and tasks are stored per-project inside `.claude/`:
     features/
       {slug}/
         plan.md
+        human_plan.md
         tasks/
           task_0.md
           task_1.md
     bugs/
       {slug}/
         plan.md
+        human_plan.md
         tasks/
           task_0.md
 ```
@@ -202,6 +207,7 @@ cks/
   agents/
     devils-advocate.md
     plan-verifier.md
+    human-plan-synthesizer.md
     tdd-test-writer.md
     tdd-code-implementor.md
     tdd-code-refactor.md

@@ -84,6 +84,18 @@ commits that might have introduced or relate to the bug.]
 
 ## Open Questions
 [Uncertainties that need user input before planning]
+
+## Sources Read
+
+### Files
+- `[path]` — [brief reason for reading, e.g., "traced code path", "existing test coverage"]
+
+### URLs
+- [url] — [summary of content retrieved]
+- *No URLs fetched during this research.*
+
+### Git History
+- `[exact git command]` — [what was learned]
 ```
 
 ---

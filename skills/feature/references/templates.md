@@ -74,6 +74,18 @@ Each item is numbered and has a `> Response:` field the user must fill in.]
 
 ### Pre-Mortem
 > [2-3 sentences, past tense, narrating the most likely failure]
+
+## Sources Read
+
+### Files
+- `[path]` — [brief reason for reading, e.g., "project architecture", "traced entry point"]
+
+### URLs
+- [url] — [summary of content retrieved]
+- *No URLs fetched during this research.*
+
+### Git History
+- `[exact git command]` — [what was learned]
 ```
 
 ---

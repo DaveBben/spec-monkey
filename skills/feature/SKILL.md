@@ -224,6 +224,22 @@ duplicate logic, or violate conventions.
 Write all findings to `.claude/features/{slug}/research.md` using the
 [research.md template](references/templates.md#researchmd).
 
+**Populate the Sources Read section.** Before finishing research.md, review
+the full conversation history from Steps 0-3 and compile every source
+consulted:
+
+- **Files**: Every project file read by you or by explore agents
+  (architecture.md, spec.md, CLAUDE.md, README.md, and every source file
+  traced during exploration). Use project-relative paths.
+- **URLs**: Every URL retrieved via WebFetch during Part B of Step 0. If
+  none, write "*No URLs fetched during this research.*"
+- **Git History**: Every `git log` or `git diff` command run during
+  exploration. Include the exact command and a brief note of what was learned.
+
+Each entry gets a short annotation (a few words) explaining why it was read.
+Do not omit sources because they seem unimportant — the section is an audit
+trail.
+
 ### Step 5: Challenge the Request (Devil's Advocate)
 
 Before presenting findings, launch the `devils-advocate` agent via the Agent tool. 
@@ -232,9 +248,10 @@ Pass it:
 - The path to the research file: `.claude/features/{slug}/research.md`
 
 The agent returns a structured challenge brief covering assumptions,
-ambiguities, edge cases, scope creep risks, and a pre-mortem. Append the
-challenge brief to the end of `research.md` under a `## Devil's Advocate
-Challenge` heading.
+ambiguities, edge cases, scope creep risks, and a pre-mortem. Insert the
+challenge brief into `research.md` under a `## Devil's Advocate Challenge`
+heading, **before** the `## Sources Read` section so that Sources Read
+remains the final section of the document.
 
 ### Step 6: Present and Validate
 

@@ -323,6 +323,23 @@ be referenced later. It will be:
 Write all findings to `.claude/bugs/{slug}/research.md` using the
 [research.md template](references/templates.md#researchmd).
 
+**Populate the Sources Read section.** Before finishing research.md, review
+the full conversation history from Phases 0-2 and compile every source
+consulted:
+
+- **Files**: Every project file read by you or by explore agents
+  (architecture files, spec files, every source file traced during code path
+  exploration, test files examined during Phase 2). Use project-relative paths.
+- **URLs**: Every URL fetched or provided by the user. If none, write
+  "*No URLs fetched during this research.*"
+- **Git History**: Every `git log` command run during exploration (e.g.,
+  `git log --oneline -20 -- [files]`). Include the exact command and a brief
+  note of what was learned.
+
+Each entry gets a short annotation (a few words) explaining why it was read.
+Do not omit sources because they seem unimportant — the section is an audit
+trail.
+
 Include:
 - The symptom summary from Phase 0
 - The reproduction findings from Phase 2 (including the draft test code

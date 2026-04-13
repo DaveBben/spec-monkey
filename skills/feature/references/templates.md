@@ -31,6 +31,50 @@ relevant parts, not everything]
 of fetched URLs, verbatim user-provided context, or "No external context
 provided." Every entry must note its source.]
 
+## Scope Lock-Down
+
+### Questions to User
+[5 generated questions based on the feature description, targeting decisions
+and constraints that cannot be answered by reading code.]
+
+1. **[Question]**
+   > Answer: [user's response]
+2. **[Question]**
+   > Answer: [user's response]
+3. **[Question]**
+   > Answer: [user's response]
+4. **[Question]**
+   > Answer: [user's response]
+5. **[Question]**
+   > Answer: [user's response]
+
+### Exploration Questions
+[10 codebase-answerable questions generated from the user's scope answers.
+These force Explore agents to trace the downstream ripple of the change.
+Every answer MUST include file:line evidence or an explicit "not applicable"
+with justification.]
+
+1. **[Question]**
+   > Answer: [finding with `file:line` reference]
+2. **[Question]**
+   > Answer: [finding with `file:line` reference]
+3. **[Question]**
+   > Answer: [finding with `file:line` reference]
+4. **[Question]**
+   > Answer: [finding with `file:line` reference]
+5. **[Question]**
+   > Answer: [finding with `file:line` reference]
+6. **[Question]**
+   > Answer: [finding with `file:line` reference]
+7. **[Question]**
+   > Answer: [finding with `file:line` reference]
+8. **[Question]**
+   > Answer: [finding with `file:line` reference]
+9. **[Question]**
+   > Answer: [finding with `file:line` reference]
+10. **[Question]**
+    > Answer: [finding with `file:line` reference]
+
 ## Codebase Findings
 [Deep reading results — specific files, functions, patterns found.
 Every claim must include a file:line reference.]

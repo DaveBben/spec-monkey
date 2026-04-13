@@ -4,6 +4,12 @@ Known failure modes in the `/cks:feature` workflow and how to avoid them.
 
 ---
 
+- **Confident divergence** — The AI reads a few files, infers patterns, and
+  starts planning based on assumptions. It misses downstream consumers,
+  changelogs, config registrations, and documentation files that a human
+  developer would instinctively check. The Scope Lock-Down Questions (Part D)
+  and 10 Exploration Questions exist specifically to force outward exploration
+  beyond the immediate implementation site.
 - **Skimming instead of reading** — Phase 0 exists because the AI reads at
   signature level and moves on. Force deep reading with specific instructions:
   "read the full function body", "trace every caller", "understand the intricacies."

@@ -32,7 +32,7 @@ User describes feature
     |-- Phase 4: Task breakdown → tasks.md + task JSON files
     |
     v
-/cks:execute .claude/features/{slug}/
+/cks:execute .claude/features/{slug}
 ```
 
 All artifacts are written to `.claude/features/{slug}/` in the project root.
@@ -50,7 +50,7 @@ This skill writes task JSON files to `.claude/features/{slug}/tasks/` so
 `/cks:execute` can pick them up. Pass the feature directory path to `/cks:execute`:
 
 ```
-/cks:execute .claude/features/{slug}/
+/cks:execute .claude/features/{slug}
 ```
 
 ---
@@ -68,7 +68,7 @@ If `$ARGUMENTS` were provided, classify them:
    - Has `plan.md` with `Status: Draft` → start at Phase 3 (annotation cycle)
    - Has `plan.md` with `Status: Approved` but no `tasks.md` → start at Phase 4
    - Has `tasks.md` → tell the user: "This feature is fully planned. Run
-     `/cks:execute .claude/features/{slug}/` to implement."
+     `/cks:execute .claude/features/{slug}` to implement."
 
 2. **Free-form text description**: Use as the feature description. Generate a
    URL-safe slug from the first 3-5 significant words (e.g., "add webhook retry
@@ -569,7 +569,7 @@ Present the task breakdown to the user:
 > Review the tasks. You can request changes or approve. When ready to
 > implement, run:
 >
-> `/cks:execute .claude/features/{slug}/`"
+> `/cks:execute .claude/features/{slug}`"
 
 ---
 

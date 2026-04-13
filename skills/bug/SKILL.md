@@ -32,7 +32,7 @@ This skill writes task JSON files to `.claude/bugs/{slug}/tasks/` so
 `/cks:execute` can pick them up:
 
 ```
-/cks:execute .claude/bugs/{slug}/
+/cks:execute .claude/bugs/{slug}
 ```
 
 ---
@@ -51,7 +51,7 @@ If `$ARGUMENTS` were provided, classify them:
    - Has `plan.md` with `Status: Approved` but no `tasks.md` → start at Phase 6
    - Has `tasks.md` → tell the user: "This bug is fully planned. Use the
      implementation command at the bottom of tasks.md to implement, or run
-     `/cks:execute .claude/bugs/{slug}/`."
+     `/cks:execute .claude/bugs/{slug}`."
 
 2. **Free-form text description**: Use as the symptom seed. Generate a
    URL-safe slug from the first 3-5 significant words of the symptom (e.g.,
@@ -518,7 +518,7 @@ Present the task breakdown to the user:
 >
 > Review the tasks. When ready to implement, run:
 >
-> `/cks:execute .claude/bugs/{slug}/`"
+> `/cks:execute .claude/bugs/{slug}`"
 
 ---
 

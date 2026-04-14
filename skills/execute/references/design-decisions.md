@@ -50,7 +50,7 @@ execution means two agents editing the same codebase simultaneously,
 creating merge conflicts and state inconsistency. The error
 amplification tax from multi-agent coordination (17.2× for independent
 agents, 4.4× even with centralization) outweighs the wall-clock savings
-of parallelism. Sequential execution with fast feedback (light-review
+of parallelism. Sequential execution with fast feedback (inline code review
 per task) catches problems early before they compound.
 
 ## Why a Fast Path for Small Plans

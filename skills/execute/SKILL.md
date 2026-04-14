@@ -6,14 +6,14 @@ argument-hint: "[feature or bug directory path or slug]"
 model: opus
 description: >
   Implements approved tasks from /cks:feature or /cks:bug. For each task:
-  dispatches a single implementation agent, commits, runs /cks:light-review.
+  dispatches a single implementation agent, commits, runs inline code review via generic-code-reviewer agent.
   After all tasks: full test suite, /cks:deep-review, finalize. Does not
   push or create PRs.
 ---
 
 # Plan Executor
 
-Execute approved tasks. For each task: implement → commit → light-review.
+Execute approved tasks. For each task: implement → commit → code review.
 After all tasks: full tests → deep-review → finalize.
 
 ### Supporting Files
@@ -33,7 +33,7 @@ Main session:
   │   ├── Pre-task check
   │   ├── Implementation agent (single agent — reads task, implements, verifies)
   │   ├── Commit: "Task N: [title]"
-  │   ├── /cks:light-review → fix findings → commit fixes
+  │   ├── Code review (generic-code-reviewer) → fix findings → commit fixes
   │   └── Update task status
   ├── Full test suite + lint
   ├── /cks:deep-review (max 2 iterations)
@@ -108,7 +108,7 @@ lines**, skip task-by-task execution:
 1. Dispatch a single implementation agent with the full plan context
    (all task JSONs, plan constraints, all atRiskTests merged)
 2. If agent returns DONE and all regressionChecks pass: commit as a
-   single commit, run light-review, proceed to Post-Implementation
+   single commit, run code review (generic-code-reviewer), proceed to Post-Implementation
 3. If agent STOPs or exceeds 200 lines: fall back to standard
    task-by-task execution below
 
@@ -201,9 +201,25 @@ extra scrutiny. Agents that exhaust their turn budget are more likely
 to have produced lower-quality output (SWE-CI: positive correlation
 between iteration count and regression rate).
 
-#### Step 6: Light Review
+#### Step 6: Code Review
 
-Run `/cks:light-review` against latest commit.
+Build change context for the latest commit:
+1. Run `git diff --stat HEAD~1` to get files changed and line counts
+2. Read the commit message to understand intent
+3. Write a 1-2 sentence summary: what changed and why
+
+Dispatch a single `generic-code-reviewer` agent using the Agent tool:
+
+```
+Review the code changes against HEAD~1.
+
+Change context: [1-2 sentence summary from above]
+
+For every finding, include a Confidence level (HIGH / MEDIUM / LOW)
+indicating how certain you are this is a real issue. HIGH = you
+verified it fully. MEDIUM = pattern matches but not fully verified.
+LOW = suspicious but could be intentional.
+```
 
 - BLOCKING/SHOULD_FIX findings: fix, commit `"Task N: review fixes"`
 - Second review still BLOCKING: record in `executionNotes`, inform user

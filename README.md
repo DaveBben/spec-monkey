@@ -43,7 +43,7 @@ Don't know where the change lives or what it touches?
   └── Yes → /cks:explore (understand the codebase first, then decide)
 
 Want a second set of eyes on what you're writing?
-  └── Yes → /cks:check (flags bugs, missing pieces, better approaches — never writes code)
+  └── Yes → /cks:check-work (flags bugs, missing pieces, better approaches — never writes code)
 
 Want to understand what was just built?
   └── Yes → /cks:retro (after /cks:execute completes)
@@ -70,9 +70,8 @@ Not every change needs the full pipeline. Pick the depth that matches your situa
 | `/cks:feature` | Investigates scope, produces a plan and TDD task files | `.claude/features/{slug}/plan.md`, `.claude/features/{slug}/tasks/task_N.md`, `.claude/features/{slug}/human_plan.md` |
 | `/cks:bug` | Captures symptom, root cause, and fix tasks | `.claude/bugs/{slug}/plan.md`, `.claude/bugs/{slug}/tasks/task_N.md`, `.claude/bugs/{slug}/human_plan.md` |
 | `/cks:execute` | Implements tasks: single-agent implementation + two-tier review + PR | Branch, commits, PR |
-| `/cks:check` | Check my work — flags bugs, missing pieces, contract risks, better approaches with explanations | Dialogue (no artifacts) |
+| `/cks:check-work` | Check my work — dispatches a reviewer, translates findings into concise why-focused explanations | Dialogue (no artifacts) |
 | `/cks:retro` | Post-execution comprehension walkthrough — understand what was built | Dialogue (no artifacts) |
-| `/cks:light-review` | Single-agent code review across all dimensions | Review report |
 | `/cks:deep-review` | Four-agent parallel review (security, reliability, maintainability, performance) | Consolidated review report |
 
 ---
@@ -128,19 +127,19 @@ Takes a feature or bug plan directory and processes all tasks:
 
 1. Create branch (`feature/{slug}` or `bugfix/{slug}`)
 2. For each task: single `code-implementor` agent reads task, implements, verifies
-3. `/cks:light-review` after each task — fast review, findings fixed before moving on
+3. Inline code review (generic-code-reviewer) after each task — findings fixed before moving on
 4. `/cks:deep-review` after all tasks — thorough cross-cutting review, findings fixed
 5. Push branch + create PR using `gh`
 
 Multi-repo: tasks are tagged with their target repository. Each repo is processed sequentially with contract stubs to decouple cross-repo dependencies.
 
-### `/cks:check`
+### `/cks:check-work`
 
-Check my work. Point it at the files you're working on and it reads them, traces downstream impact, and reports what matters: bugs, missing pieces, contract risks, and better approaches — always with an explanation of *why* something matters, not just what's wrong.
+Check my work. Dispatches a `generic-code-reviewer` agent to find bugs, missing pieces, contract risks, and better approaches — then translates the findings into concise, why-focused feedback. HIGH-confidence findings are stated directly; MEDIUM-confidence ones surface as guiding questions.
 
 Never writes code for you. If something needs fixing, it tells you what and why, then you write the fix. Think of it as a tutor looking over your shoulder, not a linter.
 
-Use anytime — no session setup, no ceremony. Just say `/cks:check` and point it at your work.
+Use anytime — no session setup, no ceremony. Just say `/cks:check-work` and point it at your work.
 
 ### `/cks:retro`
 
@@ -152,10 +151,6 @@ Use this when:
 - You're growing into a domain and want to build mental models faster
 
 Not a review, not a gate — a learning tool. Entirely opt-in, skip any task at any time.
-
-### `/cks:light-review`
-
-Single-agent review covering correctness, readability, security surface, and maintainability in one pass. Used automatically by `/cks:execute` after each task. Can also be invoked standalone.
 
 ### `/cks:deep-review`
 
@@ -179,7 +174,7 @@ Results are consolidated into a single report. Used automatically by `/cks:execu
 | `plan-verifier` | Fact-checks plan.md references against the codebase | `/cks:feature` |
 | `human-plan-synthesizer` | Synthesizes artifacts into a human-readable implementation guide | `/cks:feature`, `/cks:bug` |
 | `code-implementor` | Reads task, implements code, verifies against acceptance criteria | `/cks:execute` |
-| `generic-code-reviewer` | All-dimensions fast review | `/cks:light-review` |
+| `generic-code-reviewer` | All-dimensions fast review | `/cks:check-work`, `/cks:execute` |
 | `security-reviewer` | Injection, access control, data exposure | `/cks:deep-review` |
 | `reliability-reviewer` | Correctness, race conditions, resource lifecycle | `/cks:deep-review` |
 | `maintainability-reviewer` | Readability, compatibility, conventions | `/cks:deep-review` |
@@ -234,11 +229,9 @@ cks/
       SKILL.md
     explore/
       SKILL.md
-    check/
+    check-work/
       SKILL.md
     retro/
-      SKILL.md
-    light-review/
       SKILL.md
     deep-review/
       SKILL.md
@@ -271,7 +264,7 @@ cks/
 
 **Artifacts are explicit contracts.** Every skill specifies what it produces and why. `/cks:execute` knows exactly what to consume.
 
-**Two-tier review.** `/cks:light-review` after each task (fast, focused). `/cks:deep-review` after all tasks per repo (thorough, cross-cutting). Both are automatic during `/cks:execute`.
+**Two-tier review.** Inline code review (generic-code-reviewer) after each task (fast, focused). `/cks:deep-review` after all tasks per repo (thorough, cross-cutting). Both are automatic during `/cks:execute`.
 
 **One branch, one PR per repo.** All tasks for a repo commit to a single branch. Deep review covers the full change set.
 

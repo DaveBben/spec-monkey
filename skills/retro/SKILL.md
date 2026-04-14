@@ -134,7 +134,7 @@ judgment calls the human didn't anticipate.
 
 ### Review findings that were fixed
 
-If the light-review or deep-review flagged issues that were fixed during
+If the inline code review or deep-review flagged issues that were fixed during
 execution, summarize the most instructive ones:
 
 > "During review, {finding} was caught in {file}. The fix was {change}.

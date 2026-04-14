@@ -1,7 +1,7 @@
 ---
 name: deep-review
 description: >
-  Use when the user explicitly requests a thorough, deep, or comprehensive review of large diffs or changes touching multiple files. Dispatches 4 specialized review agents in parallel (security, reliability, performance on Opus; maintainability on Sonnet for model diversity) and consolidates their findings through evidence auditing, cross-agent validation, and actionability filtering. Do NOT use for general code writing guidance, refactoring advice, or spec/design reviews. For a faster single-agent review, use /cks:light-review instead.
+  Use when the user explicitly requests a thorough, deep, or comprehensive review of large diffs or changes touching multiple files. Dispatches 4 specialized review agents in parallel (security, reliability, performance on Opus; maintainability on Sonnet for model diversity) and consolidates their findings through evidence auditing, cross-agent validation, and actionability filtering. Do NOT use for general code writing guidance, refactoring advice, or spec/design reviews. For a faster single-agent review, use /cks:check-work instead.
 argument-hint: "<base-branch-or-commit>"
 effort: high
 model: opus

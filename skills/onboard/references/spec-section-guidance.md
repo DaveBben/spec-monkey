@@ -24,6 +24,19 @@ reference while drafting or reviewing — do NOT include this text in the output
 - **Active**: Spec is reviewed, accurate, and being used as a reference
 - **Needs Update**: A significant change (new feature, architectural shift, removed dependency) has made part of the spec stale — update before relying on it
 
+## Last Verified Date
+
+The `Last verified` field records when a human last confirmed the spec
+matches reality. Update it whenever you review the spec for accuracy —
+even if no content changed.
+
+**Staleness threshold**: If `Last verified` is more than 30 days old,
+tools that consume the spec (e.g., `/cks:execute` pre-flight) should
+warn that the spec may be stale. The Codified Context research found
+that specification staleness is a silent failure mode — agents trust
+documentation absolutely, so outdated specs cause them to generate
+code that conflicts with recent refactors.
+
 ---
 
 ## What This Project Does
@@ -49,6 +62,11 @@ reference while drafting or reviewing — do NOT include this text in the output
 ## Current State
 
 **This is the most important section.** It tells the reader what is actually working in the repo right now. A developer or AI reading this should immediately understand the current shape of the codebase without digging through code.
+
+### Split behavior (multi-domain projects)
+- **Root spec**: 2-4 sentence system-level summary. What the system does as a whole.
+- **Domain specs**: 2-3 sentence domain-level detail. What this specific subsystem does.
+- The root should not repeat domain-level detail — point to domain specs instead.
 
 ### What it should contain
 - 2-4 concrete sentences describing what is implemented and working today
@@ -88,6 +106,12 @@ Describes how the major components relate and what external systems this project
 - Good: "Repository pattern for database access (src/lib/repos/), all repos extend BaseRepository"
 
 ### External Dependencies (subsection)
+
+**Split behavior**: In multi-domain projects, only *shared* dependencies (used by 2+
+domains) stay in the root spec. Domain-specific dependencies (e.g., Stripe in billing)
+move to that domain's spec.md. This prevents an agent working in auth from loading
+billing's Stripe constraints into its context.
+
 Every external system this project communicates with should have an entry. The table documents failure behavior and constraints — this is the highest-signal content for AI coders.
 
 **Capability constraints are critical.** Document what the API *can't* do, not just failure modes:
@@ -115,6 +139,12 @@ These constraints shape protocol design, algorithm choices, and chunking strateg
 ---
 
 ## Testing Strategy
+
+**Split behavior**: In multi-domain projects, the root spec keeps framework name,
+runner commands, and project-wide conventions. Coverage gaps and domain-specific
+test conventions (e.g., "use Stripe test clock" for billing) move to domain specs.
+This way the agent gets the right testing context for the domain it's working in.
+
 - Include framework name, file location conventions, and how to run tests
 - Mention any setup requirements (database seeding, env vars, Docker containers)
 - State whether mocks or real services are preferred
@@ -137,6 +167,14 @@ These constraints shape protocol design, algorithm choices, and chunking strateg
 ---
 
 ## Boundaries & Constraints
+
+**Split behavior**: In multi-domain projects, project-wide rules (never commit
+secrets, always run tests) stay at root. Domain-specific rules (never call Stripe
+without idempotency keys, always use the billing connection pool) move to domain
+specs. An agent in billing gets billing's boundaries loaded automatically via
+`.claude/rules/` — it doesn't need to parse project-wide boundaries to find the
+billing-specific ones.
+
 - The three-tier system (Always/Ask First/Never) prevents the AI from making dangerous changes
 - "Never" items are hard stops — the AI must not proceed regardless of context
 - "Ask First" items require explicit user approval before proceeding
@@ -157,6 +195,12 @@ These constraints shape protocol design, algorithm choices, and chunking strateg
 ---
 
 ## Known Issues
+
+**Split behavior**: In multi-domain projects, issues go in the domain spec where
+they live. A billing webhook bug belongs in billing's spec, not root. Root keeps
+only cross-cutting issues that span domains. This prevents an agent in auth from
+loading billing's known issues into context.
+
 - Things that are **currently broken or degraded** in the repo — not historical traps or gotchas
 - Each entry: what is broken, severity (blocks work / annoying / minor), and any known workaround
 - Write "None known." if the repo is clean rather than leaving the section blank
@@ -166,6 +210,10 @@ These constraints shape protocol design, algorithm choices, and chunking strateg
 ---
 
 ## Tech Debt
+
+**Split behavior**: Same as Known Issues — domain-specific debt goes in domain
+specs. Root keeps only cross-cutting debt (e.g., no connection pooling project-wide).
+
 - Deferred work that would improve quality but has been intentionally set aside
 - Each entry: what it is, why it was deferred, rough effort estimate if known
 - Bad: "Code could be better." (useless)

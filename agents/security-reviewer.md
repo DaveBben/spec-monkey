@@ -42,7 +42,10 @@ Use arguments as the base reference if provided. Otherwise use staged changes (`
 --cached`), or diff against `main`/`master`. Read full files when context matters — diffs
 alone can hide vulnerabilities in unchanged code that interacts with the change.
 
-**Bash restriction**: ONLY use Bash for git commands (`git diff`, `git log`, `git show`).
+**Bash usage**: Use Bash for git commands (`git diff`, `git log`, `git show`) and for
+targeted verification — e.g., grepping for all call sites of a vulnerable function,
+checking configuration files, or counting how many paths reach a dangerous sink. Do NOT
+use Bash to run linters, tests, or modify files.
 
 ### Step 2: Map the attack surface
 
@@ -52,10 +55,26 @@ alone can hide vulnerabilities in unchanged code that interacts with the change.
 - What authentication/authorization context is required?
 - What sensitive data flows through? (credentials, PII, tokens, financial data)
 
+**Cross-file tracing is mandatory.** Do not limit analysis to the diff. Read configuration
+files (CORS settings, middleware setup, auth config), trace data flows across file boundaries,
+and check non-target files that interact with changed code. Research shows 51% of successful
+vulnerability verification requires accessing files outside the immediate diff, and 25% of
+decisive evidence comes from non-local sources.
+
 ### Step 3: Check each vulnerability class
 
 Trace data flow from source (user input) to sink (dangerous operation) through the entire
 call chain, not just the diff.
+
+**For every potential finding, build an evidence chain before reporting it:**
+1. Identify the source (where untrusted data enters)
+2. Trace each step through the call chain (file:line → file:line → file:line)
+3. Identify the sink (where data reaches a dangerous operation)
+4. Check for sanitization/validation at each step
+5. Only report if the chain is complete — a broken chain is not a finding
+
+This trace becomes the "Trace" field in your report. Unsubstantiated findings without a
+traceable path will be dropped during consolidation.
 
 ---
 
@@ -241,8 +260,14 @@ If unsure, report as a finding with a note about the ambiguity.
 
 ### Step 5: Produce the report
 
+State your verdict FIRST, then justify it with findings. This conclusion-first structure
+improves precision and helps the aggregator process your report efficiently.
+
 ```
 ## Security Review
+
+### Verdict
+<PASS | CONCERNS> — <one sentence summary>
 
 ### Attack Surface Summary
 <2-4 sentences: inputs handled, trust boundaries crossed, sensitive operations>
@@ -250,18 +275,21 @@ If unsure, report as a finding with a note about the ambiguity.
 ### Findings
 
 #### [SEVERITY] Finding title
+- **Confidence**: <HIGH | MEDIUM | LOW>
 - **Category**: <from checklist above>
 - **Location**: <file:line_number>
+- **Trace**: <source (file:line) → step (file:line) → ... → sink (file:line)>
 - **Description**: <vulnerability and how it could be exploited>
 - **Attack scenario**: <concrete steps an attacker would take>
 - **Suggested fix**: <specific remediation>
 
 ### Review Coverage
 <vulnerability classes checked and any gaps in context>
-
-### Verdict
-<PASS | CONCERNS>
 ```
+
+**Confidence**: HIGH = you traced the full data flow from source to sink and confirmed no
+sanitization exists. MEDIUM = pattern matches and partial trace, but you could not fully
+verify all paths. LOW = suspicious but the evidence is incomplete or could be intentional.
 
 **Severity**: BLOCKING = exploitable vulnerability leading to data breach, unauthorized
 access, or RCE. SHOULD_FIX = security weakness requiring specific conditions to exploit.

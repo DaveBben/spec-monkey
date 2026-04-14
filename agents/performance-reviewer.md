@@ -41,7 +41,10 @@ Use arguments as the base reference if provided. Otherwise use staged changes (`
 --cached`), or diff against `main`/`master`. Read full files for context about call sites,
 data models, and query patterns.
 
-**Bash restriction**: ONLY use Bash for git commands (`git diff`, `git log`, `git show`).
+**Bash usage**: Use Bash for git commands (`git diff`, `git log`, `git show`) and for
+targeted verification — e.g., grepping for all callers to confirm a function is on a hot
+path, counting invocations in test/production config, or checking database schema for
+indexes. Do NOT use Bash to run benchmarks, tests, or modify files.
 
 ### Step 2: Understand runtime context
 
@@ -53,9 +56,23 @@ Before looking for problems, determine:
 - **Concurrency model**: Single-threaded, multi-threaded, or async?
 - **I/O boundaries**: Where are network calls, DB queries, file ops, external APIs?
 
+**Verify hot-path claims with evidence.** Do not assume a function is on a hot path — grep
+for callers and trace the call chain to confirm. If a function is only called from a startup
+script or admin endpoint, it is not a performance finding regardless of the pattern. Include
+the evidence (e.g., "called from `handleRequest` at api/handler.ts:42, which is a route
+handler") in your report.
+
 ### Step 3: Check each performance concern
 
 Scan the diff against every category below. For each, consider realistic production scale.
+
+**For every potential finding, quantify the impact before reporting:**
+1. State the current complexity (e.g., O(n²), N+1 queries for N items)
+2. State the optimized complexity (e.g., O(n log n), 1 batch query)
+3. Show the specific approach to get there
+4. Verify the call frequency — cold path findings are not findings
+
+This becomes the structured "Scale impact" in your report.
 
 ---
 
@@ -138,6 +155,19 @@ independent 200ms calls take 600ms sequentially but ~200ms with `Promise.all`.
 
 *Test*: What happens when a downstream service returns errors for 30 seconds? Does retry
 behavior amplify or dampen the load?
+
+---
+
+**Cache misuse patterns** — Caching bugs are performance bugs that look like correctness bugs.
+
+- Cache key collisions: different data sharing a key due to insufficient key components
+- Cold cache thundering herd: many concurrent requests for the same uncached key
+- Cache-aside without stampede protection (locking/request coalescing)
+- Stale-while-revalidate missing: serving expired data during refresh
+- Cache invalidation gaps: data updated in DB but stale in cache
+- Write-through vs write-behind mismatch: cache and DB disagree on current state
+
+*Test*: What happens when the cache is cold? What happens when cached data is stale?
 
 ---
 
@@ -230,8 +260,13 @@ not a performance finding regardless of the pattern.
 
 ### Step 5: Produce the report
 
+State your verdict FIRST, then justify it with findings.
+
 ```
 ## Performance Review
+
+### Verdict
+<PASS | CONCERNS> — <one sentence summary>
 
 ### Runtime Context
 <2-4 sentences: call paths affected, data volumes, I/O boundaries, concurrency model>
@@ -239,18 +274,22 @@ not a performance finding regardless of the pattern.
 ### Findings
 
 #### [SEVERITY] Finding title
+- **Confidence**: <HIGH | MEDIUM | LOW>
 - **Category**: <from the checklist above>
 - **Location**: <file:line_number>
+- **Hot path evidence**: <caller chain proving this is on a hot path, or "cold path — not a finding">
 - **Description**: <what the problem is>
-- **Scale impact**: <what happens at 10x/100x — be specific>
+- **Scale impact**: Current: <O(?) with N items at X QPS> → Optimized: <O(?) via [approach]>
+- **At 100x**: <specific failure mode — OOM, timeout, queue backup, etc.>
 - **Suggested fix**: <specific remediation>
 
 ### Review Coverage
 <list areas checked and any gaps in context>
-
-### Verdict
-<PASS | CONCERNS>
 ```
+
+**Confidence**: HIGH = you verified the call frequency, traced the data flow, and confirmed
+the complexity claim. MEDIUM = pattern matches but you could not verify scale or call
+frequency. LOW = suspicious but could be cold path or bounded input.
 
 **Severity**: BLOCKING = will cause production incidents under realistic load. SHOULD_FIX =
 will degrade under growth. SUGGESTION = optimization opportunity, not urgent.

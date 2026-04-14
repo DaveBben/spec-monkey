@@ -3,12 +3,31 @@
 Copy-paste starting point for spec.md. Fill in each section following the guidance in
 `spec-section-guidance.md`. Sections marked (optional) can be omitted if not applicable.
 
+**For multi-domain projects** (2+ subsystems): this root spec stays slim and system-level.
+Domain-specific content (external deps, testing gaps, known issues, tech debt, domain
+boundaries) moves to `{domain-dir}/spec.md`. See `domain-spec-template.md`.
+
+## Contents
+
+- [What This Project Does](#what-this-project-does)
+- [Why This Project Exists](#why-this-project-exists)
+- [Current State](#current-state) — most important
+- [Architecture Overview](#architecture-overview) — includes shared external deps
+- [Testing Strategy](#testing-strategy)
+- [Deployment & Infrastructure](#deployment--infrastructure)
+- [Boundaries & Constraints](#boundaries--constraints)
+- [Ownership](#ownership)
+- [Domain Specs](#domain-specs) — multi-domain only
+- [Known Issues](#known-issues)
+- [Tech Debt](#tech-debt)
+
 ---
 
 ```markdown
 # [Project Name] — Project Spec
 
 **Last updated**: [YYYY-MM-DD]
+**Last verified**: [YYYY-MM-DD]
 **Status**: [Draft | Active | Needs Update] <!-- See spec-section-guidance.md for status definitions -->
 
 > This spec represents current state, not aspirational state. Update it whenever
@@ -39,8 +58,8 @@ it serve and what role does it play?]
 ## Current State
 
 <!-- THIS IS THE MOST IMPORTANT SECTION. Write 2-4 concrete sentences describing what is
-actually implemented and working today. Distinguish what's done from what's stubbed or
-in-progress. No future tense. Update this section after every significant implementation change. -->
+actually implemented and working today. No future tense.
+For multi-domain projects: keep this system-level. Each domain spec has its own Current State. -->
 
 [e.g., "The API accepts invoice submission via POST /invoices and stores them in PostgreSQL.
 Reconciliation runs nightly via a cron job and creates Linear tickets for discrepancies.
@@ -52,7 +71,7 @@ src/integrations/netsuite.ts and currently throws NotImplementedError."]
 ## Architecture Overview
 
 [High-level description of the major components and how they relate. An ASCII diagram is
-fine for complex systems. Reference real source paths rather than describing them inline.]
+fine for complex systems. Focus on inter-domain data flows, not domain internals.]
 
 ```
 [Client] → [API Gateway] → [Service Layer] → [Database]
@@ -64,23 +83,18 @@ fine for complex systems. Reference real source paths rather than describing the
 - [Component and what it does, e.g., "src/api/ — Express routes, one file per resource"]
 - [Component and what it does]
 
-### External Dependencies
+### Shared External Dependencies
 
-[Document every external system this project communicates with. Include failure behavior
-and constraints — this is the highest-signal content for AI coders.]
+[Dependencies used by 2+ domains or the project as a whole. Domain-specific deps
+go in that domain's spec.md instead.]
 
 | Dependency | Normal Behavior | Failure Behavior | Constraints |
 |------------|----------------|------------------|-------------|
-| [e.g., Stripe API] | [sync call on checkout] | [retry 3x with exponential backoff, then queue for manual review] | [timeout: 5s, rate limit: 100/min] |
 | [e.g., PostgreSQL] | [connection pool, max 20] | [circuit breaker trips after 5 failures, returns 503] | [query timeout: 10s] |
 
-**Degraded mode:** [What the system does when a key dependency is unavailable. e.g., "If
-Redis is unavailable, sessions fall back to database-backed sessions. If Stripe is down,
-checkout is disabled but browsing continues."]
+**Degraded mode:** [What the system does when a shared dependency is unavailable.]
 
 ### Architecture Decisions (optional)
-
-[Significant choices and their rationale. Prevents AI from unknowingly reversing deliberate decisions.]
 
 | Decision | Rationale | Date | Alternatives Considered |
 |----------|-----------|------|------------------------|
@@ -90,19 +104,17 @@ checkout is disabled but browsing continues."]
 
 ## Testing Strategy
 
+[Project-wide testing infrastructure only. Domain-specific coverage gaps and
+conventions go in domain specs.]
+
 **Framework:** [name and version]
 **Location:** [where test files live relative to source]
 **Naming:** [convention, e.g., "*.test.ts co-located with source files"]
 
 **Test types:**
-- **Unit tests**: [what they cover, how to run them]
-- **Integration tests**: [what they cover, how to run them, any setup needed]
-- **E2E tests** (optional): [framework, how to run, any environment requirements]
-
-**Coverage target:** [if any]
-
-**What's well-covered:** [areas with strong test coverage]
-**What's missing or thin:** [areas with little or no coverage — be honest]
+- **Unit tests**: [how to run them]
+- **Integration tests**: [how to run them, any setup needed]
+- **E2E tests** (optional): [framework, how to run]
 
 **Testing conventions:**
 - [e.g., "Use real database for integration tests, not mocks"]
@@ -130,8 +142,7 @@ S3 for file storage, CloudFront CDN"]
 
 ## Boundaries & Constraints
 
-[The three-tier boundary system. This is critical — it prevents the AI from making
-dangerous or disruptive changes.]
+[Project-wide boundaries only. Domain-specific boundaries go in domain specs.]
 
 ### Always Do
 - [e.g., "Run tests before committing"]
@@ -139,46 +150,54 @@ dangerous or disruptive changes.]
 
 ### Ask First
 - [e.g., "Before changing database schema or migrations"]
-- [e.g., "Before adding new dependencies"]
 - [e.g., "Before modifying CI/CD configuration"]
 
 ### Never Do
 - [e.g., "Never commit .env files or secrets"]
 - [e.g., "Never modify files in vendor/ or generated/"]
-- [e.g., "Never delete migration files"]
 
 ---
 
 ## Ownership
 
-[Who owns this repo and who to contact when something breaks.]
-
 - **Team/Owner**: [team name or individual]
 - **Contact**: [Slack channel, email, or on-call rotation]
-- [e.g., "For production incidents, page the platform team via PagerDuty"]
+
+---
+
+## Domain Specs
+
+[For multi-domain projects only. Remove this section for single-domain projects.]
+
+| Domain | Path | Owns |
+|--------|------|------|
+| [e.g., Billing] | `src/billing/spec.md` | [e.g., "payment intents, refunds, Stripe integration"] |
+| [e.g., Auth] | `src/auth/spec.md` | [e.g., "authentication, sessions, JWT handling"] |
+
+Each domain spec contains: domain-specific current state, conventions,
+interface contracts, external deps, testing gaps, boundaries, known issues,
+and gotchas. Loaded via `.claude/rules/` when working in that directory.
 
 ---
 
 ## Known Issues
 
-[Things that are currently broken or degraded in this repo. Each entry: what is broken,
-severity, and any known workaround. Write "None known." if the repo is clean.]
+[Cross-cutting issues only. Domain-specific issues go in domain specs.
+Write "None known." if clean.]
 
 - **[Issue]**: [description, severity, workaround if any]
-- [e.g., "Stripe webhook handler throws 500 on malformed payloads — no validation before
-  JSON.parse(). Severity: medium (only affects malformed webhooks). Workaround: use Stripe
-  CLI's test payloads only. Tracked in issue #42."]
 
 ---
 
 ## Tech Debt
 
-[Deferred improvements that would raise codebase quality but haven't been prioritized.
-Each entry: what it is and why it was deferred.]
+[Cross-cutting tech debt only. Domain-specific debt goes in domain specs.]
 
-- [e.g., "Auth token refresh is implemented inline in every route handler instead of
-  middleware — deferred because there are only 3 routes today. Will need extraction
-  when the admin API is added. ~2 days effort."]
 - [e.g., "No database connection pooling — using a single connection. Acceptable at current
   load (<100 req/min) but will need addressing before scaling. Ticket: #87."]
 ```
+
+> **Target: 60-100 lines for multi-domain projects.** The root spec is a navigation
+> layer, not a knowledge dump. Domain-specific content lives in domain specs.
+> For single-domain projects, include all content in the root spec (no domain
+> specs needed) — target 100-200 lines.

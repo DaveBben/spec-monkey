@@ -11,11 +11,6 @@ Last updated: 2026-04-12
 - [Section Rules](#section-rules) — Required sections, ordering, and what makes each good
 - [Anti-Patterns](#anti-patterns) — Known failure patterns to catch
 
-### Supporting Files
-
-- [spec-template.md](spec-template.md) — Copy-paste starting point for spec.md
-- [spec-section-guidance.md](spec-section-guidance.md) — Why each section exists, with bad/good examples
-
 ---
 
 ## Why Project Specs Matter
@@ -58,20 +53,49 @@ questions. If it doesn't, it belongs in CLAUDE.md, in a change plan, or nowhere.
 
 ## Section Rules
 
-### Mandatory Sections (in order)
+### Root Spec — Mandatory Sections (in order)
+
+For multi-domain projects, the root spec is a **system-level navigation
+layer** (target 60-100 lines). Domain-specific content moves to domain
+specs. For single-domain projects, include everything in root (100-200 lines).
+
+| # | Section | Key Rule | Multi-domain note |
+|---|---------|----------|-------------------|
+| 1 | What This Project Does | 2-4 sentences, product/purpose not technology | Always root |
+| 2 | Why This Project Exists | Problem being solved; role in larger system | Always root |
+| 3 | **Current State** | **Most important.** What IS implemented now. No future tense. | Root = system summary; domains = domain detail |
+| 4 | Architecture Overview | System diagram + inter-domain flows + shared deps + optional decisions | Root = system structure; domain internals go in domain specs |
+| 5 | Testing Strategy | Framework, location, how to run, conventions | Root = infrastructure + commands; domains own coverage gaps |
+| 6 | Deployment & Infrastructure | CI/CD pipeline, environments, hosting | Always root (unless domains deploy independently) |
+| 7 | Boundaries & Constraints | Three-tier: Always Do / Ask First / Never Do | Root = project-wide rules; domains own domain-specific rules |
+| 8 | Ownership | Team or owner name, contact method | Root = project owner; domains can override |
+| 9 | Domain Specs | Pointer table: domain name, path, one-line description | Multi-domain only |
+| 10 | Known Issues | Cross-cutting issues only | Domain-specific issues go in domain specs |
+| 11 | Tech Debt | Cross-cutting debt only | Domain-specific debt goes in domain specs |
+
+### Domain Spec — Sections (for `{domain-dir}/spec.md`)
+
+Domain specs are created for projects with 2+ distinct subsystems. They
+are loaded via `.claude/rules/` when the agent works in that directory.
+Omit sections with no meaningful content — empty sections are worse than
+missing ones.
 
 | # | Section | Key Rule |
 |---|---------|----------|
-| 1 | What This Project Does | 2-4 sentences, product/purpose not technology |
-| 2 | Why This Project Exists | Problem being solved; role in larger system if applicable |
-| 3 | **Current State** | **Most important.** 2-4 concrete sentences about what IS implemented now. No future tense. Update after every significant change. |
-| 4 | Architecture Overview | Key components + External Dependencies table (failure behavior + constraints) + optional Architecture Decisions table |
-| 5 | Testing Strategy | Framework, location, how to run, what's well-covered AND what's missing |
-| 6 | Deployment & Infrastructure | CI/CD pipeline, environments, hosting, deploy trigger |
-| 7 | Boundaries & Constraints | Three-tier: Always Do / Ask First / Never Do |
-| 8 | Ownership | Team or owner name, contact method |
-| 9 | Known Issues | Currently broken things with severity and workaround. "None known." if clean. |
-| 10 | Tech Debt | Deferred improvements with reason for deferral |
+| 1 | What This Domain Owns | What it owns AND does NOT own — boundaries are the point |
+| 2 | Current State | Present tense, what's implemented in this domain now |
+| 3 | Domain Conventions | Only conventions that differ from or extend the root |
+| 4 | Interface Contracts | Internal (consumed/exposed) + domain-specific external deps |
+| 5 | Testing | Coverage gaps and domain-specific test conventions (not framework/commands) |
+| 6 | Domain Boundaries | Domain-specific Always/Ask First/Never rules |
+| 7 | Known Issues | Broken things in this domain. "None known." if clean |
+| 8 | Gotchas | Domain-specific traps — highest-value content |
+
+**Hard cap: 100 lines per domain spec.** Longer means content belongs
+in the root spec or the domain needs further splitting.
+
+**No duplication with root spec.** If it applies project-wide, it stays
+at root. If it's domain-specific, it goes in the domain spec — not both.
 
 ### Optional Subsections (within Architecture Overview)
 
@@ -118,3 +142,11 @@ While drafting or reviewing, verify the spec does NOT contain:
 - **Code style rules enforced by a linter.** Never send an LLM to do a linter's job.
 - **Standard language conventions.** "Use const instead of let" is TypeScript default
   knowledge — the AI already knows this.
+- **Domain spec that duplicates the root.** If a domain spec restates project-wide
+  boundaries, deployment info, or testing strategy, move that content to root and
+  delete it from the domain spec. Duplication means two places to go stale.
+- **Domain spec over 100 lines.** The domain is too broad or contains content that
+  belongs at the root level. Split the domain or move shared content up.
+- **Domain spec without interface contracts.** The primary value of a domain spec
+  is documenting how this subsystem communicates with others. A domain spec that
+  only lists conventions without interfaces is missing its highest-value content.

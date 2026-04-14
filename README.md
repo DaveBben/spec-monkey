@@ -39,6 +39,12 @@ Is it a bug?
 Is it a new feature or capability?
   └── Yes → /cks:feature → then /cks:execute
 
+Don't know where the change lives or what it touches?
+  └── Yes → /cks:explore (understand the codebase first, then decide)
+
+Want a second set of eyes on what you're writing?
+  └── Yes → /cks:check (flags bugs, missing pieces, better approaches — never writes code)
+
 Want to understand what was just built?
   └── Yes → /cks:retro (after /cks:execute completes)
 ```
@@ -60,9 +66,11 @@ Not every change needs the full pipeline. Pick the depth that matches your situa
 | Skill | What it does | Artifacts produced |
 |---|---|---|
 | `/cks:onboard` | Sets up context for a new or existing codebase | `CLAUDE.md`, `spec.md` |
+| `/cks:explore` | Guided investigation for changes you don't understand yet — AI traces impact, you think first | Dialogue (no artifacts) |
 | `/cks:feature` | Investigates scope, produces a plan and TDD task files | `.claude/features/{slug}/plan.md`, `.claude/features/{slug}/tasks/task_N.md`, `.claude/features/{slug}/human_plan.md` |
 | `/cks:bug` | Captures symptom, root cause, and fix tasks | `.claude/bugs/{slug}/plan.md`, `.claude/bugs/{slug}/tasks/task_N.md`, `.claude/bugs/{slug}/human_plan.md` |
-| `/cks:execute` | Implements tasks: TDD cycle + two-tier review + PR | Branch, commits, PR |
+| `/cks:execute` | Implements tasks: single-agent implementation + two-tier review + PR | Branch, commits, PR |
+| `/cks:check` | Check my work — flags bugs, missing pieces, contract risks, better approaches with explanations | Dialogue (no artifacts) |
 | `/cks:retro` | Post-execution comprehension walkthrough — understand what was built | Dialogue (no artifacts) |
 | `/cks:light-review` | Single-agent code review across all dimensions | Review report |
 | `/cks:deep-review` | Four-agent parallel review (security, reliability, maintainability, performance) | Consolidated review report |
@@ -80,6 +88,20 @@ Run this first on any codebase — new or existing. The skill reads the reposito
 
 Once onboarded, `/cks:feature` and `/cks:bug` plans have rich context to work from, reducing the questions they need to ask.
 
+### `/cks:explore`
+
+Guided codebase investigation for changes you want to make but don't yet understand. AI traces the full impact surface and surfaces edge cases — but asks you to think and predict before revealing what it found. The gap between your prediction and reality is where understanding gets built.
+
+Use this when:
+- You don't know where a piece of functionality lives
+- You want to understand what a change touches before committing to a plan
+- You're new to the codebase or the domain
+- You want to learn, not just ship
+
+Works in five phases: establish prior knowledge → silent AI investigation → human directs and predicts → graduated reveal by category → comprehension check and evaluation. Produces no artifacts — it's a dialogue that builds your mental model.
+
+After exploring, you can plan it yourself, feed into `/cks:feature`, or dig deeper.
+
 ### `/cks:feature`
 
 Investigative conversation that clarifies scope, constraints, and acceptance criteria. The skill reads any existing `CLAUDE.md` and `spec.md` for context, explores the codebase, then produces:
@@ -87,8 +109,6 @@ Investigative conversation that clarifies scope, constraints, and acceptance cri
 - **`plan.md`** — what is being built, why, constraints, and scope boundaries
 - **`task_N.md` files** — one per task, each with: relevant files (strict boundary for the executor), acceptance criteria (GIVEN/WHEN/THEN), verification description, and explicit anti-scope (Do NOT list)
 - **`human_plan.md`** — concise synthesis of all artifacts for developers who want to implement the feature themselves rather than using `/cks:execute`
-
-A `devils-advocate` agent challenges the plan before it is finalized.
 
 Multi-repo: when a feature spans multiple repositories, `/cks:feature` records all repository paths and tags each task with its target repository. Works best with monorepos or co-located repos. For separate repos, contract stubs decouple execution — see `/cks:execute` docs.
 
@@ -107,12 +127,20 @@ Execute with `/cks:execute`.
 Takes a feature or bug plan directory and processes all tasks:
 
 1. Create branch (`feature/{slug}` or `bugfix/{slug}`)
-2. For each task: 3-agent TDD cycle (`tdd-test-writer` → `tdd-code-implementor` → `tdd-code-refactor`)
+2. For each task: single `code-implementor` agent reads task, implements, verifies
 3. `/cks:light-review` after each task — fast review, findings fixed before moving on
 4. `/cks:deep-review` after all tasks — thorough cross-cutting review, findings fixed
 5. Push branch + create PR using `gh`
 
 Multi-repo: tasks are tagged with their target repository. Each repo is processed sequentially with contract stubs to decouple cross-repo dependencies.
+
+### `/cks:check`
+
+Check my work. Point it at the files you're working on and it reads them, traces downstream impact, and reports what matters: bugs, missing pieces, contract risks, and better approaches — always with an explanation of *why* something matters, not just what's wrong.
+
+Never writes code for you. If something needs fixing, it tells you what and why, then you write the fix. Think of it as a tutor looking over your shoulder, not a linter.
+
+Use anytime — no session setup, no ceremony. Just say `/cks:check` and point it at your work.
 
 ### `/cks:retro`
 
@@ -148,12 +176,9 @@ Results are consolidated into a single report. Used automatically by `/cks:execu
 
 | Agent | Role | Used by |
 |---|---|---|
-| `devils-advocate` | Challenges feature plan scope, criteria, and assumptions | `/cks:feature` |
 | `plan-verifier` | Fact-checks plan.md references against the codebase | `/cks:feature` |
 | `human-plan-synthesizer` | Synthesizes artifacts into a human-readable implementation guide | `/cks:feature`, `/cks:bug` |
-| `tdd-test-writer` | RED phase — writes failing tests from acceptance criteria | `/cks:execute` |
-| `tdd-code-implementor` | GREEN phase — minimum code to make tests pass | `/cks:execute` |
-| `tdd-code-refactor` | REFACTOR phase — improves code while keeping tests green | `/cks:execute` |
+| `code-implementor` | Reads task, implements code, verifies against acceptance criteria | `/cks:execute` |
 | `generic-code-reviewer` | All-dimensions fast review | `/cks:light-review` |
 | `security-reviewer` | Injection, access control, data exposure | `/cks:deep-review` |
 | `reliability-reviewer` | Correctness, race conditions, resource lifecycle | `/cks:deep-review` |
@@ -207,6 +232,10 @@ cks/
         templates.md
     execute/
       SKILL.md
+    explore/
+      SKILL.md
+    check/
+      SKILL.md
     retro/
       SKILL.md
     light-review/
@@ -222,12 +251,9 @@ cks/
         spec-template.md
         spec-section-guidance.md
   agents/
-    devils-advocate.md
     plan-verifier.md
     human-plan-synthesizer.md
-    tdd-test-writer.md
-    tdd-code-implementor.md
-    tdd-code-refactor.md
+    code-implementor.md
     generic-code-reviewer.md
     security-reviewer.md
     reliability-reviewer.md
@@ -245,16 +271,12 @@ cks/
 
 **Artifacts are explicit contracts.** Every skill specifies what it produces and why. `/cks:execute` knows exactly what to consume.
 
-**TDD by default.** RED (failing test) then GREEN (implement) then REFACTOR. Tests and implementation live in the same task.
-
-**Context isolation between TDD phases — best-effort, not enforced.** The test-writer agent receives `testContext` (interfaces, types, contracts) but not `implementationContext` (implementation details). This is enforced by prompt instructions and by splitting context into separate fields in the task JSON. However, the test-writer agent has Read/Glob/Grep tools and *could* read implementation files or plan.md if it chose to — there is no filesystem-level enforcement available in the current agent framework. The isolation is designed to remove the *incentive* for the test-writer to look at implementation details, not to make it *impossible*. In practice this produces meaningfully better tests than a single-agent approach, but it is not a guarantee.
-
 **Two-tier review.** `/cks:light-review` after each task (fast, focused). `/cks:deep-review` after all tasks per repo (thorough, cross-cutting). Both are automatic during `/cks:execute`.
 
 **One branch, one PR per repo.** All tasks for a repo commit to a single branch. Deep review covers the full change set.
 
 **Multi-repo support.** `/cks:execute` groups tasks by repository. Cross-repo dependencies use contract stubs for decoupled execution. Works best with monorepos or co-located repos.
 
-**Bugs use the same execution path.** `/cks:bug` creates the plan. `/cks:execute` implements it. Identical TDD cycle, identical review gates.
+**Bugs use the same execution path.** `/cks:bug` creates the plan. `/cks:execute` implements it. Same review gates.
 
 **Skip the skills when you don't need them.** One- or two-line changes do not need a plan file. Use vanilla Claude Code with plan mode.

@@ -204,15 +204,8 @@ The user runs `/execute .claude/features/add-user-avatar/`.
 
 ### Task Execution (Task 1 of 5)
 
-**RED**: tdd-test-writer reads task_0.json, writes a test that asserts the
-`avatar_url` column exists on the users table. Test fails (column doesn't
-exist yet). Status: RED confirmed.
-
-**GREEN**: tdd-code-implementor reads the failing test, adds the column to
-the schema, runs `drizzle:generate`. Test passes. Status: GREEN confirmed.
-
-**REFACTOR**: tdd-code-refactor evaluates — no refactoring needed for a
-schema change. Status: skipped.
+**Implement**: code-implementor reads task_0.json, adds the `avatar_url`
+column to the schema, runs `drizzle:generate`, and verifies tests pass.
 
 **Commit**: `"Task 0: Add avatar column to users table"`
 

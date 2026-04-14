@@ -1,11 +1,13 @@
 ---
 name: onboard
 description: >
-  Use when onboarding a new or existing repository. Creates both CLAUDE.md (quick-reference
-  context for Claude) and spec.md (living project specification). Do NOT use for reviewing
-  existing files without changes, or for creating .claude/rules/ files.
+  Use when onboarding a new or existing repository. Creates CLAUDE.md (quick-reference
+  context), spec.md (living project specification), and .claude/rules/ files (spec
+  maintenance and domain-scoped context loading). For multi-domain projects, also creates
+  domain-scoped spec.md files. Do NOT use for reviewing existing files without changes.
 disable-model-invocation: true
 argument-hint: "[output-path]"
+model: opus
 effort: high
 ---
 
@@ -57,6 +59,18 @@ delays the user.
 - External dependencies and their integration points
 - **Implemented vs. aspirational** — look for `TODO`, `FIXME`, `NotImplementedError`, stub files, placeholder comments
 - For pipelines or multi-stage systems: trace data flows between stages, document handoff contracts
+
+**Identify domains:**
+- From the top-level directory structure, identify **distinct subsystems or
+  deployment units** — areas with their own conventions, dependencies, or
+  interfaces. Examples: `backend/`, `frontend/`, `workers/`, `infra/`,
+  or `src/auth/`, `src/billing/` in a monolith.
+- A simple app may have 0-1 domains (just the root spec.md is sufficient).
+  A multi-service system may have 2-5. Record each with its root directory
+  and a one-line description.
+- Let the user confirm, add, or remove domains before proceeding. They may
+  identify domains the directory structure doesn't make obvious (e.g., a
+  shared library that serves as an internal API boundary).
 
 **Gather for both:**
 - Existing files: `CLAUDE.md`, `.claude/CLAUDE.md`, `.claude/rules/`, `spec.md`, `SPEC.md`, `docs/architecture.md`, `README.md`, `CONTRIBUTING.md`
@@ -133,6 +147,15 @@ Use [references/spec-template.md](references/spec-template.md) for the section s
 it anchors every other section and is the most important thing the spec communicates. It
 must describe only what is actually implemented and working today. No future tense.
 
+**If Phase 1 identified 2+ domains:** Write a slim, system-level root spec (target
+60-100 lines). Domain-specific content (external deps, testing gaps, known issues,
+tech debt, domain boundaries) goes in domain specs created in Phase 8. Don't put
+domain-specific content in the root — it will be loaded unnecessarily when the agent
+works in an unrelated domain.
+
+**If single-domain project:** Include everything in the root spec (target 100-200 lines).
+Skip Phase 8.
+
 Do not include tech stack, directory structure, or dev commands — those belong in CLAUDE.md.
 
 ### Phase 5: Self-Review
@@ -143,15 +166,22 @@ from [references/spec-standards.md](references/spec-standards.md):
 **Required sections present:**
 - [ ] Current State (most critical — must describe what is implemented today)
 - [ ] Architecture Overview
-- [ ] External Dependencies
-- [ ] Testing Strategy
-- [ ] Boundaries & Constraints
+- [ ] External Dependencies (shared only, if multi-domain)
+- [ ] Testing Strategy (infrastructure only, if multi-domain)
+- [ ] Boundaries & Constraints (project-wide only, if multi-domain)
+- [ ] Domain Specs pointer table (if multi-domain)
 
 **Content quality:**
 - [ ] Current State uses past/present tense only — no "will", "planned", "upcoming"
 - [ ] No tech stack, directory structure, or dev commands (those belong in CLAUDE.md)
 - [ ] No content that restates what the code already shows
 - [ ] External dependency failure behaviors are documented, not just their names
+
+**Split check (multi-domain only):**
+- [ ] No domain-specific external deps in root (they go in domain specs)
+- [ ] No domain-specific known issues or tech debt in root
+- [ ] No domain-specific boundaries in root
+- [ ] Root spec under 100 lines
 
 **Anti-patterns to remove:**
 - [ ] Future roadmap items or planned features
@@ -185,25 +215,80 @@ Iterate until the user approves.
 3. Verify the CLAUDE.md Pointers to Deeper Docs section includes the spec.md pointer
 4. Tell the user which sections have placeholders they should fill in
 
-### Phase 8: Domain-Scoped Context (large projects only)
+### Phase 8: Domain-Scoped Specs
 
-If the project has **5 or more distinct subsystem directories** (e.g., `src/auth/`,
-`src/billing/`, `src/api/`, `src/workers/`, `src/notifications/`), suggest
-creating subdirectory CLAUDE.md files:
+If Phase 1 identified **2 or more domains**, create a domain spec for each.
 
-> "This project has {N} distinct subsystems. A single root CLAUDE.md will
-> grow past the 200-line cap as conventions accumulate. Consider adding
-> scoped context files for the largest subsystems:
->
-> - `src/auth/CLAUDE.md` — auth-specific conventions, session handling quirks
-> - `src/billing/CLAUDE.md` — billing domain rules, Stripe integration patterns
->
-> These load automatically when Claude reads files in those directories.
-> Each should contain only conventions specific to that subsystem — shared
-> rules stay in the root CLAUDE.md."
+#### Step 1: Draft Domain Specs
 
-Only suggest this for subsystems that surfaced domain-specific conventions
-during discovery. Do not create empty subdirectory files.
+For each domain, write `{domain-dir}/spec.md` using the
+[domain-spec-template.md](references/domain-spec-template.md). Each domain
+spec is **under 100 lines** and contains:
+
+- What this domain owns and does NOT own
+- Current state of this domain specifically
+- Domain-specific conventions
+- Interface contracts (internal + exposed + domain-specific external deps)
+- Testing — coverage gaps and domain-specific test conventions
+- Domain boundaries — domain-specific Always/Ask First/Never rules
+- Known issues in this domain
+- Gotchas and anti-patterns
+
+Content that was gathered during Phase 1 discovery but excluded from the
+root spec (domain-specific deps, testing gaps, known issues, tech debt,
+domain boundaries) goes here. This is the primary home for that content
+— don't leave it orphaned.
+
+**Do not duplicate the root spec.md.** Shared conventions, project-wide
+boundaries, and deployment info stay at root. Omit empty sections rather
+than including placeholders.
+
+These are **drafts** — present them to the user for review just like the
+root spec.md. LLM-generated context files that aren't human-reviewed
+reduce resolution rates (ETH Zurich, 2602.11988).
+
+#### Step 2: Create Loading Rules
+
+For each domain spec, create a path-scoped rule in `.claude/rules/`
+that loads the spec when Claude works in that directory. Rules use
+YAML frontmatter with a `paths` field for scoping:
+
+```markdown
+# .claude/rules/{domain-name}-context.md
+---
+paths:
+  - "{domain-dir}/**/*"
+---
+
+Read {domain-dir}/spec.md for domain-specific conventions, interface
+contracts, and boundaries before making changes in this area.
+```
+
+#### Step 2b: Verify Rules Load
+
+After creating rule files, verify each one by checking that the glob
+pattern matches actual files in the domain directory:
+
+```
+ls {domain-dir}/**/* | head -3
+```
+
+If the glob returns no files, the pattern is wrong and the rule will
+never trigger. Fix the pattern before proceeding. Common mistakes:
+missing `**` for recursive matching, wrong directory prefix.
+
+#### Step 3: Update Root Pointers
+
+Add a `## Domain Specs` section to the root spec.md listing each
+domain spec with its path and one-line description. Add a pointer in
+CLAUDE.md's "Pointers to Deeper Docs" section.
+
+#### When NOT to Create Domain Specs
+
+- Project has only 1 domain or is a simple app — root spec.md is sufficient
+- A subsystem has no domain-specific conventions — don't create an empty spec
+- The domain's conventions are already in the root spec — move them to the
+  domain spec instead of duplicating
 
 ---
 
@@ -221,59 +306,35 @@ during discovery. Do not create empty subdirectory files.
 
 ---
 
-## Living Document Maintenance
+## Spec Maintenance Rule
 
-Both documents should be kept current as the project evolves.
+After writing all files, create `.claude/rules/spec-maintenance.md`
+(no `paths` frontmatter — this loads unconditionally every session):
 
-**spec.md** should be updated whenever:
-- A feature ships or is removed
-- The architecture changes significantly
-- A new external dependency is added or removed
-- The deployment infrastructure changes
-- A known issue is resolved or a new one is discovered
-- Ownership changes
+```markdown
+# .claude/rules/spec-maintenance.md
 
-**The Current State section is the most time-sensitive.** After any significant implementation
-session, read it and correct anything that no longer matches the code.
+After completing a feature implementation that changes the project's
+capabilities, check spec.md and update the Current State section if
+it no longer matches reality. If the changes are within a directory
+that has its own domain spec.md, update that domain spec's Current
+State and interface contracts too. Update the Last verified date on
+any spec you review.
+```
 
-**CLAUDE.md** should be updated whenever:
-- Tooling changes (new package manager, different test runner, etc.)
-- Directory structure changes significantly
-- New critical constraints are discovered
+Also add to CLAUDE.md's Critical Constraints section:
 
-### Drift Detection
+```
+- After significant implementation changes, update spec.md Current State
+  (and domain spec.md if the change is domain-scoped). Stale specs are
+  worse than no specs.
+```
 
-After writing both files, suggest a lightweight drift detection approach:
+Then suggest drift detection to the user:
 
-> "To catch spec drift, consider adding a CI step or post-merge hook that
-> checks whether files touched in a PR overlap with architecture sections
-> in spec.md. For example, a simple script that greps changed file paths
-> against the Files Affected patterns in spec.md and adds a PR comment:
-> 'This PR touches areas documented in spec.md — please verify the docs
-> are still accurate.'
->
-> `/cks:execute` also checks spec.md freshness during pre-flight and will
-> remind you if it hasn't been updated recently."
-
-This is a suggestion, not an automated installation — the user decides
-whether to implement it.
-
-### Automatic Spec Updates via Claude Code Rules
-
-After writing both files, also suggest adding a rule file:
-
-> "To keep spec.md current automatically, you can add a Claude Code rule
-> at `.claude/rules/spec-update.md` with:
->
-> ```
-> After completing a feature implementation that changes the project's
-> capabilities, check spec.md and update the Current State section if
-> it no longer matches reality.
-> ```
->
-> This activates in every Claude session (not just /cks:execute), catching
-> drift from manual changes too. `/cks:execute` also updates spec.md
-> automatically after completing all tasks."
+> "To catch spec drift in CI, consider a post-merge hook that checks
+> whether files touched in a PR overlap with paths documented in spec.md
+> and flags them for review."
 
 ---
 

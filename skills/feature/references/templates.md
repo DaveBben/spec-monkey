@@ -157,6 +157,7 @@ reference implementation alongside proposed change.]
   "files": ["src/path/to/file.ts"],
   "symbol": "functionName()",
   "reference": "src/existing/pattern.ts:42",
+  "dependencyChain": ["src/routes/index.ts", "src/controllers/feature.ts", "src/services/feature.ts"],
   "blockedBy": ["task_0"],
   "atRiskTests": [
     {"path": "tests/existing.test.ts", "symbol": "describe('existing')", "reason": "[why this test could regress]"}
@@ -175,6 +176,7 @@ reference implementation alongside proposed change.]
   ],
   "environmentCheck": "",
   "verificationCommand": "[single runnable command]",
+  "regressionCheck": "[command to run atRiskTests — empty only if atRiskTests is empty]",
   "scopeBoundaries": "[what this task owns] / [what others own]",
   "doNot": ["[explicit anti-scope]"],
   "doneWhen": "[mechanically-verifiable condition]",
@@ -189,6 +191,9 @@ Notes:
 - **atRiskTests**: Existing tests that could regress from this change. Traced
   from dependents of modified files. Empty array only if no existing tests
   touch the affected code.
+- **dependencyChain**: Ordered import path from entry point to target symbol
+  (3-5 entries). Prevents cross-file NameError failures by giving the agent
+  the full import chain it must maintain.
 - **blockedBy**: Set when this task consumes a type, interface, or migration
   created by an earlier task.
 - **testContext**: max 3 entries — interfaces, types, and contracts only

@@ -60,30 +60,45 @@ vs internal, integration expectations, quality bar.
 
 ### Step 3 — Codebase Exploration
 
-Read CLAUDE.md and any architecture/spec docs if they exist. Summarize
-only the parts relevant to this feature — do not dump full contents into
-the plan.
+Read CLAUDE.md and the root spec.md if they exist. If the feature
+touches files in a directory that has its own `spec.md` (domain spec),
+read that too — it contains interface contracts and domain-specific
+conventions that the root spec doesn't cover. Summarize only the parts
+relevant to this feature — do not dump full contents into the plan.
 
 From the user's scope answers, generate **5 exploration questions** that
-trace the downstream ripple of the change. Launch Explore agents with
-these questions. Each answer MUST include `file:line` evidence or an
-explicit "not applicable" with justification. Instruct agents to **stop
-searching once they have `file:line` evidence** for a question — do not
-continue looking for additional supporting evidence.
-
-Also answer three mandatory questions:
+trace the downstream ripple of the change. Fold these three mandatory
+questions into the 5 (not in addition to):
 1. Where does this belong? (specific modules, directories, files)
 2. Does something similar exist to extend rather than duplicate?
 3. Have we solved a related problem whose pattern applies?
 
-If any exploration question lacks a `file:line` answer, launch a
-follow-up agent for that specific question before proceeding.
+Launch **max 3 parallel Explore agents** — group related questions per
+agent. Instruct each agent to:
+- **Stop searching** once it has `file:line` evidence for a question
+- Return answers in this format only:
+  ```
+  Q: [question]
+  A: file:line — [1-3 line code snippet]
+  Relevance: [one sentence]
+  ```
+- Cap return to **~200 tokens per question**. No exploration logs.
+
+If any question lacks a `file:line` answer, launch **one** follow-up
+agent for the unanswered questions before proceeding.
 
 ### Step 3b — Identify At-Risk Tests
 
 For every file being modified, trace its test dependents: which existing
 tests import, mock, or exercise this code? Record as `atRiskTests` per
 task — the single highest-leverage context for preventing regressions.
+
+### Step 3c — Persist Evidence
+
+Write `.claude/features/{slug}/evidence.md` — a structured record of
+every exploration finding. For each finding: the question, `file:line`,
+the actual code snippet (not a reference), and one-sentence relevance.
+This file survives context compression and is re-read at Phase 3.
 
 ### Step 4 — Write plan.md
 
@@ -138,6 +153,12 @@ On "approve": set Status to Approved, proceed to Phase 3.
 
 ## Phase 3: Task Breakdown
 
+### Re-anchor
+
+Before decomposing, re-read from `plan.md`: Scope (In/Out),
+Constraints, "What NOT to Do", and `evidence.md`. These degrade in
+attention over long conversations. Do not proceed without re-reading.
+
 ### Task Granularity
 
 - **Single concern** — 1-3 files (hard max 4). Route + controller + types
@@ -163,12 +184,19 @@ Each task MUST contain:
 - **atRiskTests** — existing test files/functions that could regress
   from this change (from Step 3b). Empty only if no existing tests
   touch the affected code.
+- **dependencyChain** — ordered import path from entry point to the
+  target symbol (3-5 entries, e.g. `router → controller → service`).
+  Prevents NameError-class failures from missing cross-file references.
 - **blockedBy** — task IDs that must complete first. Set this when a
   task creates a type, interface, or migration that later tasks consume.
 - **doNot** — at least one explicit boundary
 - **acceptanceCriteria** — GIVEN/WHEN/THEN format
 - **verificationCommand** — single runnable command
-- **doneWhen** — mechanically verifiable condition
+- **regressionCheck** — command to run `atRiskTests` (e.g.
+  `pytest tests/test_auth.py tests/test_session.py`). Empty only when
+  `atRiskTests` is empty.
+- **doneWhen** — mechanically verifiable condition. MUST include
+  "and regressionCheck passes" when `atRiskTests` is non-empty.
 
 Context constraints (more context degrades execution):
 - **testContext**: max 3 entries. Interfaces and types only.
@@ -191,6 +219,7 @@ preference, MAY = full discretion.
    - `intent` is non-empty and explains *why*, not *what*
    - No path appears in both `testContext` and `implementationContext`
    - `verificationCommand` contains a recognizable test runner command
+   - `regressionCheck` is non-empty when `atRiskTests` is non-empty
 4. Present tasks to the user:
    > "Task breakdown complete — {N} tasks. Review or run
    > `/cks:execute .claude/features/{slug}`"

@@ -18,7 +18,6 @@ After all tasks: full tests → deep-review → finalize.
 
 ### Supporting Files
 
-- [Agent Prompt](references/agent-prompt.md) — Implementation agent dispatch prompt
 - [PR Templates](references/pr-templates.md) — Feature and bugfix PR body templates
 - [Resumption](references/resumption.md) — Checkpoint format and session resumption
 - [Error Handling](references/error-handling.md) — Plan deviation responses
@@ -82,10 +81,39 @@ Run full test suite. Record passing count and known failures. During
 execution, the agent only needs to ensure: new tests pass + baseline
 tests still pass + known failures are ignored.
 
+### Spec Freshness Check
+
+If the project has a root `spec.md`, check its `Last verified` date.
+If older than 30 days: warn the user that the spec may be stale and
+recommend running `/cks:onboard` to refresh before executing.
+
+If any task touches files in a directory with its own domain `spec.md`,
+check that domain spec's `Last verified` date too. Stale domain specs
+are a silent failure mode — agents trust them absolutely.
+
+Do not block execution on stale specs — warn and continue.
+
 ### Gate Check
 
 - `plan.json` status is `Approved`
 - Read `constraints` and `criticalReminders` — passed to every agent
+
+---
+
+## Fast Path (Small Plans)
+
+If the plan has **≤3 tasks** and total estimated size is **under 200
+lines**, skip task-by-task execution:
+
+1. Dispatch a single implementation agent with the full plan context
+   (all task JSONs, plan constraints, all atRiskTests merged)
+2. If agent returns DONE and all regressionChecks pass: commit as a
+   single commit, run light-review, proceed to Post-Implementation
+3. If agent STOPs or exceeds 200 lines: fall back to standard
+   task-by-task execution below
+
+This avoids the per-task overhead (dispatch, commit, review, status
+update) when the total work fits comfortably in a single agent context.
 
 ---
 
@@ -98,6 +126,19 @@ Create TodoWrite entries for all tasks for user visibility.
 If `totalSlices > 1`: process sequentially. Each slice = branch →
 tasks → post-implementation → finalize. Slice 1 branches from main;
 subsequent slices branch from previous (stacked PRs).
+
+### Complexity Tier
+
+Before dispatching each task, classify it:
+
+| Tier | Criteria | Agent Config |
+|------|----------|-------------|
+| **Simple** | 1 file, clear reference, no interface changes | maxTurns: 20, model: haiku |
+| **Standard** | 2-3 files, or 1 file with interface changes | maxTurns: 50, model: sonnet (default) |
+| **Complex** | 4 files, or touches shared interfaces/types | maxTurns: 75, model: sonnet, also pass `evidence.md` and full interface files (ignore testContext/implementationContext caps) |
+
+If a Simple task agent STOPs or hits maxTurns, retry once at Standard
+tier before marking BLOCKED.
 
 ### For Each Task
 
@@ -113,18 +154,28 @@ If assumptions violated, ask the user.
 
 Create checkpoint: `git checkout -b tmp/pre-task-{N} && git checkout -`
 
-Dispatch the implementation agent via Agent tool using the prompt in
-[references/agent-prompt.md](references/agent-prompt.md). Pass it:
+Dispatch the `code-implementor` agent via Agent tool
+(`subagent_type: "code-implementor"`). Pass it:
 - Task JSON path
 - Plan JSON path (for constraints)
 - Test baseline (known failures to ignore)
 - Plan constraints verbatim
+- Task's `doNot` and `dependencyChain` fields verbatim
+- Instruction: after completing edits but before running verification,
+  re-read the task's `doNot` and plan `constraints` to check compliance.
+  This counters instruction fade-out over long implementation runs.
 
 If agent returns STOPPED: restore via
 `git reset --hard tmp/pre-task-{N}`, cleanup branch, mark task `BLOCKED`,
 record reason in `executionNotes`, ask user how to proceed.
 
-If succeeded: `git branch -D tmp/pre-task-{N}`.
+If succeeded, **trust-but-verify**: run the task's `regressionCheck`
+command (if non-empty) from the orchestrator — do not rely solely on
+the agent's self-reported test results. If at-risk tests fail: send
+the agent back to fix within the same commit scope. If still failing
+after one retry: mark task `BLOCKED`, record which tests broke.
+
+Then: `git branch -D tmp/pre-task-{N}`.
 
 #### Step 3: Size Check + Commit
 
@@ -141,7 +192,16 @@ git add [files from task]
 git commit -m "Task N: [title]"
 ```
 
-#### Step 4: Light Review
+#### Step 4: Drift Check
+
+If the agent used **>80% of its maxTurns** (e.g. >40 of 50), flag the
+task: "High turn count — possible drift or difficulty." This does not
+block execution, but the light review in the next step should receive
+extra scrutiny. Agents that exhaust their turn budget are more likely
+to have produced lower-quality output (SWE-CI: positive correlation
+between iteration count and regression rate).
+
+#### Step 6: Light Review
 
 Run `/cks:light-review` against latest commit.
 
@@ -152,10 +212,19 @@ Run `/cks:light-review` against latest commit.
 
 Reset consecutive failure count on clean review.
 
-#### Step 5: Update Status
+#### Step 7: Update Status
 
 Set task to `DONE` (or `BLOCKED`). Update `execution-state.json`.
 Mark TodoWrite entry completed.
+
+#### Step 8: Observation Masking
+
+After updating status, mentally discard the full agent output, diff
+stats, and review details from completed tasks. Retain only a one-line
+summary per prior task: `"Task N: DONE|BLOCKED, X files, Y lines,
+review clean|findings"`. Keep the **last 2 tasks'** full results for
+continuity. This prevents stale observation tokens from crowding out
+the current task's context.
 
 ### Context Pause Gate
 

@@ -33,12 +33,23 @@ The caller will specify what to diff against (a commit SHA, branch, or "staged c
 Use `git diff` via Bash to get the changes. Read full files only when the diff alone
 doesn't provide enough context to assess a finding.
 
-**Bash restriction**: ONLY use Bash for git commands (`git diff`, `git log`, `git show`).
+**Bash usage**: Use Bash for git commands (`git diff`, `git log`, `git show`) and for
+targeted verification — e.g., grepping for all callers of a function to confirm a claim,
+checking a config file to verify a security assumption, or counting how many paths reach a
+dangerous sink. Do NOT use Bash to run tests, linters, or modify files.
 
 ### Step 2: Single-pass review
 
 Scan the diff against every category below. Skip anything that is clearly not relevant to
 the changed code (e.g., don't check for SQL injection if there are no database queries).
+
+**Before reporting any finding, verify it:**
+- Trace the specific path that leads to the problem (source → step → failure)
+- Check cross-file context when needed — grep for callers, read config files, follow imports
+- If you cannot complete the trace, mark Confidence LOW or drop the finding
+
+This is a single-agent review with no cross-validation — your false positive rate is your
+own signal-to-noise ratio. Drop findings you are not confident in.
 
 #### Security
 
@@ -83,27 +94,34 @@ the changed code (e.g., don't check for SQL injection if there are no database q
 - **Breaking changes**: Removed/renamed public API params, changed defaults silently,
   non-reversible DB migrations
 - **Stale docs**: Comments contradicting changed code, outdated README/API docs
-- **Naming inconsistency**: Different verbs for same operation vs codebase convention
 - **Shotgun surgery**: One concept scattered across many files without abstraction
-- **Dead code / stale flags**: Commented-out blocks, feature flags for shipped features
+
+Note: naming preferences and dead code do not meet the BLOCKING/SHOULD_FIX bar for a
+fast review — skip them here.
 
 ### Step 3: Produce the report
+
+State your verdict FIRST, then findings.
 
 ```
 ## Code Review
 
+### Verdict
+<PASS — no issues | NEEDS_FIX — N findings>
+
 ### Findings
 
-- `file:line` — **[BLOCKING|SHOULD_FIX]** [Dimension] Description. Fix: suggestion.
-
-### Verdict
-<PASS — no issues | NEEDS_FIX — N findings that must be addressed>
+- `file:line` — **[BLOCKING|SHOULD_FIX]** (Confidence: HIGH/MEDIUM) [Dimension]
+  Description. Trace: [path that leads to the problem]. Fix: suggestion.
 ```
 
 Rules:
 - Only report BLOCKING and SHOULD_FIX. Do not report SUGGESTIONS.
 - If zero findings, return PASS with a one-line "checked X, Y, Z — clean."
-- Keep findings to one line each. Be specific: file, line, what's wrong, how to fix.
+- Keep findings concise but include the trace — specificity is what makes findings
+  actionable. Research shows vague findings have a 4.2% action rate; specific ones
+  with evidence have a 23.2% action rate.
+- Do not report LOW confidence findings — drop them.
 - Do not explain what you checked unless the verdict is PASS (then list the dimensions).
 
 Return the report and stop.

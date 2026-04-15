@@ -134,7 +134,14 @@ Read [references/quality-guide.md](references/quality-guide.md) for principles. 
 Using discovery data, draft each section per the format reference:
 
 - **Fill from exploration data**: Tech Stack and Codebase Map, Operational Commands, Pointers to Deeper Docs. If a command category was not found, include a placeholder comment like `<!-- add test command -->`.
-- **Leave blank with HTML comment placeholder**: Project Identity and Critical Constraints — these require human judgment and cannot be reliably inferred.
+- **Leave blank with HTML comment placeholder**: Project Identity — this requires human judgment and cannot be reliably inferred.
+- **Critical Constraints**: Leave blank with a placeholder comment unless spec.md is being created in this run. If spec.md is being created, pre-populate with:
+  ```
+  - After significant implementation changes, update spec.md Current State
+    (and domain spec.md if the change is domain-scoped). Stale specs are
+    worse than no specs.
+  ```
+  Add a second placeholder comment for any additional human-judgment constraints.
 - **Always include** a pointer to spec.md in Pointers to Deeper Docs (it will be created in Phase 4): `` `spec.md` — current project state, architecture overview, and working constraints ``
 
 ### Phase 4: Draft spec.md
@@ -309,26 +316,9 @@ CLAUDE.md's "Pointers to Deeper Docs" section.
 
 ---
 
-## Spec Maintenance Rule
+## Spec Maintenance
 
-After writing all files, create `.claude/rules/spec-maintenance.md`
-(no `paths` frontmatter — this loads unconditionally every session):
-
-```markdown
-# Spec Maintenance
-
-After implementing a feature, update `spec.md` Current State if it no longer reflects reality. For changes scoped to a subdirectory with its own `spec.md`, update that domain spec too. Always update the Last verified date on any spec you touch.
-```
-
-Also add to CLAUDE.md's Critical Constraints section:
-
-```
-- After significant implementation changes, update spec.md Current State
-  (and domain spec.md if the change is domain-scoped). Stale specs are
-  worse than no specs.
-```
-
-Then suggest drift detection to the user:
+After writing all files, suggest drift detection to the user:
 
 > "To catch spec drift in CI, consider a post-merge hook that checks
 > whether files touched in a PR overlap with paths documented in spec.md

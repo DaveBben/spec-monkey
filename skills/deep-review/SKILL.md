@@ -5,7 +5,7 @@ description: >
 argument-hint: "<base-branch-or-commit>"
 effort: high
 model: opus
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Deep Code Review

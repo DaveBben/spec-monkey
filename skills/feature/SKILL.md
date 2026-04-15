@@ -43,8 +43,7 @@ Evaluate `$ARGUMENTS` against two questions:
 If both are clear, state your understanding and ask the user to confirm.
 If either is unclear, ask for the missing piece. Do not guess at "why."
 
-Then ask: *"Is there context outside this codebase I should know — specs,
-other repos, business constraints, URLs? If not, say 'no'."*
+Then say: *"If there is any context outside this codebase that would be relevant, provide them to me — specs, other repos, business constraints, URLs, etc*
 
 If URLs provided, fetch and summarize. If other repo paths, record them
 for the `repository` field in task JSONs.

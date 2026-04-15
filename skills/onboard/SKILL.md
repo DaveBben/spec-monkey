@@ -4,7 +4,7 @@ description: >
   Use when onboarding a new or existing repository. Creates CLAUDE.md (quick-reference
   context), spec.md (living project specification), and .claude/rules/ files (spec
   maintenance and domain-scoped context loading). For multi-domain projects, also creates
-  domain-scoped spec.md files. Do NOT use for reviewing existing files without changes.
+  domain-scoped spec.md files.
 disable-model-invocation: true
 argument-hint: "[output-path]"
 model: opus
@@ -149,6 +149,8 @@ Using discovery data, draft each section per the format reference:
 Read [references/spec-standards.md](references/spec-standards.md) for principles and anti-patterns.
 Use [references/spec-template.md](references/spec-template.md) for the section structure. Consult
 [references/spec-section-guidance.md](references/spec-section-guidance.md) for what makes each section good.
+
+**Include a `## Table of Contents` after the header block** (title, dates, status, blurb) listing all sections with anchor links. Omit entries for sections you didn't include (e.g., Domain Specs for single-domain projects).
 
 **Write Current State first, before any other section.** Get it right before proceeding —
 it anchors every other section and is the most important thing the spec communicates. It

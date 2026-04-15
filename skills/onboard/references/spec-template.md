@@ -35,6 +35,21 @@ boundaries) moves to `{domain-dir}/spec.md`. See `domain-spec-template.md`.
 
 ---
 
+## Table of Contents
+
+- [What This Project Does](#what-this-project-does)
+- [Why This Project Exists](#why-this-project-exists)
+- [Current State](#current-state)
+- [Architecture Overview](#architecture-overview)
+- [Testing Strategy](#testing-strategy)
+- [Deployment & Infrastructure](#deployment--infrastructure)
+- [Boundaries & Constraints](#boundaries--constraints)
+- [Ownership](#ownership)
+- [Known Issues](#known-issues)
+- [Tech Debt](#tech-debt)
+
+---
+
 ## What This Project Does
 
 [2-4 sentences. What the project is, who uses it, and why it exists. No implementation details.

@@ -22,13 +22,15 @@ effectively in a repository.
 
 | spec.md | CLAUDE.md |
 |---------|-----------|
-| Why the project exists | Tech stack and versions |
-| Current state — what's actually implemented | Directory structure |
+| Current state — what's actually implemented (goes first) | Tech stack and versions |
+| What's NOT yet implemented — stubs and placeholders | Directory structure |
 | Architecture overview and external dependencies | Development commands |
 | Deployment & infrastructure | Build/test/lint commands |
 | Testing strategy (what exists and what's missing) | Package manager |
 | Boundaries & constraints | Environment setup |
-| Ownership, known issues, tech debt | Critical constraints |
+| Gotchas — institutional knowledge not in the code | Critical constraints |
+| System context (if part of a larger platform) | — |
+| Ownership, known issues, tech debt | — |
 
 Do not duplicate content between the two files.
 
@@ -152,9 +154,19 @@ Use [references/spec-template.md](references/spec-template.md) for the section s
 
 **Include a `## Table of Contents` after the header block** (title, dates, status, blurb) listing all sections with anchor links. Omit entries for sections you didn't include (e.g., Domain Specs for single-domain projects).
 
-**Write Current State first, before any other section.** Get it right before proceeding —
-it anchors every other section and is the most important thing the spec communicates. It
-must describe only what is actually implemented and working today. No future tense.
+**Write Current State first — it is section #1 in the spec.** Get it right before proceeding.
+It anchors every other section and is the most important thing the spec communicates. It must
+describe only what is actually implemented and working today. No future tense. Include a named
+**"Not yet implemented"** list for any stubs, placeholders, or intentionally incomplete
+features — do not bury these in prose.
+
+**Include a System Context section only if** this project is part of a larger platform,
+has adjacent services with explicit ownership boundaries, or if the project's origin prevents
+a wrong technical assumption. Omit it for standalone projects.
+
+**Include a Gotchas section if** Phase 1 or the mature codebase interview surfaced
+institutional knowledge that isn't derivable from the code — naming traps, hidden side
+effects, things that have caused incidents. Omit if none exist.
 
 **If Phase 1 identified 2+ domains:** Write a slim, system-level root spec (target
 60-100 lines). Domain-specific content (external deps, testing gaps, known issues,
@@ -173,7 +185,7 @@ Before presenting to the user, review the spec.md draft against these checks
 from [references/spec-standards.md](references/spec-standards.md):
 
 **Required sections present:**
-- [ ] Current State (most critical — must describe what is implemented today)
+- [ ] Current State (most critical — must be section #1, must describe what is implemented today)
 - [ ] Architecture Overview
 - [ ] External Dependencies (shared only, if multi-domain)
 - [ ] Testing Strategy (infrastructure only, if multi-domain)
@@ -182,9 +194,17 @@ from [references/spec-standards.md](references/spec-standards.md):
 
 **Content quality:**
 - [ ] Current State uses past/present tense only — no "will", "planned", "upcoming"
+- [ ] Stubs and incomplete features are in a named "Not yet implemented" list in Current State (not buried in prose)
 - [ ] No tech stack, directory structure, or dev commands (those belong in CLAUDE.md)
 - [ ] No content that restates what the code already shows
-- [ ] External dependency failure behaviors are documented, not just their names
+- [ ] External dependency table includes "Constraints / Can't Do" column (not just failure behavior)
+- [ ] Boundaries & Constraints includes "ask if not covered by this spec" in Ask First
+- [ ] Each line answers "what agent decision does this inform?" — remove lines that can't answer
+
+**Density check:**
+- [ ] System Context section is present only if this project has platform boundaries or an origin constraint that prevents a wrong technical assumption — omit for standalone projects
+- [ ] Gotchas section is present if Phase 1 surfaced institutional knowledge not in the code
+- [ ] No human motivation included unless it prevents a specific wrong technical assumption
 
 **Split check (multi-domain only):**
 - [ ] No domain-specific external deps in root (they go in domain specs)
@@ -196,6 +216,7 @@ from [references/spec-standards.md](references/spec-standards.md):
 - [ ] Future roadmap items or planned features
 - [ ] Standard language conventions the AI already knows
 - [ ] Code style rules enforced by a linter
+- [ ] Organizational motivation without a decision-informing constraint attached
 
 Fix any issues found. If fixes were significant, run through the checklist
 once more. **Maximum 2 passes** — after 2 passes, note remaining findings
@@ -220,10 +241,12 @@ Tell the user the files have been written and ask them to open and review them. 
 
 **For spec.md:**
 - Does the Current State section accurately describe what is implemented and working today, with nothing aspirational or future-tense?
+- Are all stubs and incomplete features named in the "Not yet implemented" list?
 - Does this accurately describe the project?
 - Is anything missing that would cause an AI to make wrong assumptions?
-- Are the failure behaviors and constraints for external dependencies accurate?
+- Are the failure behaviors and capability constraints (what the dependency *can't* do) for external dependencies accurate?
 - Is anything included that's obvious from reading the code? (remove it if so)
+- Are there gotchas — non-obvious traps or institutional knowledge — that aren't captured?
 
 Iterate — applying their feedback as edits to the files — until the user approves. Once approved, update the **Status** field in spec.md (and any domain specs) from `Draft` to `Active`, and update the **Last verified** date to today.
 

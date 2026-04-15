@@ -6,13 +6,14 @@ reference while drafting or reviewing — do NOT include this text in the output
 ## Contents
 
 - [Status Field](#status-field)
+- [**Current State**](#current-state) ← most important, goes first
 - [What This Project Does](#what-this-project-does)
-- [Why This Project Exists](#why-this-project-exists)
-- [Current State](#current-state) ← most important
+- [System Context](#system-context)
 - [Architecture Overview](#architecture-overview)
 - [Testing Strategy](#testing-strategy)
 - [Deployment & Infrastructure](#deployment--infrastructure)
 - [Boundaries & Constraints](#boundaries--constraints)
+- [Gotchas](#gotchas)
 - [Ownership](#ownership)
 - [Known Issues](#known-issues)
 - [Tech Debt](#tech-debt)
@@ -39,6 +40,66 @@ code that conflicts with recent refactors.
 
 ---
 
+## Current State
+
+**This is the most important section. It goes first in the spec.** It tells the reader what
+is actually working in the repo right now. A developer or AI reading this should immediately
+understand the current shape of the codebase without digging through code.
+
+Front-loading Current State also makes the spec resilient to context compression: in long
+sessions where older context gets summarized or dropped, the highest-density content survives
+because it appeared first.
+
+### Split behavior (multi-domain projects)
+- **Root spec**: 2-4 sentence system-level summary. What the system does as a whole.
+- **Domain specs**: 2-3 sentence domain-level detail. What this specific subsystem does.
+- The root should not repeat domain-level detail — point to domain specs instead.
+
+### What it should contain
+- 2-4 concrete sentences describing what is implemented and working today
+- A named **"Not yet implemented"** list for any stubs, placeholders, or intentionally
+  incomplete features — do not bury these in prose
+- Reference key modules, endpoints, or integrations by their actual path or identifier
+- Be specific — "Stripe integration is complete" is less useful than "Stripe integration is
+  complete (src/integrations/stripe.ts)"
+
+### The "Not Yet Implemented" list
+
+This is a first-class subsection, not an afterthought. List every stub, placeholder, and
+intentionally incomplete feature by name and location. An agent that assumes a stubbed
+integration works will build against a wall it can't see.
+
+- **Bad**: "Some integrations are still being built." (vague, doesn't name them)
+- **Good**:
+  ```
+  **Not yet implemented:**
+  - NetSuite integration — stubbed in src/integrations/netsuite.ts, throws NotImplementedError
+  - Multi-tenant billing — no data model or routes exist yet
+  ```
+- Omit the subsection entirely if the codebase has no meaningful stubs or incomplete features
+
+### Update trigger
+This section **must be updated** whenever:
+- A feature ships or is removed
+- A module changes its role significantly
+- Something moves from "stubbed" to "implemented" (or vice versa)
+
+At the start of a session in a repo with spec.md, check whether Current State still matches
+what the code actually does. If it's stale, update it before starting new work.
+
+### Examples
+- Bad: "This project will support multi-tenant billing." (future tense — describes what will be, not what is)
+- Bad: "Work is ongoing on the authentication module." (vague progress language)
+- Bad: "The app handles user management." (too abstract — gives no concrete picture)
+- Good: "The API accepts invoice submission via POST /invoices and stores them in PostgreSQL.
+  Reconciliation runs nightly via a cron job and creates Linear tickets for discrepancies.
+  The Stripe integration is complete (src/integrations/stripe.ts).
+
+  **Not yet implemented:**
+  - NetSuite integration — stubbed in src/integrations/netsuite.ts, throws NotImplementedError"
+
+---
+
 ## What This Project Does
 - 2-4 sentences maximum
 - Must describe the product/purpose, not the technology
@@ -48,48 +109,25 @@ code that conflicts with recent refactors.
 
 ---
 
-## Why This Project Exists
-- Focus on the problem being solved, not current sprint work
-- If this project is a micro-service or component of a larger system, say so — name the parent system and describe this project's role within it
-- Each point should explain motivation — what was broken, costly, or missing before this project
-- Bad: "Make the app better" (unmeasurable, no context)
-- Good: "Manual invoice processing was costing 20 hours/week — this automates the entire flow"
-- Good: "Micro-service within the payments platform — this service owns payment intent creation; the notifications service handles downstream emails"
-- This section helps the AI prioritize trade-offs: understanding the root problem prevents solutions that technically work but miss the point
+## System Context
 
----
+**Optional section.** Include only when one or more of the following applies:
 
-## Current State
+1. **This project is part of a larger platform or micro-service ecosystem** — name the platform
+   and describe this project's role. Name what adjacent services own that this project does NOT.
+2. **Adjacent services own things this project explicitly does NOT own** — this prevents agents
+   from adding code to the wrong service.
+3. **The project's origin prevents a wrong technical assumption** — e.g., "built for strong
+   billing consistency — don't optimize for eventual consistency."
 
-**This is the most important section.** It tells the reader what is actually working in the repo right now. A developer or AI reading this should immediately understand the current shape of the codebase without digging through code.
+**Omit entirely for standalone projects** with no adjacent service boundaries. Do not include
+organizational motivation ("manual processing cost 20 hours/week") unless it directly prevents
+a wrong technical choice.
 
-### Split behavior (multi-domain projects)
-- **Root spec**: 2-4 sentence system-level summary. What the system does as a whole.
-- **Domain specs**: 2-3 sentence domain-level detail. What this specific subsystem does.
-- The root should not repeat domain-level detail — point to domain specs instead.
-
-### What it should contain
-- 2-4 concrete sentences describing what is implemented and working today
-- Note anything that is stubbed, in-progress, or intentionally incomplete
-- Name the key modules, endpoints, or integrations by their actual path or identifier
-- Be specific — "Stripe integration is complete" is less useful than "Stripe integration is complete; see src/integrations/stripe.ts"
-
-### Update trigger
-This section **must be updated** whenever:
-- A feature ships or is removed
-- A module changes its role significantly
-- Something moves from "stubbed" to "implemented" (or vice versa)
-
-At the start of a session in a repo with spec.md, check whether Current State still matches what the code actually does. If it's stale, update it before starting new work.
-
-### Examples
-- Bad: "This project will support multi-tenant billing." (future tense — describes what will be, not what is)
-- Bad: "Work is ongoing on the authentication module." (vague progress language)
-- Bad: "The app handles user management." (too abstract — gives no concrete picture)
-- Good: "The API accepts invoice submission via POST /invoices and stores them in PostgreSQL.
-  Reconciliation runs nightly via a cron job and creates Linear tickets for discrepancies.
-  The Stripe integration is complete (src/integrations/stripe.ts); NetSuite integration is
-  stubbed with a TODO in src/integrations/netsuite.ts and currently throws NotImplementedError."
+- Bad: "This project was created because the ops team needed a better solution." (human motivation with no decision value)
+- Bad: "Part of the platform" (too vague to constrain decisions)
+- Good: "Part of the payments platform. This service owns payment intent creation and refund processing. Email notifications are owned by the notifications service — never add email-sending code here."
+- Good: "Built for strong financial consistency — Stripe webhooks must be idempotent and all payment state transitions must be atomic. Don't apply eventual consistency patterns to payment records."
 
 ---
 
@@ -112,16 +150,19 @@ domains) stay in the root spec. Domain-specific dependencies (e.g., Stripe in bi
 move to that domain's spec.md. This prevents an agent working in auth from loading
 billing's Stripe constraints into its context.
 
-Every external system this project communicates with should have an entry. The table documents failure behavior and constraints — this is the highest-signal content for AI coders.
+Every external system this project communicates with should have an entry. The table documents
+failure behavior and capability constraints — this is the highest-signal content for AI coders.
 
-**Capability constraints are critical.** Document what the API *can't* do, not just failure modes:
+**The "Constraints / Can't Do" column is critical.** Document what the API *can't* do, not just
+failure modes:
 - Context window limits (e.g., ~4K tokens for Foundation Model)
 - Output format restrictions (e.g., free-text only, no function-calling/JSON mode)
 - Initialization semantics (e.g., instructions set at session init, not per-call)
 - Operation limitations (e.g., listFolders returns immediate children only, not recursive)
 - Latency characteristics (e.g., each AppleScript call is ~100-500ms IPC roundtrip)
 
-These constraints shape protocol design, algorithm choices, and chunking strategies. Without them, the AI will design solutions that hit invisible walls.
+These constraints shape protocol design, algorithm choices, and chunking strategies. Without
+them, the AI will design solutions that hit invisible walls.
 
 - Bad: just listing what services exist (that's a flat inventory, not boundary behavior)
 - Bad: "Uses Foundation Model framework" (states a fact — doesn't mention the ~4K token limit or free-text-only output that shape every design decision)
@@ -179,9 +220,36 @@ billing-specific ones.
 - "Never" items are hard stops — the AI must not proceed regardless of context
 - "Ask First" items require explicit user approval before proceeding
 - "Always" items are habits the AI should maintain without being asked
-- Always include: "Update the Current State section in spec.md after significant implementation changes"
+- Always include in Ask First: "If a pattern, dependency, or architectural decision isn't covered by this spec, ask before inferring — don't invent conventions"
+- Always include in Always: "Update the Current State section in spec.md after significant implementation changes"
 - Bad: empty or missing (gives the AI infinite permission)
 - Good: specific, actionable boundaries that protect the codebase
+
+---
+
+## Gotchas
+
+**Optional but highest-value content.** Include institutional knowledge that prevents
+expensive AI mistakes — things that are non-obvious, not derivable from reading the code,
+and that a competent engineer would know from experience but a new agent would not.
+
+Include only cross-cutting gotchas here. Domain-specific gotchas (e.g., "Stripe amount is
+in cents") go in domain specs.
+
+Omit this section entirely if no genuine gotchas exist — don't pad it.
+
+### What belongs here
+- Naming or convention traps that exist project-wide (e.g., "all `amount` fields are cents")
+- Implicit dependencies between systems that aren't visible from code structure
+- Operations that look safe but have hidden side effects in this project
+- Things that have caused production incidents that aren't yet fixed by a linter or test
+
+### Examples
+- Bad: "Be careful when making changes." (not actionable)
+- Bad: "Always handle errors." (standard practice, not a project-specific gotcha)
+- Good: "The job queue is not idempotent — duplicate submissions will double-process. Always check for existing jobs before enqueuing."
+- Good: "Migrations run automatically on deploy with no dry-run step — never write a migration that can't run against live production data without downtime."
+- Good: "The `config` object is mutated by middleware during request processing — never cache a reference to it across async boundaries."
 
 ---
 

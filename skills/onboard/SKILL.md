@@ -200,7 +200,7 @@ Tell the user the files are written and ask them to review. Prompt them to check
 - Is anything included that's obvious from reading the code? (remove it if so)
 - Are there gotchas — non-obvious traps or institutional knowledge — that aren't captured?
 
-Iterate — applying their feedback as edits to the files — until the user approves. Once approved, update the **Status** field in spec.md (and any domain specs) from `Draft` to `Active`, and update the **Last verified** date to today.
+Iterate — applying their feedback as edits to the files. End each round of changes by asking: **"Any other changes, or reply 'approved' to finalise?"** Once the user replies "approved", update the **Status** field in spec.md (and any domain specs) from `Draft` to `Active`, and update the **Last verified** date to today.
 
 ### Phase 8: Domain-Scoped Specs
 

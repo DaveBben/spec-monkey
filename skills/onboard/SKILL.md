@@ -3,8 +3,8 @@ name: onboard
 description: >
   Use when onboarding a new or existing repository. Creates CLAUDE.md (quick-reference
   context), spec.md (living project specification), and .claude/rules/ files (spec
-  maintenance and domain-scoped context loading). For multi-domain projects, also creates
-  domain-scoped spec.md files.
+  maintenance and technical domain-scoped context loading). For multi-technical-domain projects, also creates
+  technical domain-scoped spec.md files.
 disable-model-invocation: true
 argument-hint: "[output-path]"
 model: opus
@@ -51,16 +51,16 @@ One exploration pass gathers everything needed for both documents. Focus on the 
 - **Implemented vs. aspirational** — look for `TODO`, `FIXME`, `NotImplementedError`, stub files, placeholder comments
 - For pipelines or multi-stage systems: trace data flows between stages, document handoff contracts
 
-**Identify domains:**
+**Identify technical domains:**
 
-Directory structure is a starting point, not a conclusion. Subdirectories often represent architectural layers (models, controllers, routes, utils) rather than separate domains.
+Directory structure is a starting point, not a conclusion. Subdirectories often represent architectural layers (models, controllers, routes, utils) rather than separate technical domains.
 
-The core question is: **if you wrote one spec section covering both areas, would a reader need to constantly ask "does this constraint apply to X or Y?"** If yes, they are separate domains. Test candidate directories against these signals to answer that question:
+The core question is: **if you wrote one spec section covering both areas, would a reader need to constantly ask "does this constraint apply to X or Y?"** If yes, they are separate technical domains. Test candidate directories against these signals to answer that question:
 
-**Strong signals — any one likely means a separate domain:**
+**Strong signals — any one likely means a separate technical domain:**
 - **Separate deployment targets** — deploys to a different service, runtime, or pipeline (e.g., Lambda vs. ECS, CDK stack vs. application code). Different deployment means independent lifecycle, independent failure modes, and different operational context.
-- **Hard interface boundaries** — areas that communicate only through contracts (APIs, queues, events, shared database tables) rather than direct function calls. If you can't import across the boundary, it's a domain boundary.
-- **Divergent constraints** — areas governed by meaningfully different rules, even if they share infrastructure. An auth subsystem with compliance requirements and a billing subsystem with financial audit constraints are separate domains even if they deploy together — the constraints an AI must respect when working in each are different.
+- **Hard interface boundaries** — areas that communicate only through contracts (APIs, queues, events, shared database tables) rather than direct function calls. If you can't import across the boundary, it's a technical domain boundary.
+- **Divergent constraints** — areas governed by meaningfully different rules, even if they share infrastructure. An auth subsystem with compliance requirements and a billing subsystem with financial audit constraints are separate technical domains even if they deploy together — the constraints an AI must respect when working in each are different.
 
 **Supporting signals — strengthen the case but insufficient alone:**
 - Separate entry points (own handler, main, or index — not shared)
@@ -68,13 +68,13 @@ The core question is: **if you wrote one spec section covering both areas, would
 - Independent CI jobs or test suites
 - Can fail independently — one area breaking does not break the other
 
-**Consolidation check:** If two candidate directories share the same deployment target, communicate through direct imports, and are governed by the same constraints, they are one domain even if they live in separate directories.
+**Consolidation check:** If two candidate directories share the same deployment target, communicate through direct imports, and are governed by the same constraints, they are one technical domain even if they live in separate directories.
 
-**Anti-pattern — do not do this:** Labeling `src/models/`, `src/controllers/`, `src/routes/` as separate domains. These are architectural layers within a single domain — they share a deployment target, call each other directly, and have no divergent constraints.
+**Anti-pattern — do not do this:** Labeling `src/models/`, `src/controllers/`, `src/routes/` as separate technical domains. These are architectural layers within a single technical domain — they share a deployment target, call each other directly, and have no divergent constraints.
 
-Record each domain with its root directory and a one-line description. Simple apps have 0-1 domains; multi-service systems have 2-5.
+Record each technical domain with its root directory and a one-line description. Simple apps have 0-1 technical domains; multi-service systems have 2-5.
 
-**Confirm with the user before proceeding.** Present your domain assessment — list each identified domain with its root directory, one-line description, and which strong signal(s) justified it. If you concluded the project is single-domain, state that and explain why (e.g., "all subdirectories share a deployment target, import each other directly, and have no divergent constraints"). The user may disagree with the count in either direction — they may know of boundaries the code doesn't make obvious, or they may see domains you identified as a single unit. **Do not proceed past Phase 1 until the user confirms the domain list.**
+**Confirm with the user before proceeding.** Present your technical domain assessment — list each identified technical domain with its root directory, one-line description, and which strong signal(s) justified it. If you concluded the project is single-technical-domain, state that and explain why (e.g., "all subdirectories share a deployment target, import each other directly, and have no divergent constraints"). The user may disagree with the count in either direction — they may know of boundaries the code doesn't make obvious, or they may see technical domains you identified as a single unit. **Do not proceed past Phase 1 until the user confirms the technical domain list.**
 
 **Gather for both:**
 - Existing files: `CLAUDE.md`, `.claude/CLAUDE.md`, `.claude/rules/`, `spec.md`, `SPEC.md`, `docs/architecture.md`, `README.md`, `CONTRIBUTING.md`
@@ -86,7 +86,7 @@ Record each domain with its root directory and a one-line description. Simple ap
 
 Follow up based on gaps — external services, failure behavior, testing, CI/CD, ownership, known issues, tech debt, things an AI should never touch, non-obvious gotchas.
 
-**For mature/brownfield codebases** (>50k lines or >2 years of git history), add a domain risks interview after initial discovery. Generate **3-5 targeted questions based on what you actually found** during exploration — not generic examples. Each question should reference a specific discovery:
+**For mature/brownfield codebases** (>50k lines or >2 years of git history), add a technical domain risks interview after initial discovery. Generate **3-5 targeted questions based on what you actually found** during exploration — not generic examples. Each question should reference a specific discovery:
 
 Examples of targeted questions (adapt to what you found):
 - "I found 3 different auth patterns (`src/auth/jwt.ts`, `src/middleware/session.ts`, `src/legacy/basic-auth.ts`) — is one canonical?"
@@ -124,7 +124,7 @@ Read [references/quality-guide.md](references/quality-guide.md) for principles. 
 - **Critical Constraints**: Leave blank with a placeholder comment unless spec.md is being created in this run. If spec.md is being created, pre-populate with:
   ```
   - After significant implementation changes, update spec.md Current State
-    (and domain spec.md if the change is domain-scoped). Stale specs are
+    (and technical domain spec.md if the change is technical domain-scoped). Stale specs are
     worse than no specs.
   ```
   Add a second placeholder comment for any additional human-judgment constraints.
@@ -134,7 +134,7 @@ Read [references/quality-guide.md](references/quality-guide.md) for principles. 
 
 Draft using [spec-template.md](references/spec-template.md) for structure, [spec-standards.md](references/spec-standards.md) for principles, and [spec-section-guidance.md](references/spec-section-guidance.md) for section guidance.
 
-**Include a `## Table of Contents` after the header block** (title, dates, status, blurb) listing all sections with anchor links. Omit entries for sections you didn't include (e.g., Domain Specs for single-domain projects).
+**Include a `## Table of Contents` after the header block** (title, dates, status, blurb) listing all sections with anchor links. Omit entries for sections you didn't include (e.g., Technical Domain Specs for single-technical-domain projects).
 
 **Write Current State first — it is section #1 in the spec.** Get it right before proceeding. It anchors every other section and is the most important thing the spec communicates. It must describe only what is actually implemented and working today. No future tense. Include a named **"Not yet implemented"** list for any stubs, placeholders, or intentionally incomplete features — do not bury these in prose.
 
@@ -142,9 +142,9 @@ Draft using [spec-template.md](references/spec-template.md) for structure, [spec
 
 **Include a Gotchas section if** Phase 1 or the mature codebase interview surfaced institutional knowledge that isn't derivable from the code — naming traps, hidden side effects, things that have caused incidents. Omit if none exist.
 
-**If Phase 1 identified 2+ domains:** Write a slim, system-level root spec (target 60-100 lines). Domain-specific content (external deps, testing gaps, known issues, tech debt, domain boundaries) goes in domain specs created in Phase 8.
+**If Phase 1 identified 2+ technical domains:** Write a slim, system-level root spec (target 60-100 lines). Technical domain-specific content (external deps, testing gaps, known issues, tech debt, technical domain boundaries) goes in technical domain specs created in Phase 8.
 
-**If single-domain project:** Include everything in the root spec (target 100-200 lines).
+**If single-technical-domain project:** Include everything in the root spec (target 100-200 lines).
 Skip Phase 8.
 
 Do not include tech stack, directory structure, or dev commands — those belong in CLAUDE.md.
@@ -156,10 +156,10 @@ Before presenting to the user, review the spec.md draft against these checks fro
 **Required sections present:**
 - [ ] Current State (most critical — must be section #1, must describe what is implemented today)
 - [ ] Architecture Overview
-- [ ] External Dependencies (shared only, if multi-domain)
-- [ ] Testing Strategy (infrastructure only, if multi-domain)
-- [ ] Boundaries & Constraints (project-wide only, if multi-domain)
-- [ ] Domain Specs pointer table (if multi-domain)
+- [ ] External Dependencies (shared only, if multi-technical-domain)
+- [ ] Testing Strategy (infrastructure only, if multi-technical-domain)
+- [ ] Boundaries & Constraints (project-wide only, if multi-technical-domain)
+- [ ] Technical Domain Specs pointer table (if multi-technical-domain)
 
 **Content quality:**
 - [ ] Current State uses past/present tense only — no "will", "planned", "upcoming"
@@ -175,10 +175,10 @@ Before presenting to the user, review the spec.md draft against these checks fro
 - [ ] Gotchas section is present if Phase 1 surfaced institutional knowledge not in the code
 - [ ] No human motivation included unless it prevents a specific wrong technical assumption
 
-**Split check (multi-domain only):**
-- [ ] No domain-specific external deps in root (they go in domain specs)
-- [ ] No domain-specific known issues or tech debt in root
-- [ ] No domain-specific boundaries in root
+**Split check (multi-technical-domain only):**
+- [ ] No technical domain-specific external deps in root (they go in technical domain specs)
+- [ ] No technical domain-specific known issues or tech debt in root
+- [ ] No technical domain-specific boundaries in root
 - [ ] Root spec under 100 lines
 
 **Anti-patterns to remove:**
@@ -221,15 +221,15 @@ Tell the user the files are written and ask them to review. Prompt them to check
 - Is anything included that's obvious from reading the code? (remove it if so)
 - Are there gotchas — non-obvious traps or institutional knowledge — that aren't captured?
 
-Iterate — applying their feedback as edits to the files. End each round of changes by asking: **"Any other changes, or reply 'approved' to finalise?"** Once the user replies "approved", update the **Status** field in spec.md (and any domain specs) from `Draft` to `Active`, and update the **Last verified** date to today.
+Iterate — applying their feedback as edits to the files. End each round of changes by asking: **"Any other changes, or reply 'approved' to finalise?"** Once the user replies "approved", update the **Status** field in spec.md (and any technical domain specs) from `Draft` to `Active`, and update the **Last verified** date to today.
 
-### Phase 8: Domain-Scoped Specs
+### Phase 8: Technical Domain-Scoped Specs
 
-If Phase 1 identified **2 or more domains**, create a domain spec for each.
+If Phase 1 identified **2 or more technical domains**, create a technical domain spec for each.
 
-#### Step 1: Draft Domain Specs
+#### Step 1: Draft Technical Domain Specs
 
-Write each `{domain-dir}/spec.md` using [domain-spec-template.md](references/domain-spec-template.md). Each spec is **under 100 lines**. Content gathered in Phase 1 but excluded from root (domain-specific deps, testing gaps, issues, boundaries) belongs here — don't leave it orphaned.
+Write each `{domain-dir}/spec.md` using [domain-spec-template.md](references/domain-spec-template.md). Each spec is **under 100 lines**. Content gathered in Phase 1 but excluded from root (technical domain-specific deps, testing gaps, issues, boundaries) belongs here — don't leave it orphaned.
 
 **Do not duplicate the root spec.md.** Shared conventions, project-wide boundaries, and deployment info stay at root. Omit empty sections.
 
@@ -237,7 +237,7 @@ Present drafts to the user for review before finalizing.
 
 #### Step 2: Create Loading Rules
 
-For each domain spec, create a path-scoped rule in `.claude/rules/` that loads the spec when Claude works in that directory. Rules use YAML frontmatter with a `paths` field for scoping:
+For each technical domain spec, create a path-scoped rule in `.claude/rules/` that loads the spec when Claude works in that directory. Rules use YAML frontmatter with a `paths` field for scoping:
 
 ```markdown
 # .claude/rules/{domain-name}-context.md
@@ -246,13 +246,13 @@ paths:
   - "{domain-dir}/**/*"
 ---
 
-Read {domain-dir}/spec.md for domain-specific conventions, interface
+Read {domain-dir}/spec.md for technical domain-specific conventions, interface
 contracts, and boundaries before making changes in this area.
 ```
 
 #### Step 2b: Verify Rules Load
 
-After creating rule files, verify each one by checking that the glob pattern matches actual files in the domain directory:
+After creating rule files, verify each one by checking that the glob pattern matches actual files in the technical domain directory:
 
 ```
 ls {domain-dir}/**/* | head -3
@@ -262,12 +262,12 @@ If the glob returns no files, fix the pattern — common mistakes are missing `*
 
 #### Step 3: Update Root Pointers
 
-Add a `## Domain Specs` section to the root spec.md listing each domain spec with its path and one-line description. Add a pointer in CLAUDE.md's "Pointers to Deeper Docs" section.
+Add a `## Technical Domain Specs` section to the root spec.md listing each technical domain spec with its path and one-line description. Add a pointer in CLAUDE.md's "Pointers to Deeper Docs" section.
 
-#### When NOT to Create Domain Specs
+#### When NOT to Create Technical Domain Specs
 
-- Project has only 1 domain — root spec.md is sufficient
-- A subsystem has no domain-specific conventions, or its conventions are already in root — move them there, don't duplicate
+- Project has only 1 technical domain — root spec.md is sufficient
+- A subsystem has no technical domain-specific conventions, or its conventions are already in root — move them there, don't duplicate
 
 ---
 
@@ -279,7 +279,7 @@ Add a `## Domain Specs` section to the root spec.md listing each domain spec wit
 - **Don't skip discovery for existing projects** — Even when the user describes the project verbally, explore the codebase first — the code is the source of truth.
 - **Don't confuse project spec with change spec** — If the user starts describing a specific feature or bug fix mid-interview, redirect them to `/cks:feature` for that work.
 - **Keep cross-references in sync** — When writing or moving files, verify CLAUDE.md's pointer to spec.md is correct.
-- **Don't conflate layers with domains** — `src/lambda_fn/` and `src/backend/` may look like siblings in a directory listing, but if they deploy separately or have divergent constraints, they are separate domains. Conversely, `src/models/`, `src/controllers/`, `src/routes/` share a deployment target, import each other directly, and have no divergent constraints — they are layers within one domain. Always apply the litmus test and signals from Phase 1, not directory names.
-- **This skill targets the root CLAUDE.md** — For subdirectory CLAUDE.md files in a monorepo, scope content to that package's domain.
+- **Don't conflate layers with technical domains** — `src/lambda_fn/` and `src/backend/` may look like siblings in a directory listing, but if they deploy separately or have divergent constraints, they are separate technical domains. Conversely, `src/models/`, `src/controllers/`, `src/routes/` share a deployment target, import each other directly, and have no divergent constraints — they are layers within one technical domain. Always apply the litmus test and signals from Phase 1, not directory names.
+- **This skill targets the root CLAUDE.md** — For subdirectory CLAUDE.md files in a monorepo, scope content to that package's technical domain.
 
 ---

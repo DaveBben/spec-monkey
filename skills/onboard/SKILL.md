@@ -72,7 +72,9 @@ The core question is: **if you wrote one spec section covering both areas, would
 
 **Anti-pattern — do not do this:** Labeling `src/models/`, `src/controllers/`, `src/routes/` as separate domains. These are architectural layers within a single domain — they share a deployment target, call each other directly, and have no divergent constraints.
 
-Record each domain with its root directory and a one-line description. Simple apps have 0-1 domains; multi-service systems have 2-5. Let the user confirm — they may know of boundaries the code structure doesn't make obvious.
+Record each domain with its root directory and a one-line description. Simple apps have 0-1 domains; multi-service systems have 2-5.
+
+**Confirm with the user before proceeding.** Present your domain assessment — list each identified domain with its root directory, one-line description, and which strong signal(s) justified it. If you concluded the project is single-domain, state that and explain why (e.g., "all subdirectories share a deployment target, import each other directly, and have no divergent constraints"). The user may disagree with the count in either direction — they may know of boundaries the code doesn't make obvious, or they may see domains you identified as a single unit. **Do not proceed past Phase 1 until the user confirms the domain list.**
 
 **Gather for both:**
 - Existing files: `CLAUDE.md`, `.claude/CLAUDE.md`, `.claude/rules/`, `spec.md`, `SPEC.md`, `docs/architecture.md`, `README.md`, `CONTRIBUTING.md`

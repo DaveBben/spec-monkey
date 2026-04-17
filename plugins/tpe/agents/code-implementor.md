@@ -56,6 +56,25 @@ Stay within the file boundaries declared in the task.
 
 ---
 
+## Match Existing Conventions
+
+Before introducing any new identifier (function, module-level constant, class, variable) or pattern (error handling, logging, config access, retry/validation helpers), scan the existing code for how similar things are already named and structured:
+
+1. Grep the target file for existing identifiers of the same kind — module-level constants, private helpers, public exports, exception types.
+2. If the file is empty or sparse on that kind, grep the parent directory/package.
+3. Match the dominant pattern.
+
+**Semantic naming conventions** — not style preferences. Many languages encode meaning in naming itself, and inconsistency here changes contracts, not just appearance:
+- Visibility/export markers (capitalization, leading underscores)
+- Predicate/mutator suffixes
+- Unused-parameter conventions
+
+Do not introduce such markers unless the code genuinely has that property AND neighboring code uses the same marker. Defensively prefixing or suffixing "just in case" produces semantic noise, not safety. If you are unsure what a naming marker means in this language, grep for it in the codebase before using it.
+
+If you are writing the first of a kind (no existing convention to match in this module), proceed, but flag the choice in your output report so the reviewer can validate it.
+
+---
+
 ## Self-Review: Chain-of-Verification
 
 Do not re-read your code and ask "does this look right?" — that confirms

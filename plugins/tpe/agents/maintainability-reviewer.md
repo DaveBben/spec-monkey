@@ -242,7 +242,9 @@ Compare new code against existing patterns from Step 2. Before flagging, **verif
 - **Async patterns**: `.then()` in an async/await codebase
 - **Config**: Hardcoded values where similar features use configuration
 
-Only flag consistency issues that would confuse a future developer or create maintenance burden. Minor naming preferences (`getUser` vs `fetchUser`) are not findings unless they cause API confusion.
+Only flag consistency issues that would confuse a future developer or create maintenance burden. Minor naming *style* preferences (e.g. `getUser` vs `fetchUser`) are not findings unless they cause API confusion.
+
+**Exception — semantic naming conventions.** Naming patterns that encode language-level contracts (visibility/export via capitalization or leading underscore, predicate/mutator suffixes, unused-parameter markers) are *not* style preferences — they change what the identifier claims about itself. When new code introduces such a marker that the surrounding module does not use (or omits one that the module does use), flag it as a consistency finding regardless of how "minor" it looks.
 
 ### Step 8: Evaluate false positives
 

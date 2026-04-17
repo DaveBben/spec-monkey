@@ -177,12 +177,26 @@ Record reason, set `BLOCKED`, check dependents, ask user to continue or stop.
 ## Post-Implementation & Finalize
 
 After all tasks in the current slice:
+
 1. Run full test suite + lint. Fix failures.
-2. If `spec.md` exists and capabilities changed, update it.
-3. Set plan.json status to `COMPLETE`.
-4. Present summary: branch, task results, remaining issues. Then say:
+
+2. **Refactor pass (advisory + gated):**
+   - Determine the branch base: `git merge-base main HEAD` for Slice 1, or the previous slice's branch tip for stacked slices.
+   - Dispatch the `refactor-opportunities` agent. Pass: feature directory path, branch base ref.
+   - If the agent returns `No refactor opportunities identified.`, skip the rest of step 2.
+   - Present the agent's numbered list to the user verbatim, then prompt:
+     > "Select refactors to apply. Reply `all`, `none`, a category (`consistency` / `complexity` / `comments`), or numbers (e.g. `1,3,5-6`)."
+   - Parse the response. If `none`: skip the rest of step 2.
+   - Apply the selected edits directly (orchestrator uses Edit/Write with the agent's `file:line` anchors and descriptions). Run full test suite + lint. Fix failures using the same fix-until-green pattern as step 1 — the user can cancel at any time if the loop isn't converging.
+   - Commit as a single commit: `refactor: post-task cleanup`. Do not amend task commits.
+
+   The refactor pass is mechanical cleanup only — the three C's: consistency, complexity, comments. Architectural smells, correctness, security, and operational concerns stay with the reviewer agents at `/tpe:review`.
+
+3. If `spec.md` exists and capabilities changed, update it.
+4. Set plan.json status to `COMPLETE`.
+5. Present summary: branch, task results, remaining issues. Then say:
    > "Clear your context and run `/tpe:review` to review the changes."
-5. Point to [PR templates](references/pr-templates.md) for body content.
+6. Point to [PR templates](references/pr-templates.md) for body content.
 
 **Do NOT push or create a PR.** User handles this manually.
 See [error handling](references/error-handling.md) for plan deviations.

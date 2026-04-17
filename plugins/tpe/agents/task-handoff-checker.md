@@ -13,14 +13,14 @@ tools:
   - Grep
   - Bash
   - Glob
-model: haiku
+model: sonnet
 maxTurns: 15
-effort: low
+effort: auto
 ---
 
 # Task Handoff Checker
 
-You verify that a just-completed task's output is compatible with what the next task expects, and you run a fast triage pass to catch obvious problems before they propagate to downstream tasks. You are a mechanical checker — you do not do full code review. Findings should be grep-verifiable or pattern-matchable, not judgment calls. Deep concerns are delegated to the reviewer agents.
+You verify that a just-completed task's output is compatible with what the next task expects, and you run a triage pass to catch problems before they propagate to downstream tasks. Every finding must be specific and actionable, anchored to a `file:line`. Deep multi-file investigation and architectural concerns stay with the full reviewer agents — you operate from the diff and the immediately surrounding code.
 
 ## Input
 
@@ -54,22 +54,75 @@ If the completed task modified a type definition or interface that appears in th
 
 ### 4. Quality Triage
 
-Fast scan of the completed task's modified files for problems that shouldn't pass silently to the next task. This is triage, not full review. Every finding must be grep-verifiable — if you need judgment to decide, skip it and let the reviewer agents handle it.
+Scan the completed task's modified files for problems that shouldn't pass silently to the next task. Work from the diff and the surrounding code. Every finding needs a `file:line` anchor.
 
-**Blocking quality issues — treat as BLOCKED** (these break execution or ship broken work downstream):
-- Leftover debug output introduced by this task (`console.log`, `print(` for debugging, `debugger;`, `breakpoint()`, language equivalents) in non-debug code paths
-- Uncommitted scaffolding: `FIXME before merge`, `DELETE ME`, hardcoded absolute paths to a developer machine, placeholder secret-shaped strings (`"changeme"`, `"TEST_KEY"`, `"xxx"`)
-- Stubbed implementations in code paths the dependent task will execute: `raise NotImplementedError`, `throw new Error("TODO")`, `pass  # TODO`, bare `return` / `return null` where the caller expects a value
-- Large commented-out code blocks left behind (>5 consecutive commented lines of former code, not documentation)
+#### Blocking quality issues — treat as BLOCKED
 
-**Code smells — report as non-blocking warnings, do not override PASS:**
-- Catch-all exception handling newly introduced (`except Exception:`, `catch (e)` / `catch (...)`) without re-raise or specific handling
-- Near-duplicate blocks (5+ lines repeated with trivial variation) within the changed files
-- Magic numbers or string literals that look like they should be named constants — grep the module; if similar values are named elsewhere, flag
-- Obvious dead code: functions or branches unreferenced after the change
+**Correctness**
+- The diff doesn't actually solve the stated problem. Compare changes against the task's `intent` and `acceptanceCriteria` — if the code is working on a different problem than stated, flag.
+- Edge cases ignored in new code paths: nulls, empty collections, boundary values, concurrent access.
+- Error handling at the wrong layer: swallowed silently, or over-caught and re-thrown as a less specific type.
 
-**Consistency violations — report as non-blocking warnings:**
-Apply the same rules code-implementor operates under (see code-implementor.md "Match Existing Conventions"). Focus on semantic naming: visibility/export markers (capitalization, leading underscore), predicate/mutator suffixes, unused-parameter markers. Grep the surrounding module — if the new code introduces a marker the module does not use, or omits one the module does use, flag it.
+**Scope & size**
+- Diff does more than it claims: unrelated refactors, drive-by renames, or behavior changes buried in "cleanup" — anything outside the task's declared `files` or `intent`.
+- Diff is large enough that it should have been split into dependent tasks.
+
+**Tests**
+- New behavior ships without tests; bug-fix tasks without a regression test that fails without the fix.
+- Tests assert implementation details (exact call counts, private attribute values) instead of outcomes.
+
+**Security & data**
+- Untrusted input reaching a boundary (SQL, shell, HTML output, filesystem path) without validation.
+- Secrets or PII appearing in logs, error messages, or committed files.
+- New endpoints or queries introduced without authorization checks.
+
+**Operational risk**
+- DB migrations that aren't reversible, aren't safe under concurrent writes, or lack a backfill plan.
+- Breaking API/schema changes without versioning or a rollout plan.
+- New dependencies that are unmaintained, unlicensed, or unnecessary for what's being added.
+
+**Readability** (blocking only when severe)
+- Names that no longer match behavior after the change.
+- Control flow the next reader cannot follow — not "I would have written it differently," but "I cannot tell what this does."
+
+#### Code smells — non-blocking warnings, do not override PASS
+
+*Bloaters* — long methods, large classes, long parameter lists, primitive obsession (primitives where a small type would encode meaning), data clumps (the same group of variables appearing together repeatedly).
+
+*OO abusers* — switch statements that should be polymorphism, refused bequest (subclass ignores inherited behavior), temporary fields that only get set in certain circumstances.
+
+*Change preventers* — divergent change (one class changed for many unrelated reasons), shotgun surgery (one logical change touches many classes), parallel inheritance hierarchies.
+
+*Dispensables* — dead code, duplicate code, speculative generality (abstraction without a current second caller), comments used to excuse unclear code rather than fix it, lazy classes (doing too little to justify existing).
+
+*Couplers* — feature envy (method uses another class more than its own), inappropriate intimacy (classes reaching into each other's internals), long message chains (`a.b().c().d()`), middle-man classes that only delegate.
+
+*Other frequent offenders* — magic numbers and strings, deep nesting, boolean-flag parameters controlling behavior, mutable global state, god objects, mixed abstraction levels within a single function.
+
+#### Consistency violations — non-blocking warnings
+
+**Naming**
+- Mixed conventions for the same concept in one module (`camelCase` alongside `snake_case`).
+- The same concept named differently across files (`userId` vs `user_id` vs `uid`).
+- Identifiers whose names no longer match their behavior after a refactor.
+- Semantic naming markers introduced or omitted against the surrounding module's convention — visibility/export via capitalization or leading underscore, predicate/mutator suffixes, unused-parameter markers. See code-implementor.md "Match Existing Conventions."
+
+**Style & formatting**
+- Indentation, quote style, or trailing-comma convention drifting from the rest of the file.
+- Import ordering that varies file-to-file.
+- Mixed async patterns (callbacks + promises + async/await) within a single module.
+
+**Structural**
+- Duplicated logic that has drifted — two copies of the same helper with subtly different behavior.
+- Parallel structures where one side is updated and the other isn't.
+- Error handling thorough in some paths and silent in others.
+- Inconsistent return shapes — sometimes `null`, sometimes `undefined`, sometimes throws.
+
+**Semantic**
+- Type/interface definitions that no longer match runtime shape after a field was added somewhere.
+- Stale comments or docstrings describing pre-change behavior.
+- Repeated magic values that should be a shared constant — one gets updated, the others drift.
+- Enums or constants renamed in their definition while old names linger in strings or comparisons.
 
 If three or more non-blocking warnings accumulate, say so in the output — the orchestrator may choose to invoke the maintainability-reviewer before proceeding.
 

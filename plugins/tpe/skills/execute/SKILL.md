@@ -1,7 +1,7 @@
 ---
 name: execute
 disable-model-invocation: true
-effort: high
+effort: xhigh
 argument-hint: "[feature or bug directory path or slug]"
 model: opus
 description: >

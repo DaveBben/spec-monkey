@@ -1,6 +1,6 @@
 ---
 name: plan
-effort: high
+effort: max
 model: opus
 disable-model-invocation: true
 argument-hint: "[feature slug or .claude/features/{slug} path]"

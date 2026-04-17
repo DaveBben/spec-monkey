@@ -294,7 +294,7 @@ Add a `## Technical Domain Specs` section to the root spec.md listing each techn
 - **Leave human-judgment sections as placeholders** — Project Identity and Critical Constraints require human input. Do not fill these with generic advice.
 - **Keep CLAUDE.md under 200 lines** — A CLAUDE.md that's too long defeats its purpose as quick-reference context.
 - **Don't skip discovery for existing projects** — Even when the user describes the project verbally, explore the codebase first — the code is the source of truth.
-- **Don't confuse project spec with change spec** — If the user starts describing a specific feature or bug fix mid-interview, redirect them to `/cks:feature` for that work.
+- **Don't confuse project spec with change spec** — If the user starts describing a specific feature or bug fix mid-interview, redirect them to `/tpe:think` or `/tpe:bug` for that work.
 - **Keep cross-references in sync** — When writing or moving files, verify CLAUDE.md's pointer to spec.md is correct.
 - **Don't conflate layers with technical domains** — `src/lambda_fn/` and `src/backend/` may look like siblings in a directory listing, but if they deploy separately or have divergent constraints, they are separate technical domains. Conversely, `src/models/`, `src/controllers/`, `src/routes/` share a deployment target, import each other directly, and have no divergent constraints — they are layers within one technical domain. Always apply the litmus test and signals from Phase 1, not directory names.
 - **This skill targets the root CLAUDE.md** — For subdirectory CLAUDE.md files in a monorepo, scope content to that package's technical domain.

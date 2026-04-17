@@ -1,17 +1,19 @@
 {
-  "name": "cks-marketplace",
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "tpe-marketplace",
   "owner": {
     "name": "Dave"
   },
-  "metadata": {
-    "description": "Claude KISS — focused skills for TDD-driven feature and bug implementation"
-  },
+  "description": "Think-Plan-Execute — the only skills you need to actually get work done",
   "plugins": [
     {
-      "name": "cks",
-      "source": "./",
-      "description": "TDD-first workflow: /cks:onboard, /cks:feature, /cks:bug, /cks:execute, /cks:light-review, /cks:deep-review",
-      "version": "1.0.0"
+      "name": "tpe",
+      "source": "./plugins/tpe",
+      "description": "Research-grounded pipeline: /tpe:think, /tpe:plan, /tpe:execute, /tpe:bug, /tpe:review, /tpe:onboard",
+      "version": "1.0.0",
+      "author": {
+        "name": "Dave"
+      }
     }
   ]
 }

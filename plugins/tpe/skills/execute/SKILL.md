@@ -5,7 +5,7 @@ effort: high
 argument-hint: "[feature or bug directory path or slug]"
 model: opus
 description: >
-  Implements approved tasks from /cks:feature or /cks:bug. For each task:
+  Implements approved tasks from /tpe:plan or /tpe:bug. For each task:
   dispatches a single implementation agent.
   After all tasks: full test suite, finalize. Does not
   commit, push, or create PRs.
@@ -45,9 +45,9 @@ Resolve `$ARGUMENTS`:
 
 1. **Feature/bug directory path**: Verify `tasks/plan.json` exists.
    If missing and path is under `.claude/bugs/`:
-   > "No tasks found at `.claude/bugs/{slug}/tasks/`. Run `/cks:bug {slug}` to complete investigation and produce task JSONs."
+   > "No tasks found at `.claude/bugs/{slug}/tasks/`. Run `/tpe:bug {slug}` to complete investigation and produce task JSONs."
    If missing and path is under `.claude/features/`:
-   > "No plan.json found at `.claude/features/{slug}/tasks/`. Run `/cks:plan {slug}` to produce the plan and task JSONs."
+   > "No plan.json found at `.claude/features/{slug}/tasks/`. Run `/tpe:plan {slug}` to produce the plan and task JSONs."
 2. **Slug**: Try `.claude/features/{slug}/` then `.claude/bugs/{slug}/`.
 3. **No input**: Glob for available plans, present choices.
 
@@ -84,7 +84,7 @@ If any `spec.md` (root or domain) has `Last verified` >30 days old and plan date
 
 ### Brainstorm.md Check
 
-If any task qualifies as Complex tier, verify `brainstorm.md` exists. If missing: warn, offer to downgrade to Standard tier or return to `/cks:think`. Do not block.
+If any task qualifies as Complex tier, verify `brainstorm.md` exists. If missing: warn, offer to downgrade to Standard tier or return to `/tpe:think`. Do not block.
 
 ### Gate Check
 
@@ -121,7 +121,7 @@ Before dispatching each task, classify it:
 |------|----------|-------------|
 | **Simple** | 1 file, clear reference, no interface changes | maxTurns: 20, model: haiku |
 | **Standard** | 2-3 files, or 1 file with interface changes | maxTurns: 50, model: sonnet (default) |
-| **Complex** | 4 files, or touches shared interfaces/types | maxTurns: 75, model: sonnet, also pass `brainstorm.md` path for additional approach context |
+| **Complex** | 4 files, or touches shared interfaces/types | maxTurns: 75, model: opus, also pass `brainstorm.md` path for additional approach context |
 
 If a Simple task agent STOPs or hits maxTurns, retry once at Standard tier before marking BLOCKED.
 

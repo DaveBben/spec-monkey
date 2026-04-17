@@ -8,7 +8,7 @@ description: >
   Pre-planning skill for feature and change requests. Scopes intent,
   traces codebase impact, evaluates approaches, and surfaces consequences
   for human decision-making. Output is a focused brainstorm.md (under 200
-  lines) that feeds /plan. Do NOT use for bugs (use /cks:bug). Do NOT use
+  lines) that feeds /plan. Do NOT use for bugs (use /tpe:bug). Do NOT use
   for trivial one-line changes (just make the change).
 ---
 
@@ -20,7 +20,7 @@ description: >
 > decisions made in this conversation, not AI proposals.
 
 ```
-User describes change → /cks:think
+User describes change → /tpe:think
   Phase 1: Intent (what + why + constraints)
   Phase 2: Impact (codebase tracing, at-risk tests, approaches)
   Phase 3: Decisions (human chooses approach, confirms boundaries)
@@ -187,4 +187,4 @@ Write `.claude/features/{slug}/brainstorm.md` using the [brainstorm.md template]
 
 **Hard rules:** under 200 lines; only confirmed decisions (unresolved → `[TBD]`); unconfirmed tests → `[unverified]`; every file:line verified on disk; no implementation details (code goes in plan.md).
 
-Present to user for review. Apply corrections. On approval, set Status to `Approved`, update Date, and direct user to run `/cks:plan .claude/features/{slug}`.
+Present to user for review. Apply corrections. On approval, set Status to `Approved`, update Date, and direct user to run `/tpe:plan .claude/features/{slug}`.

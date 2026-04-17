@@ -6,9 +6,9 @@ disable-model-invocation: true
 argument-hint: "[feature slug or .claude/features/{slug} path]"
 description: >
   Takes an approved brainstorm.md and produces plan.md and task JSONs
-  ready for /cks:execute. Minimal user interaction — Think already made the
-  decisions. Do NOT run without an approved brainstorm.md (run /think
-  first). Do NOT use for bugs (use /cks:bug).
+  ready for /tpe:execute. Minimal user interaction — Think already made the
+  decisions. Do NOT run without an approved brainstorm.md (run /tpe:think
+  first). Do NOT use for bugs (use /tpe:bug).
 ---
 
 # Plan — Implementation Specification
@@ -18,7 +18,7 @@ description: >
 > /act can run without needing to ask questions.
 
 ```
-/cks:plan {slug}
+/tpe:plan {slug}
   Step 1: Load and validate brainstorm.md
   Step 2: Deepen codebase investigation
   Step 3: Write plan.md with real code snippets
@@ -39,16 +39,16 @@ Resolve `$ARGUMENTS` to a feature directory:
 3. **No input**: glob for available brainstorm.md files, present choices
 
 Read `brainstorm.md`. Hard stop if no `brainstorm.md` exists:
-> "No brainstorm.md found at `.claude/features/{slug}/`. Run `/cks:think {description}` first to produce one."
+> "No brainstorm.md found at `.claude/features/{slug}/`. Run `/tpe:think {description}` first to produce one."
 
 Hard stop if:
-- Status is not `Approved` — tell user to complete `/cks:think` first
+- Status is not `Approved` — tell user to complete `/tpe:think` first
 - At-risk tests section contains `[unverified]` entries — ask user to confirm or remove them before proceeding. Unverified test context is worse than no test context.
-- More than 3 `[TBD]` entries — too many open decisions. Return to `/cks:think` to resolve them.
+- More than 3 `[TBD]` entries — too many open decisions. Return to `/tpe:think` to resolve them.
 
 Warn (do not hard stop) if:
 - Dependency Chain section is empty or absent — dependency chains prevent NameError-class failures on multi-file tasks. Warn:
-  > "brainstorm.md has no dependency chain. Multi-file tasks are at higher risk of cross-file reference errors. Continue or return to /cks:think to add one?"
+  > "brainstorm.md has no dependency chain. Multi-file tasks are at higher risk of cross-file reference errors. Continue or return to /tpe:think to add one?"
 
 If 1–3 `[TBD]` entries remain (allowed by think), extract them now. During Step 2 investigation, attempt to resolve each from the codebase. Any that remain unresolved after Step 2 must appear in the relevant task's `doNot` as: "Do not assume [TBD topic] — decision pending."
 
@@ -147,13 +147,13 @@ Present plan.md to the user:
 
 > "The plan is at `.claude/features/{slug}/plan.md` and {N} task JSONs are in `tasks/`. Review the plan and either:
 > 1. **Give feedback** — tell me what's wrong, I'll revise once
-> 2. **Approve** — say 'approve' to proceed to /cks:execute"
+> 2. **Approve** — say 'approve' to proceed to /tpe:execute"
 
 Process feedback as one revision pass. Re-run the plan-verifier after any changes to plan.md that touch code references.
 
 After revision, if the user gives further feedback: apply it, but flag:
-> "This is the second revision. If the plan still doesn't match your intent, consider returning to /cks:think — the approach may need revisiting rather than the plan."
+> "This is the second revision. If the plan still doesn't match your intent, consider returning to /tpe:think — the approach may need revisiting rather than the plan."
 
 On approval: update plan.json status from `PendingDecomposition` to `Approved`. Say:
 
-> "Run `/cks:act .claude/features/{slug}` to execute."
+> "Run `/tpe:execute .claude/features/{slug}` to execute."

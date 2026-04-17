@@ -20,7 +20,7 @@ description: >
 > executable task JSONs with minimal intermediate artifacts.
 
 ```
-User describes symptom → /cks:bug
+User describes symptom → /tpe:bug
   Phase 1: Capture (symptom, repro steps, severity)
   Phase 2: Investigate (trace code path, reproduce programmatically)
   Phase 3: Confirm (present findings, user confirms root cause)
@@ -136,7 +136,7 @@ Present what the fix will and will NOT do (no refactoring, no unrelated fixes, n
 
 Before producing task JSONs, check whether the fix exceeds bug-pipeline scope. If investigation revealed **>3 files affected**, the fix requires **changing a shared interface/type**, or would require **>4 tasks**, recommend escalating:
 
-> "This looks larger than a typical bug fix — it touches {N} files across {concerns}. The bug pipeline skips approach selection and plan verification, which matter at this size. Recommend escalating to `/cks:think` → `/cks:plan` → `/cks:act`. I can pass the findings so far. Escalate or continue as bug?"
+> "This looks larger than a typical bug fix — it touches {N} files across {concerns}. The bug pipeline skips approach selection and plan verification, which matter at this size. Recommend escalating to `/tpe:think` → `/tpe:plan` → `/tpe:execute`. I can pass the findings so far. Escalate or continue as bug?"
 
 If the user chooses to continue, proceed — but note the decision in plan.json's `knownRisks`: "User opted to keep bug pipeline despite {N}-file scope."
 
@@ -178,4 +178,4 @@ Validate each task JSON:
 - If task_0 references `repro-test.[ext]` in `acceptanceCriteria` and `reproductionResult` was ERROR: verify the file exists on disk. If absent, remove the reference — let the agent write from scratch.
 
 Present to user:
-> "{N} tasks in `.claude/bugs/{slug}/tasks/`. Review, then run `/cks:act .claude/bugs/{slug}` to execute."
+> "{N} tasks in `.claude/bugs/{slug}/tasks/`. Review, then run `/tpe:execute .claude/bugs/{slug}` to execute."

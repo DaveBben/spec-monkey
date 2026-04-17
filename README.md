@@ -1,6 +1,6 @@
-# Claude KISS — Keep it Simple Stupid
+# Think-Plan-Execute (TPE)
 
-A focused set of Claude Code skills that turn ideas and bugs into implemented, reviewed code. No multi-stage planning pipelines. Direct entry points only.
+A pipeline that attempts to ground its design choices in empirical research, keeping humans in architectural decisions while AI handles investigation and implementation.
 
 ## Installation
 
@@ -11,7 +11,7 @@ Install as a Claude Code plugin:
 /plugin marketplace add <owner>/backlog-driven-development
 
 # Install the plugin
-/plugin install cks@cks-marketplace
+/plugin install tpe@tpe-marketplace
 ```
 
 Or test locally:
@@ -20,44 +20,31 @@ Or test locally:
 claude --plugin-dir ./backlog-driven-development
 ```
 
-All skills are namespaced under `cks:` (e.g., `/cks:feature`, `/cks:execute`).
+All skills are namespaced under `tpe:` (e.g., `/tpe:think`, `/tpe:execute`).
 
 ---
 
 ## Routing
 
 ```
-Is this a new codebase or one you haven't onboarded yet?
-  └── Yes → /cks:onboard  (creates CLAUDE.md + spec.md, then come back here)
+Is this a new codebase or one you haven't onboarded yet (brownfield)?
+  └── Yes → /tpe:onboard  (creates CLAUDE.md + spec.md)
 
-Is the change one or two lines?
+Can the change be understood by a single diff?
   └── Yes → Use vanilla Claude Code with plan mode. No skills needed.
 
 Is it a bug?
-  └── Yes → /cks:bug → then /cks:execute
+  └── Yes → /tpe:bug → then /tpe:execute
 
 Is it a new feature or capability?
-  └── Yes → /cks:feature → then /cks:execute
+  └── Yes → /tpe:think → /tpe:plan → /tpe:execute
 
 Don't know where the change lives or what it touches?
-  └── Yes → /cks:explore (understand the codebase first, then decide)
+  └── Yes → /tpe:think (investigation phase surfaces this before any planning)
 
 Want a second set of eyes on what you're writing?
-  └── Yes → /cks:check-work (flags bugs, missing pieces, better approaches — never writes code)
-
-Want to understand what was just built?
-  └── Yes → /cks:retro (after /cks:execute completes)
+  └── Yes → /tpe:review (four-agent parallel review — never writes code)
 ```
-
-### Depth Modes
-
-Not every change needs the full pipeline. Pick the depth that matches your situation:
-
-| Mode | When to use | What to do |
-|------|------------|------------|
-| **Quick fix** | You know exactly what to change, < ~50 lines | Skip /cks:feature entirely. Write a task JSON manually and run `/cks:execute`, or just use vanilla Claude Code. |
-| **Experienced** | You know the codebase well, the feature is straightforward | Run `/cks:feature` — when gates present output, confirm quickly or say "continue" to keep moving. The workflow won't block you unless something looks structurally wrong. |
-| **Full pipeline** | New to the codebase, complex feature, high-risk area, or compliance-sensitive work | Run `/cks:feature` — engage with every gate, review the devil's advocate challenges carefully, annotate the plan thoroughly. This is the maximum-guidance path. |
 
 ---
 
@@ -65,94 +52,74 @@ Not every change needs the full pipeline. Pick the depth that matches your situa
 
 | Skill | What it does | Artifacts produced |
 |---|---|---|
-| `/cks:onboard` | Sets up context for a new or existing codebase | `CLAUDE.md`, `spec.md` |
-| `/cks:explore` | Guided investigation for changes you don't understand yet — AI traces impact, you think first | Dialogue (no artifacts) |
-| `/cks:feature` | Investigates scope, produces a plan and TDD task files | `.claude/features/{slug}/plan.md`, `.claude/features/{slug}/tasks/task_N.md`, `.claude/features/{slug}/human_plan.md` |
-| `/cks:bug` | Captures symptom, root cause, and fix tasks | `.claude/bugs/{slug}/plan.md`, `.claude/bugs/{slug}/tasks/task_N.md`, `.claude/bugs/{slug}/human_plan.md` |
-| `/cks:execute` | Implements tasks: single-agent implementation + two-tier review + PR | Branch, commits, PR |
-| `/cks:check-work` | Check my work — dispatches a reviewer, translates findings into concise why-focused explanations | Dialogue (no artifacts) |
-| `/cks:retro` | Post-execution comprehension walkthrough — understand what was built | Dialogue (no artifacts) |
-| `/cks:deep-review` | Four-agent parallel review (security, reliability, maintainability, performance) | Consolidated review report |
+| `/tpe:onboard` | Sets up context for a new or existing codebase | `CLAUDE.md`, `spec.md` |
+| `/tpe:think` | Investigates scope, surfaces consequences, gets human decisions before planning | `brainstorm.md` |
+| `/tpe:plan` | Reads approved brainstorm, writes implementation plan, decomposes to task JSONs | `plan.md`, `plan.json`, `task_{N}.json` |
+| `/tpe:execute` | Implements tasks: dispatches code-implementor per task, regression checks, deep review | Branch, commits |
+| `/tpe:bug` | Captures symptom, investigates root cause, produces task JSONs directly | `task_{N}.json` (no plan.md intermediate) |
+| `/tpe:review` | Four-agent parallel review (security, reliability, maintainability, performance) | Consolidated review report |
 
 ---
 
 ## Skill Details
 
-### `/cks:onboard`
+### `/tpe:onboard`
 
 Run this first on any codebase — new or existing. The skill reads the repository, asks targeted questions about purpose, tech stack, conventions, and constraints, then produces:
 
 - **`CLAUDE.md`** — quick-reference context that Claude Code loads on every conversation
 - **`spec.md`** — living specification describing what the system does, key decisions, and known constraints
 
-Once onboarded, `/cks:feature` and `/cks:bug` plans have rich context to work from, reducing the questions they need to ask.
+Once onboarded, `/tpe:think` and `/tpe:bug` have rich context to work from, increasing the chances that AI agents implement changes without breaking existing data contracts.
 
-### `/cks:explore`
+### `/tpe:think`
 
-Guided codebase investigation for changes you want to make but don't yet understand. AI traces the full impact surface and surfaces edge cases — but asks you to think and predict before revealing what it found. The gap between your prediction and reality is where understanding gets built.
+Investigative conversation that clarifies scope, constraints, and approach — **before** any planning or implementation. The human makes architectural decisions here; the AI investigates and surfaces consequences.
 
-Use this when:
-- You don't know where a piece of functionality lives
-- You want to understand what a change touches before committing to a plan
-- You're new to the codebase or the domain
-- You want to learn, not just ship
+Runs three parallel Explore agents (blast radius, existing patterns, data shapes), synthesizes findings, and asks:
+1. Impact surface — what does this change touch?
+2. At-risk tests — which tests must not break? (requires human confirmation)
+3. Approach — human states their approach first, AI presents alternatives, human decides
 
-Works in five phases: establish prior knowledge → silent AI investigation → human directs and predicts → graduated reveal by category → comprehension check and evaluation. Produces no artifacts — it's a dialogue that builds your mental model.
+Produces **`brainstorm.md`** — the contract between think and plan. Plan will not start until Status is `Approved`.
 
-After exploring, you can plan it yourself, feed into `/cks:feature`, or dig deeper.
+### `/tpe:plan`
 
-### `/cks:feature`
+Reads the approved `brainstorm.md`, deepens targeted investigation, and produces:
 
-Investigative conversation that clarifies scope, constraints, and acceptance criteria. The skill reads any existing `CLAUDE.md` and `spec.md` for context, explores the codebase, then produces:
+- **`plan.md`** — implementation plan with real code, constraints, and pattern references (100–200 lines)
+- **`plan.json`** — machine-readable plan metadata
+- **`task_{N}.json`** files — one per vertical slice, each with: files (max 4), symbol, single reference, dependency chain, at-risk tests, acceptance criteria (GIVEN/WHEN/THEN), verification command, and explicit scope boundaries
 
-- **`plan.md`** — what is being built, why, constraints, and scope boundaries
-- **`task_N.md` files** — one per task, each with: relevant files (strict boundary for the executor), acceptance criteria (GIVEN/WHEN/THEN), verification description, and explicit anti-scope (Do NOT list)
-- **`human_plan.md`** — concise synthesis of all artifacts for developers who want to implement the feature themselves rather than using `/cks:execute`
+Runs a `plan-verifier` agent to fact-check all file:line references before producing task JSONs.
 
-Multi-repo: when a feature spans multiple repositories, `/cks:feature` records all repository paths and tags each task with its target repository. Works best with monorepos or co-located repos. For separate repos, contract stubs decouple execution — see `/cks:execute` docs.
+### `/tpe:execute`
 
-### `/cks:bug`
+Takes a plan directory and processes all task JSONs:
 
-Guides the user through: symptom description, environment, reproduction steps, expected vs actual behavior, severity, and root cause investigation. Produces:
+1. Pre-flight: branch safety, validate task JSONs, test baseline, spec freshness
+2. For each task: dispatch `code-implementor` agent at appropriate complexity tier (haiku/sonnet/opus, maxTurns 20–75)
+3. Trust-but-verify: run `regressionCheck` after each task — hard stop on failure
+4. Per-task commit after verification passes (rollback granularity)
+5. Handoff check when next task depends on the completed one
+6. `/tpe:review` after all tasks for the repo
+7. Full test suite + lint
 
-- **`plan.md`** — bug context, root cause, severity
-- **`task_N.md` files** — fix tasks with the same TDD structure as feature tasks
-- **`human_plan.md`** — concise synthesis of all artifacts for developers who want to fix the bug themselves rather than using `/cks:execute`
+Does not push or create PRs
 
-Execute with `/cks:execute`.
+### `/tpe:bug`
 
-### `/cks:execute`
+Bugs start from a symptom, not a change request, so they skip the think→plan path. Guides through: symptom description, reproduction steps, root cause investigation via two parallel agents, then produces task JSONs directly:
 
-Takes a feature or bug plan directory and processes all tasks:
+- `task_0`: write the failing reproduction test
+- `task_1`: fix (blocked by task_0, done when repro test goes green)
+- `task_2`: edge case tests (optional)
 
-1. Create branch (`feature/{slug}` or `bugfix/{slug}`)
-2. For each task: single `code-implementor` agent reads task, implements, verifies
-3. Inline code review (generic-code-reviewer) after each task — findings fixed before moving on
-4. `/cks:deep-review` after all tasks — thorough cross-cutting review, findings fixed
-5. Push branch + create PR using `gh`
+Same task JSON schema as features — `/tpe:execute` does not need to know whether it's running a bug or feature.
 
-Multi-repo: tasks are tagged with their target repository. Each repo is processed sequentially with contract stubs to decouple cross-repo dependencies.
+If the investigation finds that the bug touches many files across multiple concerns, the skill warns and offers to escalate to `/tpe:think` → `/tpe:plan` → `/tpe:execute`.
 
-### `/cks:check-work`
-
-Check my work. Dispatches a `generic-code-reviewer` agent to find bugs, missing pieces, contract risks, and better approaches — then translates the findings into concise, why-focused feedback. HIGH-confidence findings are stated directly; MEDIUM-confidence ones surface as guiding questions.
-
-Never writes code for you. If something needs fixing, it tells you what and why, then you write the fix. Think of it as a tutor looking over your shoulder, not a linter.
-
-Use anytime — no session setup, no ceremony. Just say `/cks:check-work` and point it at your work.
-
-### `/cks:retro`
-
-Post-execution comprehension check. After `/cks:execute` completes, this skill walks through the implementation task by task, asking you to predict how each task was implemented before revealing the actual diff. Finds the gaps between what you expected and what was built — those gaps are where learning happens.
-
-Use this when:
-- You used `/cks:execute` on unfamiliar code or a new codebase
-- You want to own the code the AI produced, not just ship it
-- You're growing into a domain and want to build mental models faster
-
-Not a review, not a gate — a learning tool. Entirely opt-in, skip any task at any time.
-
-### `/cks:deep-review`
+### `/tpe:review`
 
 Four agents run in parallel, each focused on one dimension:
 
@@ -163,7 +130,7 @@ Four agents run in parallel, each focused on one dimension:
 | `maintainability-reviewer` | Readability, compatibility, conventions |
 | `performance-reviewer` | N+1 queries, blocking I/O, resource leaks |
 
-Results are consolidated into a single report. Used automatically by `/cks:execute` after all tasks for a repo complete.
+Results are consolidated into a single report. Used automatically by `/tpe:execute` after all tasks for a repo complete. Can also be invoked standalone on any code.
 
 ---
 
@@ -171,14 +138,13 @@ Results are consolidated into a single report. Used automatically by `/cks:execu
 
 | Agent | Role | Used by |
 |---|---|---|
-| `plan-verifier` | Fact-checks plan.md references against the codebase | `/cks:feature` |
-| `human-plan-synthesizer` | Synthesizes artifacts into a human-readable implementation guide | `/cks:feature`, `/cks:bug` |
-| `code-implementor` | Reads task, implements code, verifies against acceptance criteria | `/cks:execute` |
-| `generic-code-reviewer` | All-dimensions fast review | `/cks:check-work`, `/cks:execute` |
-| `security-reviewer` | Injection, access control, data exposure | `/cks:deep-review` |
-| `reliability-reviewer` | Correctness, race conditions, resource lifecycle | `/cks:deep-review` |
-| `maintainability-reviewer` | Readability, compatibility, conventions | `/cks:deep-review` |
-| `performance-reviewer` | N+1 queries, blocking I/O, resource leaks | `/cks:deep-review` |
+| `plan-verifier` | Fact-checks plan.md references against the codebase | `/tpe:plan` |
+| `code-implementor` | Reads task JSON, implements code, verifies against acceptance criteria | `/tpe:execute` |
+| `task-handoff-checker` | Checks export/import consistency between completed and dependent tasks | `/tpe:execute` |
+| `security-reviewer` | Injection, access control, data exposure | `/tpe:review` |
+| `reliability-reviewer` | Correctness, race conditions, resource lifecycle | `/tpe:review` |
+| `maintainability-reviewer` | Readability, compatibility, conventions | `/tpe:review` |
+| `performance-reviewer` | N+1 queries, blocking I/O, resource leaks | `/tpe:review` |
 
 ---
 
@@ -191,85 +157,66 @@ Plans and tasks are stored per-project inside `.claude/`:
   .claude/
     features/
       {slug}/
+        brainstorm.md
         plan.md
-        human_plan.md
+        plan.json
         tasks/
-          task_0.md
-          task_1.md
+          task_0.json
+          task_1.json
     bugs/
       {slug}/
-        plan.md
-        human_plan.md
         tasks/
-          task_0.md
+          task_0.json
+          task_1.json
+        repro-test.[ext]
 ```
 
-`plan.md` contains metadata, context, and constraints for the feature or bug. `task_N.md` files contain individual TDD tasks: relevant files, acceptance criteria, verification, and anti-scope.
-
----
-
-## File Structure
-
-```
-cks/
-  .claude-plugin/
-    plugin.json
-    marketplace.json
-  skills/
-    feature/
-      SKILL.md
-      references/
-        templates.md
-        implementation-guidance.md
-    bug/
-      SKILL.md
-      references/
-        templates.md
-    execute/
-      SKILL.md
-    explore/
-      SKILL.md
-    check-work/
-      SKILL.md
-    retro/
-      SKILL.md
-    deep-review/
-      SKILL.md
-    onboard/
-      SKILL.md
-      references/
-        quality-guide.md
-        claude-md-format.md
-        spec-standards.md
-        spec-template.md
-        spec-section-guidance.md
-  agents/
-    plan-verifier.md
-    human-plan-synthesizer.md
-    code-implementor.md
-    generic-code-reviewer.md
-    security-reviewer.md
-    reliability-reviewer.md
-    maintainability-reviewer.md
-    performance-reviewer.md
-```
+`brainstorm.md` records human decisions and confirmed at-risk tests. `plan.md` contains the implementation approach and constraints. `task_{N}.json` files contain individual tasks: files, symbol, dependency chain, at-risk tests, acceptance criteria, and verification commands.
 
 ---
 
 ## Design Principles
 
-**Onboard first, question less.** `/cks:onboard` front-loads context gathering. Every downstream skill benefits: `/cks:feature` asks fewer questions when `CLAUDE.md` and `spec.md` already exist.
+**Human decides before AI plans.** `/tpe:think` surfaces consequences and alternatives; the human chooses the approach. The AI never recommends — it presents options and waits.
 
-**Gap-driven questioning.** Skills analyze what context already exists and only ask about what is missing.
+**Brainstorm → Plan → Execute is a verified handoff chain.** Each skill consumes artifacts from the previous one. Plan blocks if brainstorm is unapproved or has unverified tests. Execute validates task JSONs before touching code.
 
-**Artifacts are explicit contracts.** Every skill specifies what it produces and why. `/cks:execute` knows exactly what to consume.
+**Context density over context volume.** Every field in a task JSON must earn its place. Wrong context is worse than no context — so at-risk tests are human-confirmed, references are capped at one, and files are capped at four.
 
-**Two-tier review.** Inline code review (generic-code-reviewer) after each task (fast, focused). `/cks:deep-review` after all tasks per repo (thorough, cross-cutting). Both are automatic during `/cks:execute`.
-
-**One branch, one PR per repo.** All tasks for a repo commit to a single branch. Deep review covers the full change set.
-
-**Multi-repo support.** `/cks:execute` groups tasks by repository. Cross-repo dependencies use contract stubs for decoupled execution. Works best with monorepos or co-located repos.
-
-**Bugs use the same execution path.** `/cks:bug` creates the plan. `/cks:execute` implements it. Same review gates.
+**Regression prevention is the primary quality metric.** Targeted at-risk tests (human-confirmed, specific) reduce regressions 72%. Generic TDD instructions without targeted context increase them. The pipeline is designed around this finding.
 
 **Skip the skills when you don't need them.** One- or two-line changes do not need a plan file. Use vanilla Claude Code with plan mode.
+
+---
+
+## Research Foundations
+
+Design choices map to empirical findings on how coding agents fail and how humans lose skill when AI removes friction. 
+
+### Agent effectiveness
+
+| Principle | Key finding | Pipeline response |
+|-----------|------------|-------------------|
+| **Context precision over volume** | Wrong context is worse than none ([2602.08316](https://arxiv.org/abs/2602.08316)). Context types interfere ([2503.20589](https://arxiv.org/abs/2503.20589)). Structured context degrades review across all models tested ([2603.26130](https://arxiv.org/abs/2603.26130)). | Artifacts capped (brainstorm 200 lines, plan 200, task JSONs per-task only). Every field must earn its place. |
+| **Task decomposition** | Highest-ceiling intervention: +10–40pp ([2510.07772](https://arxiv.org/abs/2510.07772), [2311.05772](https://arxiv.org/abs/2311.05772)). Agents collapse from 74% to 11% on feature-level tasks ([2602.10975](https://arxiv.org/abs/2602.10975)). | `/tpe:plan` decomposes into vertical slices, hard max 4 files per task. |
+| **Targeted test context** | Test dependency info reduced regressions 72%; generic TDD instructions *increased* them 42% ([2603.17973](https://arxiv.org/abs/2603.17973)). | Human-confirmed at-risk tests, multi-agent triangulated. Never instructs "write tests first." |
+| **Single agent** | Matches or beats multi-agent at fraction of cost ([2604.02460](https://arxiv.org/abs/2604.02460), [2505.18286](https://arxiv.org/abs/2505.18286)). Weaker model + strong scaffolding wins ([2512.10398](https://arxiv.org/abs/2512.10398)). | One agent per task. Haiku/Sonnet implements, Opus orchestrates. |
+| **Instruction brevity** | Shorter instructions quadrupled resolution ([2603.17973](https://arxiv.org/abs/2603.17973)). Context length alone degrades performance even with perfect retrieval ([2510.05381](https://arxiv.org/abs/2510.05381)). | Task JSONs carry intent, not procedures. |
+| **Agent overconfidence** | Agents predict 77% success at 22% actual ([2602.06948](https://arxiv.org/abs/2602.06948)). | Trust-but-verify: orchestrator runs `regressionCheck`, never trusts agent self-report. |
+| **Instruction fade-out** | System instructions lose influence as context fills ([2603.05344](https://arxiv.org/abs/2603.05344)). | Re-surfaces constraints before each verification; pauses every 6 tasks. |
+| **Quality erosion** | Code quality eroded in 80% of trajectories ([2603.24755](https://arxiv.org/abs/2603.24755)). Security vulnerabilities increased 37.6% after 5 iterations ([2506.11022](https://arxiv.org/abs/2506.11022)). | Per-task commits, handoff checks, size/drift warnings, human pause gates. |
+
+### Human cognition
+
+| Principle | Key finding | Pipeline response |
+|-----------|------------|-------------------|
+| **Predict-before-reveal** | Predicting before seeing results improves learning and defends against anchoring ([2410.08922](https://arxiv.org/abs/2410.08922), [SSRN:6097646](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6097646)). | `/tpe:think` asks human to predict at-risk tests and propose approach before revealing findings. |
+| **Human decides, AI investigates** | Formulating hypotheses produces deeper learning than following suggestions ([2505.08063](https://arxiv.org/abs/2505.08063)). | AI never recommends. Human chooses approach, confirms boundaries, signs off scope. |
+| **Batch reveals** | Most AI interactions stay in a single metacognitive phase, skipping planning and evaluation ([2511.04144](https://arxiv.org/abs/2511.04144)). | Three sequential batches (impact → tests → approach), each gated on human response. |
+| **Inquiry over delegation** | Conceptual inquiry builds skill; code delegation erodes it ([2601.20245](https://arxiv.org/abs/2601.20245), [2506.08872](https://arxiv.org/abs/2506.08872)). | `/tpe:think` = inquiry mode (human). `/tpe:execute` = delegation (agent). |
+
+### Cross-cutting
+
+- **Verified context only.** Multi-agent convergence for at-risk tests, grep-verified dependency chains, orchestrator-run regression checks. No stage trusts its inputs blindly ([2602.08316](https://arxiv.org/abs/2602.08316)).
+- **Progressive compression.** brainstorm (~200 lines) → plan (~200 lines) → task JSONs (~50–80 lines). Semantic density over token count ([2604.07502](https://arxiv.org/abs/2604.07502)).
+- **Human gates at decision points, automation at verification points.** Human chooses approach, approves plan, handles push/PR. Regression checks, reference verification, and handoff validation are mechanical.

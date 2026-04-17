@@ -75,6 +75,15 @@ If the plan identifies at-risk tests (existing tests that could regress):
 - Verify the test file actually imports or exercises code in the files being modified (grep for imports of the affected modules)
 - If a listed test doesn't actually depend on the changed code, flag it as a false positive — wasted at-risk entries dilute the signal
 
+### 7. Internal Consistency Against Negated Names
+
+Plan.md's `Scope > Out` and `What NOT to Do` sections establish names the plan explicitly *will not* produce. Elsewhere in plan.md, a naked reference to that same basename will pattern-match onto the negated artifact in a reader's head, even if the author meant a different file.
+
+For every basename listed in `Scope > Out` or `What NOT to Do`:
+- Grep the rest of plan.md (Impact, Patterns, Implementation, Reference lines, Architectural Decision) for that basename
+- Flag any unqualified reference as a potential collision — the plan should use a disambiguated form (parent dir prefix, e.g. `synthetic_data_gen/s3.py` instead of `s3.py`) or drop the negation if the two really refer to the same thing
+- This is an internal-consistency check, not a codebase check — you are comparing plan.md against itself
+
 ## Output
 
 Return a structured report:

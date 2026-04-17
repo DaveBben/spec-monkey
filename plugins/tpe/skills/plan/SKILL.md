@@ -68,6 +68,10 @@ For each file in brainstorm.md's Impact Surface, read targeted extracts:
 
 **Cap reads to what the plan will actually cite.** Do not read files speculatively. Every file read here should produce at least one `file:line` reference in plan.md. If it doesn't, stop reading it.
 
+**Breaking-change call-site sweep.** The "cap reads" rule above governs *file reading*, not *reference finding* — these are different. For every symbol in brainstorm.md's Impact Surface undergoing a breaking change (signature change, field removal, rename, deletion), grep the entire repo for references — especially tests. This is mechanical completeness, not speculation: you must find every call site that will stop compiling or pass/fail differently after the change.
+
+For each test file that references a symbol undergoing a breaking change, it must either appear in the task's `atRiskTests` or you must justify in plan.md why it isn't at risk. A plan that lists one obviously-named test but misses sibling tests hitting the same call site creates an impossible situation for the implementor: "change the signature, don't modify tests, regressionCheck must pass" becomes unsatisfiable.
+
 Resolve the dependency chain from brainstorm.md against the actual codebase — verify each hop in the chain exists at the stated path. If a hop is wrong, find the correct path now. Do not carry stale dependency chains into task JSONs.
 
 ---

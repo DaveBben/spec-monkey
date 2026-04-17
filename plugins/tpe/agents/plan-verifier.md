@@ -75,7 +75,18 @@ If the plan identifies at-risk tests (existing tests that could regress):
 - Verify the test file actually imports or exercises code in the files being modified (grep for imports of the affected modules)
 - If a listed test doesn't actually depend on the changed code, flag it as a false positive — wasted at-risk entries dilute the signal
 
-### 7. Internal Consistency Against Negated Names
+### 7. At-Risk Test Completeness (False Negatives)
+
+Check #6 flags false positives — listed tests that don't actually touch the changed code. This check flags the inverse: tests that touch the changed code but aren't listed.
+
+For every Impact table entry with action `modify` (involving a signature change, field removal, or rename) or action `delete`:
+- Grep the repo for references to the symbol or field (e.g. `grep -rn "load_clinical_descriptions\|clinical_descriptions_path" tests/`)
+- For each test file that imports or references the symbol, verify it appears in some task's `atRiskTests` or is explicitly justified as not-at-risk in plan.md
+- Any test that references the symbol but is missing from both is a false negative — flag it. A missed at-risk test creates an unsatisfiable contract for the implementor ("change the API, keep the test green, don't modify tests").
+
+This is the mechanical sweep the plan should have done in Step 2. The verifier is the safety net.
+
+### 8. Internal Consistency Against Negated Names
 
 Plan.md's `Scope > Out` and `What NOT to Do` sections establish names the plan explicitly *will not* produce. Elsewhere in plan.md, a naked reference to that same basename will pattern-match onto the negated artifact in a reader's head, even if the author meant a different file.
 

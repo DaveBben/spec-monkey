@@ -180,17 +180,12 @@ After all tasks in the current slice:
 
 1. Run full test suite + lint. Fix failures.
 
-2. **Refactor pass (advisory + gated):**
-   - Determine the branch base: `git merge-base main HEAD` for Slice 1, or the previous slice's branch tip for stacked slices.
-   - Dispatch the `refactor-opportunities` agent. Pass: feature directory path, branch base ref.
-   - If the agent returns `No refactor opportunities identified.`, skip the rest of step 2.
-   - Present the agent's numbered list to the user verbatim, then prompt:
-     > "Select refactors to apply. Reply `all`, `none`, a category (`consistency` / `complexity` / `comments`), or numbers (e.g. `1,3,5-6`)."
-   - Parse the response. If `none`: skip the rest of step 2.
-   - Apply the selected edits directly (orchestrator uses Edit/Write with the agent's `file:line` anchors and descriptions). Run full test suite + lint. Fix failures using the same fix-until-green pattern as step 1 — the user can cancel at any time if the loop isn't converging.
-   - Commit as a single commit: `refactor: post-task cleanup`. Do not amend task commits.
+2. **Refactor pass (advisory + gated).** Dispatch the `refactor-opportunities` agent with the feature directory path and branch base (`git merge-base main HEAD` for slice 1, or the previous slice's tip for stacked slices). If it returns `No refactor opportunities identified.`, skip.
 
-   The refactor pass is mechanical cleanup only — the three C's: consistency, complexity, comments. Architectural smells, correctness, security, and operational concerns stay with the reviewer agents at `/tpe:review`.
+   Otherwise present the numbered list verbatim and prompt:
+   > "Select refactors to apply. Reply `all`, `none`, a category (`consistency` / `complexity` / `comments`), or numbers (e.g. `1,3,5-6`)."
+
+   On `none`, skip. Otherwise apply the selected edits with Edit/Write at the agent's `file:line` anchors, re-run tests + lint (same fix-until-green pattern as step 1), and commit as a single `refactor: post-task cleanup` — new commit, do not amend task commits.
 
 3. If `spec.md` exists and capabilities changed, update it.
 4. Set plan.json status to `COMPLETE`.

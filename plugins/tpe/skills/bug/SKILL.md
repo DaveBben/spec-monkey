@@ -54,7 +54,14 @@ If description contains multiple bugs, split:
 
 ### Step 2 — Fill the Gaps
 
-Conversationally (not as checklist), 1-2 questions at a time: repro steps, expected vs actual, severity, environment if relevant. Push back on vagueness.
+Conversationally (not as checklist), 1-2 questions at a time. Target these four pieces of information:
+
+1. **Repro steps** — numbered, concrete actions (not "use the feature")
+2. **Expected vs actual** — what should happen, what happens instead
+3. **Severity** — who is affected, how often, is there a workaround
+4. **Environment** (if relevant) — browser, OS, config, data shape
+
+**Stopping criterion:** you have enough when you could write a failing test from the description alone, without reading any code. If you can't, ask what's missing. If the user doesn't know (e.g. "it just crashes sometimes"), note the gap and proceed — Phase 2 investigation may fill it. Do not ask more than 2 rounds of questions.
 
 ### Step 3 — Confirm
 
@@ -69,11 +76,25 @@ Wait for confirmation before proceeding.
 
 Read `CLAUDE.md` and any relevant `spec.md`. Then launch **2 parallel Explore agents**:
 
-**Agent 1 — Code path:** trace repro steps through code (file:line per hop), find existing tests for the path, check `git log --oneline -10` for recent changes.
+**Agent 1 — Code path:**
+1. Starting from the entry point of the repro steps, trace the code path to the symptom location. Return: file:line per hop (max 5 hops).
+2. Which test files import or call into any file on this path? Return: file path + test symbol.
+3. `git log --oneline -10` on each file in the path — any recent changes that could have introduced the bug?
 
-**Agent 2 — Blast radius:** other callers of affected function, shared state (caches, globals, singletons), working patterns elsewhere.
+**Agent 2 — Blast radius:**
+1. What other callers invoke the function where the bug manifests? Return: file:line per caller.
+2. Does the affected function read or write shared state (caches, globals, singletons, class-level mutables)? Return: the state, where it's defined, and who else touches it.
+3. Is there a working code path that does the same thing correctly (a different caller, a sibling method, an older pattern)? Return: file:line of the working implementation.
 
-Cap returns to **3 lines per question**.
+**Agent output format** — cap each answer to 3 lines:
+```
+Q: [question]
+A: file:line — [finding]
+Note: [one sentence max]
+```
+If no answer, return "not found" — do not invent.
+
+**Scope cap:** if the combined agent findings touch more than 8 files, focus detailed analysis on the code path (Agent 1) and list blast radius files (Agent 2) by name only. Bugs should have a narrow fix — a wide blast radius is a signal to check the complexity gate early.
 
 ### Step 5 — Reproduce
 
@@ -96,6 +117,11 @@ In the main session (not delegated), synthesize:
   and do they match the report? If both frames point to the same
   location, confidence is high. If they diverge, surface the
   uncertainty to the user in Step 7 rather than picking one.
+  **Confidence calibration:** state your confidence as one of:
+  - *Confirmed* — repro test fails at the exact location, both frames converge, evidence is mechanical (not inferred)
+  - *Strong hypothesis* — both frames converge but no failing test yet, or test fails but at a slightly different location
+  - *Candidate* — only one frame points here, or evidence is circumstantial (e.g. recent git change near the area)
+  Present the label in Step 7 so the user knows how much weight to give the finding.
 - **At-risk tests**: every existing test that exercises the affected code path — these could regress from the fix
 - **Reference pattern**: the working implementation found by Agent 2 that the fix should follow
 
@@ -134,7 +160,16 @@ Wait for confirmation.
 
 ### Step 8 — Boundaries
 
-Present what the fix will and will NOT do (no refactoring, no unrelated fixes, no API changes unless required). Wait for confirmation.
+Present what the fix will and will NOT do. At minimum, evaluate each category and include any that apply:
+
+- **Fix scope**: which files change, which don't (no refactoring, no unrelated fixes)
+- **Interface stability**: does the fix change any public API, CLI flag, or data format? If not, say so explicitly.
+- **Test scope**: does the fix require modifying existing tests, or only adding new ones?
+- **Data/state**: does the fix change persisted data, cached state, or migration behavior?
+
+Skip categories that are clearly not applicable.
+
+Wait for confirmation.
 
 ---
 
@@ -174,6 +209,12 @@ observable behavior?" If a criterion is ambiguous or conflates multiple
 behaviors, split or sharpen it — the code-implementor verifies against
 these.
 
+**Ambiguity signals to catch:**
+- Criterion uses "correct" or "appropriate" without defining what that means for this bug
+- Criterion names two behaviors joined by "and" — split into two criteria
+- Criterion cannot be checked by running a command or reading a specific output — it's an aspiration, not an AC
+- **Observable** means: the implementor can verify it by running a command, inspecting a file, or observing a behavior — not by reading the code and judging whether it "looks right"
+
 Validate each task JSON:
 - `files` has 1-4 entries
 - `relevantFiles` paths match expected disk state
@@ -183,5 +224,11 @@ Validate each task JSON:
 - No `[TBD]` values
 - If task_0 references `repro-test.[ext]` in `acceptanceCriteria` and `reproductionResult` was ERROR: verify the file exists on disk. If absent, remove the reference — let the agent write from scratch.
 
-Present to user:
-> "{N} tasks in `.claude/bugs/{slug}/tasks/`. Review, then run `/tpe:execute .claude/bugs/{slug}` to execute."
+Present to user with a focused review guide. Identify the 1-2 highest-risk aspects of *this specific fix*. For bugs, common risk areas: whether the repro test actually exercises the bug (not a nearby path), whether the fix addresses root cause vs. symptom, whether at-risk tests are complete.
+
+> "{N} tasks in `.claude/bugs/{slug}/tasks/`.
+>
+> **Highest-risk areas to scrutinize:**
+> - [specific risk — e.g. "repro test asserts on return value but the bug is a side effect on cached state"]
+>
+> Review, then run `/tpe:execute .claude/bugs/{slug}` to execute."

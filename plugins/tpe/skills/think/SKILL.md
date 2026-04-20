@@ -53,7 +53,11 @@ Fetch any URLs provided. Record external context — it will appear in brainstor
 
 ### Step 2 — Three Focused Scope Questions
 
-Generate exactly **3 questions** about things only the user knows that the code cannot answer. Each must reference this specific change. Good questions target: what is explicitly out of scope, backwards compatibility requirements, and the quality/correctness bar.
+Generate exactly **3 questions** about things only the user knows that the code cannot answer. Each must reference this specific change and must be answerable in one sentence. Each answer must change what you would investigate in Phase 2 — if it wouldn't, the question is wasted.
+
+Good questions target: what is explicitly out of scope, backwards compatibility requirements, and the quality/correctness bar.
+
+**Quality filter:** A good scope question names a specific fork in the road ("Should X also handle Y, or is Y out of scope?"). A bad one asks for open-ended preferences ("What's your quality bar?" — too vague to act on) or asks something the codebase can answer ("Are there tests for X?" — that's Phase 2's job).
 
 Do not ask generic questions. Present all 3 at once. Wait for answers before proceeding.
 
@@ -67,7 +71,9 @@ Read `CLAUDE.md`, `spec.md`, and any domain `spec.md` files relevant to this cha
 
 Launch **3 parallel Explore agents** (blast radius, existing patterns, data shapes) using the questions in [agent-questions.md](references/agent-questions.md). Agents retrieve raw findings only — they do not reason about approaches or trade-offs.
 
-Once agents return, **synthesize in the main session** (do not delegate):
+Once agents return, **synthesize in the main session** (do not delegate).
+
+**Investigation scope cap:** if the combined agent findings touch more than 12 files, group by concern and cap detailed analysis at the top 4 concern groups (by number of affected files). List remaining groups by name and file count only — the user can request expansion. This prevents rabbit-holing on large surface areas while preserving completeness in the summary.
 
 **Step back first**: before producing any outputs, classify the change.
 Is it **additive** (new path through existing infra — risk is shadowing
@@ -109,12 +115,17 @@ is to make sure the human sees this choice — not to pick for them.
 
 Then produce:
 - Concern groups and dependency chain (from blast radius)
-- 2-3 implementation approaches grounded in findings (from patterns)
+- 2-3 implementation approaches grounded in findings (from patterns).
+  Each approach must differ on which constraint it sacrifices or which
+  risk it accepts. If two approaches trade the same thing, they are
+  variants — pick the stronger one and discard the other.
 - Load-bearing types/interfaces and serialization boundaries (from data shapes)
 - 2-3 highest-consequence failure modes — identify these twice using
   different frames: first "what breaks silently?" (returns wrong data,
   corrupts state, passes tests while wrong), then "what's irreversible?"
   (data loss, schema migration, published API contract). Take the union.
+  Rank by cost-to-fix-after-discovery, not by likelihood of occurrence —
+  a rare data-corruption bug outranks a common build break.
   Single-pass failure analysis anchors on the obvious risk and misses
   the subtle one.
 - **Security flag**: if blast radius includes auth, validation, query construction, or external endpoints, call it out as a hard constraint in brainstorm.md — not a suggestion.
@@ -185,7 +196,14 @@ Do not recommend one. The human decides.
 
 ### Step 5 — Confirm Boundaries
 
-Based on the chosen approach and scope answers, present explicit boundaries for human confirmation:
+Based on the chosen approach and scope answers, present explicit boundaries for human confirmation. At minimum, evaluate each of these boundary categories and include any that apply:
+
+- **Data model / schema**: tables, columns, serialization formats that must not change
+- **Public API surface**: endpoints, response shapes, CLI flags consumers depend on
+- **Performance characteristics**: latency budgets, batch sizes, concurrency limits
+- **Backwards compatibility**: old clients, migration coexistence, feature flags
+
+Skip categories that are clearly not applicable — do not pad with irrelevant boundaries.
 
 > "Based on what we've discussed, here's what this change will NOT do:
 > [list]

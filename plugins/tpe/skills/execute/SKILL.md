@@ -72,7 +72,15 @@ For each task:
 - `doNot`, `acceptanceCriteria` non-empty; `doneWhen` non-empty
 - `verificationCommand` is syntactically valid
 
-Critical violations → report and ask. Minor issues → warn and continue.
+**Critical** (report and ask — do not proceed):
+- File with `action: modify` does not exist on disk
+- File with `action: create` already exists (collision)
+- `acceptanceCriteria` or `doneWhen` is empty (task is unimplementable)
+
+**Minor** (warn and continue):
+- `verificationCommand` references a binary not on PATH (may be in devDependencies — try running it first)
+- File exists but has been modified since planning (content differs from plan.md snippets) — note the drift, proceed unless the changed symbol is in the task's `dependencyChain`
+- `relevantFiles` path differs in casing or trailing slash
 
 ### Test Baseline
 
@@ -120,8 +128,10 @@ Before dispatching each task, classify it:
 | Tier | Criteria | Agent Config |
 |------|----------|-------------|
 | **Simple** | 1 file, clear reference, no interface changes | maxTurns: 20, model: haiku |
-| **Standard** | 2-3 files, or 1 file with interface changes | maxTurns: 50, model: sonnet (default) |
-| **Complex** | 4 files, or touches shared interfaces/types | maxTurns: 75, model: opus, also pass `brainstorm.md` path for additional approach context |
+| **Standard** | 2-3 files, no shared interface/type changes | maxTurns: 50, model: sonnet (default) |
+| **Complex** | 4 files, OR any task that changes a shared interface/type (regardless of file count) | maxTurns: 75, model: opus, also pass `brainstorm.md` path for additional approach context |
+
+**Tiebreaker:** if a task matches multiple tiers, always promote to the higher tier. A 2-file task that changes a shared interface is Complex, not Standard — the interface change is the risk driver, not the file count.
 
 If a Simple task agent STOPs or hits maxTurns, retry once at Standard tier before marking BLOCKED.
 
@@ -138,11 +148,25 @@ If assumptions violated, ask the user.
 
 #### Step 2: Implement
 
-Dispatch the `code-implementor` agent. Pass: task JSON path, plan JSON path, test baseline, plan constraints verbatim, task's `doNot` and `dependencyChain` verbatim. Instruct agent to re-read `doNot` and constraints before verification (counters instruction fade-out).
+Dispatch the `code-implementor` agent. Pass these items in this order (the agent reads top-down, so frontload what constrains behavior):
+
+1. **Plan constraints** verbatim — global boundaries the agent must not violate
+2. **Task `doNot`** verbatim — task-specific boundaries
+3. **Task JSON path** — the full spec (acceptanceCriteria, reference, files, etc.)
+4. **Plan JSON path** — for broader context
+5. **`dependencyChain`** verbatim — prevents cross-file reference errors
+6. **Test baseline** — known failures to ignore
+7. **Instruction**: "Re-read `doNot` and plan constraints before your verification step" (counters instruction fade-out)
 
 If STOPPED: mark `BLOCKED`, record in `executionNotes[task_id]`, ask user.
 
-**Trust-but-verify**: run `regressionCheck` from the orchestrator (do not rely on agent self-report). Check both: (1) exit code is non-zero → fail, and (2) scan output for "fail", "error", "FAIL", "ERROR", or "skipped" — a test suite can exit 0 while skipping the tests you care about. If either check fails: one retry, then `BLOCKED`.
+**Trust-but-verify**: run `regressionCheck` from the orchestrator (do not rely on agent self-report). Check three things:
+
+1. **Exit code** is non-zero → fail
+2. **Scan output** for "fail", "error", "FAIL", "ERROR" → fail
+3. **At-risk test coverage**: for each test in the task's `atRiskTests`, verify its name or file appears in the test output. If a test is absent from output entirely (not failed — *absent*), it was skipped or not collected. This is a failure — a skipped at-risk test provides no regression signal. Report which tests were missing.
+
+If any check fails: one retry, then `BLOCKED`. On the retry, include the specific failure in the agent prompt ("regressionCheck failed: [reason]") so it can target the fix.
 
 #### Step 3: Commit
 
@@ -156,9 +180,9 @@ On BLOCKED: record in `executionNotes[dependent_task_id]`, warn user. Skip entir
 
 #### Step 5: Size & Drift
 
-- Task >200 lines: note in `executionNotes`, inform user
-- Cumulative slice >500 lines: warn, ask to continue or split
-- Agent used >80% maxTurns: flag possible drift
+- **Task >200 lines**: note in `executionNotes`, inform user. Recommend: if remaining tasks depend on this one, continue but flag the size for review. If remaining tasks are independent, offer to pause for user review before continuing.
+- **Cumulative slice >500 lines**: warn, ask to continue or split. If splitting, the current slice should be finalized (post-implementation, tests, commit) before starting the next.
+- **Agent used >80% maxTurns**: flag possible drift. If the task is DONE despite high turn count, note it but continue. If the next task is in the same concern group, consider promoting it one complexity tier (the high turn count suggests the area is harder than estimated).
 
 #### Step 6: Update Status & Mask
 
@@ -189,7 +213,14 @@ After all tasks in the current slice:
 
 3. If `spec.md` exists and capabilities changed, update it.
 4. Set plan.json status to `COMPLETE`.
-5. Present summary: branch, task results, remaining issues. Then say:
+5. Present summary structured as:
+   - **Branch**: name and commit count
+   - **Tasks**: completed / blocked / total, with one-line status per task
+   - **Test results**: pass count vs baseline, any new failures
+   - **Flags**: any executionNotes entries (size warnings, drift flags, handoff issues)
+   - **Needs attention** (if any): blocked tasks, unresolved issues, or deviations from the plan that the user should review before proceeding
+
+   Then say:
    > "Clear your context and run `/tpe:review` to review the changes."
 6. Point to [PR templates](references/pr-templates.md) for body content.
 

@@ -33,7 +33,7 @@ effort: high
 
 ### Phase 1: Unified Discovery
 
-One exploration pass gathers everything needed for both documents. Focus on the project root and first-level subdirectories. Do not recurse deeply into source directories. **Stop exploring once you have concrete answers for each category below** — do not continue reading files for additional supporting evidence. Over-retrieval wastes context and delays the user.
+One exploration pass gathers everything needed for both documents. Focus on the project root and first-level subdirectories. Do not recurse past the second directory level unless you need to verify a specific technical domain boundary (e.g., checking whether `src/auth/middleware/` imports from `src/billing/` to determine if they communicate through direct imports or contracts). When you go deeper, state what you're checking and return to the top level. **Stop exploring once you have concrete answers for each category below** — do not continue reading files for additional supporting evidence. Over-retrieval wastes context and delays the user.
 
 **Gather for CLAUDE.md:**
 - Primary language(s), frameworks, and their versions
@@ -95,11 +95,15 @@ Record each technical domain with its root directory and a one-line description.
 
 Follow up based on gaps — external services, failure behavior, testing, CI/CD, ownership, known issues, tech debt, things an AI should never touch, non-obvious gotchas.
 
-**For mature/brownfield codebases** (>50k lines or >2 years of git history), add a technical domain risks interview after initial discovery. Generate **3-5 targeted questions based on what you actually found** during exploration — not generic examples. Each question should reference a specific discovery:
+**For mature/brownfield codebases** (>50k lines or >2 years of git history), add a technical domain risks interview after initial discovery. Generate **3-5 targeted questions based on what you actually found** during exploration — not generic examples. Each question should reference a specific discovery.
+
+**Quality filter for interview questions:** each question must (1) reference a specific file, pattern, or discovery, and (2) the answer must change what you write in the spec. If the answer would be "interesting to know" but wouldn't appear in any spec section, the question is wasted. Questions that resolve ambiguity between competing patterns are highest-value; questions that confirm something you're already confident about are lowest.
 
 Examples of targeted questions (adapt to what you found):
-- "I found 3 different auth patterns (`src/auth/jwt.ts`, `src/middleware/session.ts`, `src/legacy/basic-auth.ts`) — is one canonical?"
-- "The database has both soft-delete (`deleted_at` columns) and hard-delete tables — which is the convention for new tables?"
+- "I found 3 different auth patterns (`src/auth/jwt.ts`, `src/middleware/session.ts`, `src/legacy/basic-auth.ts`) — is one canonical?" → answer goes in Gotchas
+- "The database has both soft-delete (`deleted_at` columns) and hard-delete tables — which is the convention for new tables?" → answer goes in Boundaries
+
+**Stopping criterion:** stop at the first set of questions (3-5). Do not ask follow-up rounds — Phase 7 review gives the user a chance to add anything missed.
 
 Present all questions at once. Capture answers in a `## Gotchas` section in spec.md — these are the highest-value items in the spec.
 
@@ -121,8 +125,9 @@ Then ask: **"This workflow creates both CLAUDE.md and spec.md. If you only need 
 If the user opts out of spec.md, skip Phases 4, 5, and the spec.md portions of Phases 6-7.
 
 **Merge rules when updating existing files:**
-- Existing content wins for human-judgment sections (Project Identity, Critical Constraints, motivation, ownership, boundaries, architecture decisions)
-- Discovery data wins for factual sections (versions, commands, current state, testing strategy, deployment)
+- **Existing content wins** for human-judgment sections (Project Identity, Critical Constraints, motivation, ownership, boundaries)
+- **Discovery data wins** for factual sections (versions, commands, current state, testing strategy, deployment)
+- **Blend rule** for sections that mix both (Architecture Decisions, Gotchas): keep the existing *rationale and judgment* (the "why"), but update *factual claims* (paths, versions, what exists) from discovery. If discovery contradicts an existing rationale, flag the conflict to the user rather than silently overwriting.
 
 ### Phase 3: Draft CLAUDE.md
 
@@ -138,6 +143,16 @@ Read [references/quality-guide.md](references/quality-guide.md) for principles. 
   ```
   Add a second placeholder comment for any additional human-judgment constraints.
 - **Always include** a pointer to spec.md in Pointers to Deeper Docs (it will be created in Phase 4): `` `spec.md` — current project state, architecture overview, and working constraints ``
+
+**CLAUDE.md self-review** before proceeding to Phase 4:
+- [ ] Under 200 lines
+- [ ] Every command is exact and copy-pasteable (no "run the tests" — the actual command)
+- [ ] No content that belongs in spec.md (architecture, boundaries, current state, external deps)
+- [ ] No linter-enforced style rules (those belong in linter config)
+- [ ] Project Identity is either filled with what/why/who or left as a placeholder — not filled with technology descriptions
+- [ ] Directory layout is top-level only — no deep subdirectory trees
+
+Fix any issues found. One pass only.
 
 ### Phase 4: Draft spec.md
 
@@ -238,7 +253,13 @@ Tell the user the files are written and ask them to review. Prompt them to check
 - Is anything included that's obvious from reading the code? (remove it if so)
 - Are there gotchas — non-obvious traps or institutional knowledge — that aren't captured?
 
-Iterate — applying their feedback as edits to the files. End each round of changes by asking: **"Any other changes, or reply 'approved' to finalise?"** Once the user replies "approved", update the **Status** field in spec.md (and any technical domain specs) from `Draft` to `Active`, and update the **Last verified** date to today.
+Iterate — applying their feedback as edits to the files. End each round of changes by asking: **"Any other changes, or reply 'approved' to finalise?"**
+
+**When to push back on feedback:** if user feedback would violate a quality principle (CLAUDE.md over 200 lines, adding linter rules, duplicating spec.md content, adding future-tense items to Current State), flag the conflict:
+> "That would [specific violation]. The quality guide recommends [alternative]. Want to proceed anyway, or adjust?"
+Do not silently apply feedback that degrades the file. Maximum 3 revision rounds — after that, suggest approving and iterating in a future session.
+
+Once the user replies "approved", update the **Status** field in spec.md (and any technical domain specs) from `Draft` to `Active`, and update the **Last verified** date to today.
 
 ### Phase 8: Technical Domain-Scoped Specs
 
@@ -247,6 +268,14 @@ If Phase 1 identified **2 or more technical domains**, create a technical domain
 #### Step 1: Draft Technical Domain Specs
 
 Write each `{domain-dir}/spec.md` using [domain-spec-template.md](references/domain-spec-template.md). Each spec is **under 100 lines**. Content gathered in Phase 1 but excluded from root (technical domain-specific deps, testing gaps, issues, boundaries) belongs here — don't leave it orphaned.
+
+**Prioritization when the 100-line cap is tight** (in order — cut from the bottom):
+1. **Interface Contracts** — what this domain exposes and consumes (highest value — this is why domain specs exist)
+2. **Gotchas** — non-obvious traps specific to this domain
+3. **Domain Boundaries** — Always/Ask First/Never rules for this domain
+4. **Current State** — what's implemented in this domain now
+5. **Known Issues** — currently broken things
+6. **Domain Conventions** — naming, patterns (lowest priority — these are derivable from the code)
 
 **Do not duplicate the root spec.md.** Shared conventions, project-wide boundaries, and deployment info stay at root. Omit empty sections.
 

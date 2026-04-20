@@ -66,7 +66,7 @@ For each file in brainstorm.md's Impact Surface, read targeted extracts:
 - The reference implementation from brainstorm.md's Chosen Approach
 - Any interface or contract the changed symbol must satisfy
 
-**Cap reads to what the plan will actually cite.** Do not read files speculatively. Every file read here should produce at least one `file:line` reference in plan.md. If it doesn't, stop reading it.
+**Cap reads to what the plan will actually cite.** Do not read files speculatively. Before reading a file, state what you expect to find (a signature, a type, a pattern). After reading, it must produce at least one `file:line` reference in plan.md — if it doesn't, stop and do not read the next file in that concern group. If the impact surface exceeds 10 files, read only files involved in breaking changes or the chosen approach's critical path; list remaining files as "verified exists, not read in detail."
 
 **Breaking-change call-site sweep.** The "cap reads" rule above governs *file reading*, not *reference finding* — these are different. For every symbol in brainstorm.md's Impact Surface undergoing a breaking change (signature change, field removal, rename, deletion), grep the entire repo for references — especially tests. This is mechanical completeness, not speculation: you must find every call site that will stop compiling or pass/fail differently after the change.
 
@@ -89,6 +89,8 @@ Write `.claude/features/{slug}/plan.md` using the [plan.md template](references/
 
 **Content rules:** real code (not pseudocode), omit empty sections, exhaustive impact table, max 2 pattern references, What NOT to Do copied verbatim from brainstorm.md. Under ~500 lines → single PR; over → vertical slices only. End with "Do not implement yet."
 
+**"Real code" means:** paste-ready signatures, type definitions, and structural code that would compile/parse as-is. A function signature with typed parameters and return type is real code. A function body with `// handle validation here` is pseudocode. When the exact body isn't known yet, show the signature and say "body implements [one sentence]" — do not invent placeholder logic.
+
 **Target: 100–200 lines.**
 
 ---
@@ -110,15 +112,18 @@ Re-read from brainstorm.md: Chosen Approach, Do NOT, Constraints, At-Risk Tests.
 ### Explore alternative decompositions before committing
 
 Generate **2-3 candidate decompositions** with different slice
-boundaries, task groupings, or ordering. For each candidate, evaluate:
+boundaries, task groupings, or ordering. For each candidate, evaluate
+these criteria in priority order (first criterion breaks ties):
 
-- Does every task stay within the 1–4 file hard max?
-- Are `blockedBy` chains short (ideally ≤2 deep)?
-- Is each slice independently reviewable with one revert reason?
-- Does the decomposition minimize cross-task interface coupling?
+1. **No unsatisfiable tasks** — every task's AC + doNot + atRiskTests are internally consistent (hard requirement, not a scoring axis)
+2. **Minimal cross-task interface coupling** — fewer shared symbols between tasks means fewer integration failures
+3. **Short blockedBy chains** (ideally ≤2 deep) — long chains serialize execution and amplify single-task failures
+4. **Every task within 1–4 file hard max**
+5. **Each slice independently reviewable with one revert reason**
 
-Select the candidate that scores best. If two are equivalent, prefer
-fewer tasks. Do not default to the first decomposition you think of —
+Select the candidate that wins on the highest-priority distinguishing
+criterion. If two are equivalent through all criteria, prefer fewer
+tasks. Do not default to the first decomposition you think of —
 the first plausible split is often not the best.
 
 ### Task granularity
@@ -132,7 +137,10 @@ the first plausible split is often not the best.
 
 Use the schema and field notes in [task_{N}.json template](references/templates.md#task_njson). Key rules:
 
-- `intent` explains *why*, not *what*
+- `intent` explains *why*, not *what*. Litmus test: if the intent
+  reads like a commit message ("Extract validation into shared module"),
+  it's a *what* — rewrite as the reason ("Validation duplicated across
+  3 handlers, causing drift when rules change")
 - `files` hard max 4 — more means split the task
 - `reference` is a single entry only
 - `atRiskTests` from brainstorm.md's confirmed list — not re-derived
@@ -145,6 +153,12 @@ resolve every ambiguity? Does each criterion test exactly one
 observable behavior?" If a criterion is ambiguous or tests multiple
 behaviors, split or sharpen it now — the code-implementor's
 verification chain is built on these.
+
+**Ambiguity signals to catch:**
+- Criterion uses "correct" or "appropriate" without defining what that means for this case
+- Criterion names two behaviors joined by "and" — split into two criteria
+- Criterion cannot be checked by running a command or reading a specific output — it's an aspiration, not an AC
+- **Observable** means: the implementor can verify it by running a command, inspecting a file, or observing a behavior — not by reading the code and judging whether it "looks right"
 
 **Validate before writing:** all paths exist/don't-exist as expected, `dependencyChain` hops have real import relationships (grep to confirm), no `[TBD]` values remain.
 
@@ -160,13 +174,80 @@ verification chain is built on these.
 
 Write `tasks/plan.json` + `tasks/task_{N}.json` per task.
 
+### Conditional: Architecture Decision documentation task
+
+After writing the implementation tasks, check whether the architecture decision from brainstorm.md should be captured in spec.md's Architecture Decisions table.
+
+**Skip this task if:**
+- No `spec.md` was found during Step 1 orientation — there is nowhere to write the ARD
+- brainstorm.md's Chosen Approach has no `**Rejected**:` entry — a decision with no rejected alternatives is a default, not an architecture decision worth recording
+
+**When conditions are met**, generate one additional `task_{N+1}.json` as the final task (where N is the last implementation task):
+
+```json
+{
+  "id": "task_{N+1}",
+  "slice": 1,
+  "repository": ".",
+  "title": "Task {N+1}: Document architecture decision in spec.md",
+  "status": "PENDING",
+  "implementer": "AI",
+  "intent": "Architecture decisions from the think phase should be captured in spec.md's Architecture Decisions table so future agents and developers understand why this approach was chosen without needing to find the feature's brainstorm.md",
+  "files": ["{path to the relevant spec.md}"],
+  "symbol": "Architecture Decisions",
+  "reference": "",
+  "dependencyChain": [],
+  "relevantFiles": [
+    {"path": "{spec.md path}", "action": "modify"}
+  ],
+  "blockedBy": ["task_{N}"],
+  "atRiskTests": [],
+  "doNot": [
+    "Do not modify any section of spec.md other than the Architecture Decisions table",
+    "Do not add the entry if the decision is obvious (can be inferred from reading the code)",
+    "Do not remove or modify existing Architecture Decisions entries"
+  ],
+  "acceptanceCriteria": [
+    "GIVEN brainstorm.md's Chosen Approach, WHEN the decision is non-obvious and has rejected alternatives, THEN a new row is appended to spec.md's Architecture Decisions table with columns mapped per the content mapping below",
+    "GIVEN spec.md has no Architecture Decisions table, WHEN adding the entry, THEN create the subsection under Architecture Overview with the standard table header and the new row",
+    "GIVEN the Chosen Approach is obvious or has no rejected alternatives, THEN report DONE with a note explaining why the decision was not recorded"
+  ],
+  "verificationCommand": "grep '{approach name from brainstorm.md}' {spec.md path}",
+  "regressionCheck": "",
+  "scopeBoundaries": "This task owns only the Architecture Decisions table in spec.md / all other spec.md sections are owned by execute's post-implementation step",
+  "doneWhen": "Architecture Decisions table in spec.md contains a row matching brainstorm.md's Chosen Approach, or task reports DONE with justification for skipping"
+}
+```
+
+**Content mapping** from brainstorm.md to spec.md ARD columns:
+
+| brainstorm.md field | spec.md ARD column |
+|--------------------|--------------------|
+| `**Approach**: [name]` | Decision |
+| `**Why chosen**: [text]` | Rationale |
+| `**Date**` (brainstorm header) | Date |
+| `**Rejected**: [alt] — [why not]` | Alternatives Considered |
+
+**Which spec.md?** Use the same spec.md consulted during Step 1 orientation. If the feature's Impact Surface files are concentrated in a domain directory with its own spec.md, use that domain spec. Otherwise, use the root spec.md.
+
+**Housekeeping:**
+- This task does not count toward the 20-task complexity limit — it is a mechanical follow-on, not a feature decomposition task
+- Update `plan.json`'s `totalTasks` to include it
+- Include it in the blockedBy integrity check (trivially satisfied — it depends only on the last implementation task)
+
 ---
 
 ## Step 6 — Single Review Pass
 
-Present plan.md to the user:
+Present plan.md to the user with a focused review guide. Identify the 2-3 highest-risk aspects of *this specific plan* — areas where a mistake would be hardest to fix downstream. Common risk areas: breaking-change call sites that might be incomplete, tasks with the most cross-task coupling, acceptance criteria for the most complex task.
 
-> "The plan is at `.claude/features/{slug}/plan.md` and {N} task JSONs are in `tasks/`. Review the plan and either:
+> "The plan is at `.claude/features/{slug}/plan.md` and {N} task JSONs are in `tasks/`.
+>
+> **Highest-risk areas to scrutinize:**
+> - [specific risk 1 — e.g. "Task 2 changes the User interface — verify the 4 listed call sites are complete"]
+> - [specific risk 2]
+>
+> Review the plan and either:
 > 1. **Give feedback** — tell me what's wrong, I'll revise once
 > 2. **Approve** — say 'approve' to proceed to /tpe:execute"
 

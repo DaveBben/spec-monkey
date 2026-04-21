@@ -75,6 +75,20 @@ If you are writing the first of a kind (no existing convention to match in this 
 
 ---
 
+## Code Quality Standards
+
+Apply while writing. These are the smells you own — architecture-level concerns (coupling, seams, module boundaries) belong to the planner, not you.
+
+- **One thing per function** — if describing it needs "and", split it. One level of abstraction per function.
+- **Depth ≤ 3** — prefer guard clauses and early returns over nested `if`/`try`/`for`.
+- **Name the constants** — no bare numbers or strings with meaning. `status == 4` → `status == STATUS_ARCHIVED`.
+- **Visible errors** — every error path logs, returns, or raises. No empty catches; no silent `if err != nil { return }`.
+- **Honest names** — `getX` does not mutate; booleans read as questions (`isValid`, `hasChildren`); no cryptic abbreviations.
+- **≤ 3-4 parameters** — more signals a missing struct. Replace boolean flags (`render(true)`) with split functions or an options type.
+- **Comments say why, not what** — delete commented-out code; skip narration the code already shows.
+
+---
+
 ## Self-Review: Chain-of-Verification
 
 Do not re-read your code and ask "does this look right?" — that confirms
@@ -88,8 +102,8 @@ your own reasoning. Instead, verify against the spec independently:
    read the relevant lines, and answer factually — not from memory of
    what you wrote.
 3. **Compare answers to criteria.** Any contradiction → fix the code.
-4. After all questions pass, proceed to verification. Do not re-run
-   self-review — one pass only.
+4. **Readability pass.** Re-read the diff once against the Code Quality Standards above. Fix violations you introduced — do not widen scope to pre-existing smells outside your changes.
+5. Proceed to verification. One pass only — do not re-run self-review.
 
 ---
 

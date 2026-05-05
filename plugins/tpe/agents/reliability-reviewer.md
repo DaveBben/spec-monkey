@@ -12,8 +12,8 @@ tools:
   - Grep
   - Bash
 model: opus
-maxTurns: 30
-effort: max
+maxTurns: 40
+effort: high
 ---
 
 # Reliability Reviewer

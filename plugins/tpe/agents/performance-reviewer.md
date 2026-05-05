@@ -12,7 +12,7 @@ tools:
   - Grep
   - Bash
 model: opus
-maxTurns: 30
+maxTurns: 40
 effort: high
 ---
 

@@ -148,6 +148,8 @@ If assumptions violated, ask the user.
 
 #### Step 2: Implement
 
+**Always dispatch — never implement in-line.** Even if the task looks like a one-line change you could make faster yourself, dispatch the agent. Your orchestrator context accumulates noise from prior tasks, plan JSONs, test output, and TodoWrite churn; the agent gets a clean read of just this task. Skipping dispatch for "small" tasks is the failure mode this skill is designed to prevent. For trivially small tasks, downshift to `model: haiku` (Simple tier) rather than implementing directly.
+
 Dispatch the `code-implementor` agent using the Agent tool with `subagent_type: "code-implementor"`. Override `maxTurns` and `model` to match the task's complexity tier. Pass these items in this order (the agent reads top-down, so frontload what constrains behavior):
 
 1. **Plan constraints** verbatim — global boundaries the agent must not violate

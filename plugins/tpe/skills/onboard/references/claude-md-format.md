@@ -164,7 +164,7 @@ without copying their content into CLAUDE.md.
 
 **Good:**
 ```markdown
-- `spec.md` — product requirements, data models, and acceptance criteria
+- `docs/specs/spec.md` — project spec, architecture, and spec index for all subsystem/feature specs
 - `docs/architecture.md` — system architecture and component design
 - `docs/api.md` — REST API endpoint reference
 - `CONTRIBUTING.md` — pull request process and code review standards

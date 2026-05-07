@@ -1,238 +1,218 @@
 ---
 name: bug
-effort: max
-model: opus
 disable-model-invocation: true
-argument-hint: "[bug symptom or .claude/bugs/{slug} path]"
+argument-hint: "[bug symptom]"
 description: >
-  Bug investigation and fix skill. Captures the symptom, reproduces it
-  programmatically, traces root cause, and produces task JSONs for /act.
-  No plan.md — produces plan.json and task JSONs directly.
-  Do NOT use for features (use /think). Do NOT use for trivial one-line
-  fixes (just make the change).
+  Bug investigation and spec producer. You describe a symptom, Claude
+  reads the code, traces the root cause, and produces a bug spec ready
+  for /tpe:execute. Use when something is broken and you need to
+  understand why before fixing it. Do NOT use for features (use
+  /tpe:spec). Do NOT use for trivial one-line fixes.
 ---
 
-# Bug — Symptom to Fix
+# Bug — Symptom to Spec
 
-> Bugs are different from features: the user has a symptom, not a change
-> request. The highest-value step is reproduction — confirming the bug
-> exists and producing a failing test. This skill goes from symptom to
-> executable task JSONs with minimal intermediate artifacts.
+> Bugs start from a symptom, not a change request. The highest-value
+> step is understanding the root cause — not jumping to a fix.
 
 ```
-User describes symptom → /tpe:bug
-  Phase 1: Capture (symptom, repro steps, severity)
-  Phase 2: Investigate (trace code path, reproduce programmatically)
-  Phase 3: Confirm (present findings, user confirms root cause)
-  Phase 4: Task JSONs (produce tasks for /act)
+/tpe:bug {symptom}
+  → Understand the symptom
+  → Read the code, trace the root cause
+  → Confirm findings with user
+  → Produce bug spec at docs/specs/bugs/{slug}/spec.md
 ```
 
-Artifacts written to `.claude/bugs/{slug}/`.
-
 ---
 
-## Input Handling
+## Phase 1 — Understand the Symptom
 
-Resolve `$ARGUMENTS` to one of three modes:
+Read `$ARGUMENTS`. If empty, ask:
 
-1. **Existing bug directory** (`$ARGUMENTS` is a path to `.claude/bugs/{slug}`): Resume from last incomplete phase based on which artifacts exist.
-2. **Free-form text** (`$ARGUMENTS` is a symptom description): Generate a URL-safe slug from the symptom (max 40 chars). Create `.claude/bugs/{slug}/` and begin Phase 1.
-3. **No input** (`$ARGUMENTS` is empty): Ask user to describe the symptom, not the cause:
-   > "Describe what you saw — the symptom, not the cause. For example: 'After saving, the old text still shows' rather than 'the cache doesn't invalidate.'"
+> "Describe what you saw — the symptom, not the cause. For example:
+> 'After saving, the old text still shows' rather than 'the cache
+> doesn't invalidate.'"
 
----
-
-## Phase 1: Capture
-
-### Step 1 — Understand the Symptom
-
-Listen to the user's description. Check for diagnosis leakage — if they describe a root cause instead of an observable symptom, redirect:
+If the user describes a root cause instead of an observable symptom,
+redirect:
 
 > "That sounds like a diagnosis. What did you actually see? What
 > behavior was wrong?"
 
-If description contains multiple bugs, split:
-> "That sounds like two issues. Which is more urgent? We'll handle the other separately."
+If the description contains multiple bugs:
 
-### Step 2 — Fill the Gaps
+> "That sounds like two issues. Which is more urgent? We'll handle
+> the other separately."
 
-Conversationally (not as checklist), 1-2 questions at a time. Target these four pieces of information:
+Gather conversationally (not as a checklist):
+- **Repro steps** — numbered, concrete actions
+- **Expected behavior** — what should happen
+- **Actual behavior** — what happens instead
+- **Severity** — who is affected, how often, workaround?
 
-1. **Repro steps** — numbered, concrete actions (not "use the feature")
-2. **Expected vs actual** — what should happen, what happens instead
-3. **Severity** — who is affected, how often, is there a workaround
-4. **Environment** (if relevant) — browser, OS, config, data shape
-
-**Stopping criterion:** you have enough when you could write a failing test from the description alone, without reading any code. If you can't, ask what's missing. If the user doesn't know (e.g. "it just crashes sometimes"), note the gap and proceed — Phase 2 investigation may fill it. Do not ask more than 2 rounds of questions.
-
-### Step 3 — Confirm
-
-Summarize: symptom title, numbered steps, expected/actual, severity.
-Wait for confirmation before proceeding.
+**Stopping criterion:** you have enough when you could write a
+failing test from the description alone. If the user doesn't know
+details ("it just crashes sometimes"), note the gap and proceed —
+code investigation may fill it. Max 2 rounds of questions.
 
 ---
 
-## Phase 2: Investigate
+## Phase 2 — Investigate
 
-### Step 4 — Codebase Tracing
+Read `CLAUDE.md` and `spec.md` if they exist. Then read the code
+to trace the bug.
 
-Read `CLAUDE.md` and, if present, any relevant `spec.md`. Then launch **2 parallel Explore agents** using the Agent tool with `subagent_type: "Explore"`. Issue both Agent tool calls in a single message to ensure parallel execution.
+**Trace the code path.** Starting from the entry point of the repro
+steps, follow the execution path to where the symptom manifests.
+Read the actual files — don't guess from names. Cap at 8-10 files.
 
-See [anti-patterns](references/anti-patterns.md) for diagnosis patterns to catch during investigation.
+**Find the root cause.** Use two frames and check convergence:
+1. Trace backward from symptom — what's the last correct state and
+   where does it go wrong?
+2. Trace forward from the suspected cause — if this is broken, what
+   symptoms would it produce? Do they match the report?
 
-**Agent 1 — Code path:**
-1. Starting from the entry point of the repro steps, trace the code path to the symptom location. Return: file:line per hop (max 5 hops).
-2. Which test files import or call into any file on this path? Return: file path + test symbol.
-3. `git log --oneline -10` on each file in the path — any recent changes that could have introduced the bug?
+If both frames converge on the same location, confidence is high.
+If they diverge, surface the uncertainty to the user.
 
-**Agent 2 — Blast radius:**
-1. What other callers invoke the function where the bug manifests? Return: file:line per caller.
-2. Does the affected function read or write shared state (caches, globals, singletons, class-level mutables)? Return: the state, where it's defined, and who else touches it.
-3. Is there a working code path that does the same thing correctly (a different caller, a sibling method, an older pattern)? Return: file:line of the working implementation.
+**Check for a working reference.** Is there a similar code path
+that does the same thing correctly? (A different caller, a sibling
+method, an older pattern.) If so, note it — the fix should follow
+the working pattern.
 
-**Agent output format** — cap each answer to 3 lines:
-```
-Q: [question]
-A: file:line — [finding]
-Note: [one sentence max]
-```
-If no answer, return "not found" — do not invent.
+**Assess blast radius.** What other callers invoke the affected
+function? Does it read/write shared state? This determines whether
+the fix is narrow or wide.
 
-**Scope cap:** if the combined agent findings touch more than 8 files, focus detailed analysis on the code path (Agent 1) and list blast radius files (Agent 2) by name only. Bugs should have a narrow fix — a wide blast radius is a signal to check the complexity gate early.
-
-### Step 5 — Reproduce
-
-1. If existing test already fails on the bug, note it and skip to 3.
-2. Write draft reproduction test (asserts expected behavior → fails if bug exists). Save to `.claude/bugs/{slug}/repro-test.[ext]`, do NOT commit.
-3. Before running, verify the test: does it exercise the exact code
-   path from the repro steps? Does it assert *expected* behavior (fails
-   on the bug), not *current* behavior (passes trivially)? A repro test
-   that passes with the bug present is worse than no test — it gives
-   false confidence that the fix works.
-4. Run test. Record: **RED** (confirmed), **GREEN** (did not reproduce), or **ERROR** (infrastructure issue, do not block).
-
-### Step 6 — Synthesize Root Cause
-
-In the main session (not delegated), synthesize:
-- **Root cause hypothesis** — identify through two frames and check
-  convergence: (1) trace backward from symptom — what's the last
-  correct state and where does it go wrong? (2) trace forward from the
-  suspected cause — if this is broken, what symptoms would it produce,
-  and do they match the report? If both frames point to the same
-  location, confidence is high. If they diverge, surface the
-  uncertainty to the user in Step 7 rather than picking one.
-  **Confidence calibration:** state your confidence as one of:
-  - *Confirmed* — repro test fails at the exact location, both frames converge, evidence is directly observable (e.g., a test fails at the exact line, a log shows the wrong value) rather than inferred from code reading
-  - *Strong hypothesis* — both frames converge but no failing test yet, or test fails but at a slightly different location
-  - *Candidate* — only one frame points here, or evidence is circumstantial (e.g. recent git change near the area)
-  Present the label in Step 7 so the user knows how much weight to give the finding.
-- **At-risk tests**: every existing test that exercises the affected code path — these could regress from the fix
-- **Reference pattern**: the working implementation found by Agent 2 that the fix should follow
+**Try to reproduce.** If there's an obvious test to run that would
+confirm the bug, run it. Note whether it's RED (confirmed), GREEN
+(did not reproduce), or ERROR (infrastructure issue).
 
 ---
 
-## Phase 3: Confirm
+## Phase 3 — Confirm with User
 
-### Step 7 — Present Findings
-
-Present to the user in three parts:
-
-**Part 0 — Ask first (prevent anchoring):**
-Ask: "Where do you think the bug lives?" Wait for answer. If no instinct, acknowledge and proceed.
+Present findings in two parts:
 
 **Part 1 — Root cause:**
-State hypothesis with file:line evidence. Where user's instinct aligns, say so. Where it diverges, explain the evidence. Ask if they have additional context. Wait for response.
 
-If the root cause is architectural (data layout, shared state, interface design) and a **symptom-layer fix** (input validation, caller adaptation, defensive check) could close the bug without touching the architecture, surface both options before moving on:
-- *Fix at root* — eliminates this bug class at source; larger blast radius, more at-risk tests, architectural change
-- *Fix at symptom layer* — smaller change; the architectural issue persists and may resurface as a different symptom
+State the hypothesis with file:line evidence. Include your
+confidence level:
+- *Confirmed* — repro test fails at the exact location, both
+  frames converge
+- *Strong hypothesis* — both frames converge but no failing test
+- *Candidate* — only one frame points here, evidence is
+  circumstantial
 
-Do not recommend one. The engineer decides based on scope, urgency, and recurrence likelihood — some teams accept a shallow fix with a tracked debt item, others fix at root every time. The AI's job is to make sure both options are visible before committing to a fix location.
+If the root cause is architectural and a symptom-layer fix could
+close the bug without touching the architecture, surface both
+options:
 
-**Part 2 — At-risk tests (predict-before-reveal):**
-Before presenting any test list, ask:
+> "Two ways to fix this:
+> 1. **Fix at root** — [description]. Larger change, eliminates
+>    the bug class entirely.
+> 2. **Fix at symptom** — [description]. Smaller change, but the
+>    underlying issue persists.
+>
+> Which approach?"
 
-> "Which existing tests do you think could break from this fix?"
+**Part 2 — Scope:**
 
-Wait for their answer. Then present the AI-identified list for comparison — highlight agreements and differences.
-
-> "Here are the tests I found at risk: [list with reasons]. Combined with yours, does this look complete?"
-
-**This requires human confirmation** — do not proceed until the user explicitly confirms the at-risk test list is complete. Incorrect at-risk test context is worse than none.
+> "The fix will touch [files]. It will NOT [boundaries]. Any
+> concerns before I write the spec?"
 
 Wait for confirmation.
 
-### Step 8 — Boundaries
+**Complexity gate:** If investigation revealed >4 files affected or
+the fix requires changing a shared interface, recommend escalating:
 
-Present what the fix will and will NOT do. At minimum, evaluate each category and include any that apply:
-
-- **Fix scope**: which files change, which don't (no refactoring, no unrelated fixes)
-- **Interface stability**: does the fix change any public API, CLI flag, or data format? If not, say so explicitly.
-- **Test scope**: does the fix require modifying existing tests, or only adding new ones?
-- **Data/state**: does the fix change persisted data, cached state, or migration behavior?
-
-Skip categories where the fix does not touch that domain (e.g., skip "Data/state" if no persisted data is involved).
-
-Wait for confirmation.
+> "This is larger than a typical bug fix. Consider using /tpe:spec
+> instead — it'll help think through the approach more carefully.
+> I can pass the findings. Escalate or continue?"
 
 ---
 
-## Complexity Gate (between Phase 3 and Phase 4)
+## Phase 4 — Produce the Bug Spec
 
-Before producing task JSONs, check whether the fix exceeds bug-pipeline scope. If investigation revealed **>3 files affected**, the fix requires **changing a shared interface/type**, or would require **>4 tasks**, recommend escalating:
+Assemble the investigation into a bug spec. Write to
+`docs/specs/bugs/{slug}/spec.md`. Create the directory if needed.
 
-> "This looks larger than a typical bug fix — it touches {N} files across {concerns}. The bug pipeline skips approach selection and plan verification, which matter at this size. Recommend escalating to `/tpe:think` → `/tpe:plan` → `/tpe:execute`. I can pass the findings so far. Escalate or continue as bug?"
+**Slug:** derive from the symptom (lowercase, hyphens, max 40
+chars).
 
-If the user chooses to continue, proceed — but note the decision in plan.json's `knownRisks`: "User opted to keep bug pipeline despite {N}-file scope."
+Then launch the `spec-reviewer` agent using the Agent tool with
+`subagent_type: "spec-reviewer"`. Pass the spec path. Fix any
+failures before presenting.
+
+After the reviewer passes, present the spec and ask:
+
+> "Bug spec saved to `docs/specs/bugs/{slug}/spec.md`.
+>
+> Clear your context and run:
+> `/tpe:execute docs/specs/bugs/{slug}/spec.md`"
+
+Update the Spec Index in `docs/specs/spec.md` — add or update the
+entry in a Bugs table (create the table if it doesn't exist):
+
+```markdown
+### Bugs
+| Spec | Path | Description |
+|------|------|-------------|
+| {title} | `docs/specs/bugs/{slug}/spec.md` | {one-line description} |
+```
 
 ---
 
-## Phase 4: Task JSONs
+## Bug Spec Template
 
-Bugs follow a natural structure: **reproduction test → fix → edge case tests**. Expect 2-4 tasks.
+```
+{One-line symptom description}
 
-### Step 9 — Write plan.json and task JSONs
+**Last updated**: {YYYY-MM-DD}
 
-Write to `.claude/bugs/{slug}/tasks/`.
+## Intended behavior
+{What should happen. Concrete, observable.}
 
-Use the schemas in [bug templates](references/templates.md): plan.json (same as features + `type`, `severity`, `reproductionResult`, `rootCause`) and task JSONs (identical schema to feature tasks).
+## Actual behavior
+{What happens instead. Include error messages or observable output
+if available.}
 
-**Task structure for bugs:**
+## Reproduce steps
+{Numbered steps to trigger the bug.}
 
-**Task 0 — Reproduction test** (if draft exists): write test that fails on the bug. `doNot`: no implementation code. Reference the draft repro-test path in `acceptanceCriteria`.
+## Root cause
+{What's broken and where. Include file:line. State confidence level
+(Confirmed / Strong hypothesis / Candidate).}
 
-**Task 1 — Fix**: `blockedBy: ["task_0"]`, `atRiskTests` from Phase 3, `doneWhen`: repro test passes GREEN + regressionCheck passes.
+## Mitigation approach
+{The agreed fix approach and why. If a symptom-layer vs root fix
+was discussed, state which was chosen and why.}
 
-**Task 2 — Edge cases** (optional): `blockedBy: ["task_1"]`, only if investigation found related scenarios.
+## Alternatives rejected
+{If applicable — e.g., "Symptom-layer fix rejected because the
+underlying issue would resurface as [scenario]".}
 
-### Step 10 — Validate and Present
+## Constraints
+{What must be true for the fix to be correct. Specific, testable.}
 
-**Verify acceptance criteria:** for each task, ask "Could I implement
-this fix from only these criteria? Does each criterion test exactly one
-observable behavior?" If a criterion is ambiguous or conflates multiple
-behaviors, split or sharpen it — the code-implementor verifies against
-these.
+## Edge cases
+{Related scenarios that the fix must also handle. Format:
+"condition: expected behavior"}
 
-**Ambiguity signals to catch:**
-- Criterion uses "correct" or "appropriate" without defining what that means for this bug
-- Criterion names two behaviors joined by "and" — split into two criteria
-- Criterion cannot be checked by running a command or reading a specific output — it's an aspiration, not an AC
-- **Observable** means: the implementor can verify it by running a command, inspecting a file, or observing a behavior — not by reading the code and judging whether it "looks right"
+## Do NOT
+{Scope boundaries. What the fix must not touch.}
 
-Validate each task JSON:
-- `files` has 1-4 entries
-- `relevantFiles` paths match expected disk state
-- `doNot` and `acceptanceCriteria` non-empty
-- `regressionCheck` set when `atRiskTests` non-empty
-- `reference` is a single verified file:line
-- No `[TBD]` values
-- If task_0 references `repro-test.[ext]` in `acceptanceCriteria` and `reproductionResult` was ERROR: verify the file exists on disk. If absent, remove the reference — let the agent write from scratch.
+## Files that matter
+{Files involved in the fix, with symbols. Format:
+- path/to/file.ext:symbolName() — role description}
 
-Present to user with a focused review guide. Identify the 1-2 highest-risk aspects of *this specific fix*. For bugs, common risk areas: whether the repro test actually exercises the bug (not a nearby path), whether the fix addresses root cause vs. symptom, whether at-risk tests are complete.
+## Verification
+{Exact command to run, then:
+- Repro test must go from RED to GREEN
+- All existing tests listed must still pass
+- Any new edge case tests must pass}
 
-> "{N} tasks in `.claude/bugs/{slug}/tasks/`.
->
-> **Highest-risk areas to scrutinize:**
-> - [specific risk — e.g. "repro test asserts on return value but the bug is a side effect on cached state"]
->
-> Review, then run `/tpe:execute .claude/bugs/{slug}` to execute."
+Keep going until all tests pass and the verification criteria are
+met. If you hit a problem, investigate and fix it rather than
+stopping.
+```

@@ -44,9 +44,11 @@ One exploration pass gathers everything needed for both documents. Focus on the 
 
 **Gather for spec.md:**
 - Test configuration — framework, conventions, coverage gaps
+- **Test coverage summary** — identify which areas are well-tested, partially tested, and untested. An agent's ability to write verification commands depends on knowing where tests exist. Scan test directories and map test files to source files to produce a 1-2 line coverage summary.
 - CI/CD config (`.github/workflows/`, `Jenkinsfile`, etc.)
 - Git history — what has actually shipped? (`git log --oneline -20`; skip for new repos)
 - Key architectural patterns from the code itself
+- **Entry-point symbols** — for the main flow, identify the specific function or method where behavior originates (e.g., `PipelineController.processNext()`, not just `PipelineController`). Name these in Current State so agents can jump directly to the right location.
 - External dependencies and their integration points
 - **Implemented vs. aspirational** — look for `TODO`, `FIXME`, `NotImplementedError`, stub files, placeholder comments
 - For pipelines or multi-stage systems: trace data flows between stages, document handoff contracts
@@ -139,12 +141,12 @@ Read [references/quality-guide.md](references/quality-guide.md) for principles. 
 - **Leave blank with HTML comment placeholder**: Project Identity — this requires human judgment and cannot be reliably inferred.
 - **Critical Constraints**: Leave blank with a placeholder comment unless spec.md is being created in this run. If spec.md is being created, pre-populate with:
   ```
-  - After significant implementation changes, update spec.md Current State
-    (and technical domain spec.md if the change is technical domain-scoped). Stale specs are
+  - After significant implementation changes, update docs/specs/spec.md Current State
+    (and subsystem spec.md if the change is subsystem-scoped). Stale specs are
     worse than no specs.
   ```
   Add a second placeholder comment for any additional human-judgment constraints.
-- **If spec.md is being created in this run**, include a pointer to spec.md in Pointers to Deeper Docs: `` `spec.md` — current project state, architecture overview, and working constraints ``. If the user opted out of spec.md in Phase 2, omit this pointer.
+- **If spec.md is being created in this run**, include a pointer in Pointers to Deeper Docs: `` `docs/specs/spec.md` — project spec, architecture overview, and spec index ``. If the user opted out of spec.md in Phase 2, omit this pointer.
 
 **CLAUDE.md self-review** before proceeding to Phase 4:
 - [ ] Under 200 lines
@@ -185,7 +187,7 @@ Before presenting to the user, review the spec.md draft against these checks fro
 - [ ] External Dependencies (shared only, if multi-technical-domain)
 - [ ] Testing Strategy (infrastructure only, if multi-technical-domain)
 - [ ] Boundaries & Constraints (project-wide only, if multi-technical-domain)
-- [ ] Technical Domain Specs pointer table (if multi-technical-domain)
+- [ ] Spec Index section with Subsystems and Features tables
 
 **Content quality:**
 - [ ] Current State uses past/present tense only — no "will", "planned", "upcoming"
@@ -235,9 +237,25 @@ Each question must reference the specific file, pattern, or discovery that promp
 
 ### Phase 6: Write Files
 
-1. If `$ARGUMENTS` provides an output path, use it. If it's a directory, write both files inside it. Otherwise default to the project root.
-2. Write CLAUDE.md and spec.md to disk.
-3. Verify the CLAUDE.md Pointers to Deeper Docs section includes the spec.md pointer.
+1. If `$ARGUMENTS` provides an output path, use it for CLAUDE.md. Otherwise default to the project root.
+2. Write CLAUDE.md to the project root.
+3. Write spec.md to `docs/specs/spec.md`. Create the `docs/specs/` directory if it doesn't exist.
+4. Verify the CLAUDE.md Pointers to Deeper Docs section includes a pointer to `docs/specs/spec.md`.
+5. Add a `## Spec Index` section at the end of `docs/specs/spec.md` with the header and an empty subsystems table (populated in Phase 8 if applicable) and an empty features table:
+
+```markdown
+## Spec Index
+
+### Subsystems
+| Spec | Path | Description |
+|------|------|-------------|
+
+### Features
+| Spec | Path | Description |
+|------|------|-------------|
+```
+
+This index is the discovery mechanism for all specs in the project. The `/tpe:spec` skill reads this table to find related specs and appends to it when creating new feature specs.
 
 ### Phase 7: Review with User
 
@@ -269,7 +287,7 @@ If Phase 1 identified **2 or more technical domains**, create a technical domain
 
 #### Step 1: Draft Technical Domain Specs
 
-Write each `{domain-dir}/spec.md` using [domain-spec-template.md](references/domain-spec-template.md). Each spec is **under 100 lines**. Content gathered in Phase 1 but excluded from root (technical domain-specific deps, testing gaps, issues, boundaries) belongs here — don't leave it orphaned.
+Write each to `docs/specs/subsystems/{domain-slug}/spec.md` using [domain-spec-template.md](references/domain-spec-template.md). Derive `{domain-slug}` from the domain name (lowercase, hyphens). Each spec is **under 100 lines**. Content gathered in Phase 1 but excluded from root (technical domain-specific deps, testing gaps, issues, boundaries) belongs here — don't leave it orphaned.
 
 **Prioritization when the 100-line cap is tight** (in order — cut from the bottom):
 1. **Interface Contracts** — what this domain exposes and consumes (highest value — this is why domain specs exist)
@@ -294,8 +312,8 @@ paths:
   - "{domain-dir}/**/*"
 ---
 
-Read {domain-dir}/spec.md for technical domain-specific conventions, interface
-contracts, and boundaries before making changes in this area.
+Read docs/specs/subsystems/{domain-slug}/spec.md for technical domain-specific
+conventions, interface contracts, and boundaries before making changes in this area.
 ```
 
 #### Step 2b: Verify Rules Load
@@ -308,9 +326,15 @@ ls {domain-dir}/**/* | head -3
 
 If the glob returns no files, fix the pattern — common mistakes are missing `**` and wrong directory prefix.
 
-#### Step 3: Update Root Pointers
+#### Step 3: Update Spec Index
 
-Add a `## Technical Domain Specs` section to the root spec.md listing each technical domain spec with its path and one-line description. Add a pointer in CLAUDE.md's "Pointers to Deeper Docs" section.
+Add each subsystem spec to the Subsystems table in `docs/specs/spec.md`'s Spec Index section:
+
+```markdown
+| {Domain Name} | `docs/specs/subsystems/{domain-slug}/spec.md` | {one-line description} |
+```
+
+Also add a pointer in CLAUDE.md's "Pointers to Deeper Docs" section to `docs/specs/spec.md` if not already present.
 
 #### When NOT to Create Technical Domain Specs
 
@@ -325,8 +349,8 @@ Add a `## Technical Domain Specs` section to the root spec.md listing each techn
 - **Leave human-judgment sections as placeholders** — Project Identity and Critical Constraints require human input. Do not fill these with generic advice.
 - **Keep CLAUDE.md under 200 lines** — A CLAUDE.md that's too long defeats its purpose as quick-reference context.
 - **Don't skip discovery for existing projects** — Even when the user describes the project verbally, explore the codebase first — the code is the source of truth.
-- **Don't confuse project spec with change spec** — If the user starts describing a specific feature or bug fix mid-interview, redirect them to `/tpe:think` or `/tpe:bug` for that work.
-- **Keep cross-references in sync** — When writing or moving files, verify CLAUDE.md's pointer to spec.md is correct.
+- **Don't confuse project spec with change spec** — If the user starts describing a specific feature or bug fix mid-interview, redirect them to `/tpe:spec` or `/tpe:bug` for that work.
+- **Keep cross-references in sync** — When writing or moving files, verify CLAUDE.md's pointer to `docs/specs/spec.md` is correct and the Spec Index is up to date.
 - **Don't conflate layers with technical domains** — `src/lambda_fn/` and `src/backend/` may look like siblings in a directory listing, but if they deploy separately or have divergent constraints, they are separate technical domains. Conversely, `src/models/`, `src/controllers/`, `src/routes/` share a deployment target, import each other directly, and have no divergent constraints — they are layers within one technical domain. Always apply the litmus test and signals from Phase 1, not directory names.
 - **This skill targets the root CLAUDE.md** — For subdirectory CLAUDE.md files in a monorepo, scope content to that package's technical domain.
 

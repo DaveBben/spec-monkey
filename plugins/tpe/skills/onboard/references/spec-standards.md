@@ -80,11 +80,11 @@ specs. For single-domain projects, include everything in root (100-200 lines).
 | 7 | Boundaries & Constraints | Three-tier: Always Do / Ask First / Never Do. Always include "ask if not covered by this spec." | Root = project-wide rules; domains own domain-specific rules |
 | 8 | Gotchas | Optional. Non-obvious traps not derivable from code. Cross-cutting only. | Domain-specific gotchas go in domain specs |
 | 9 | Ownership | Team or owner name, contact method | Root = project owner; domains can override |
-| 10 | Domain Specs | Pointer table: domain name, path, one-line description | Multi-domain only |
+| 10 | Spec Index | Subsystems + Features tables: spec name, path, one-line description | Always present |
 | 11 | Known Issues | Cross-cutting issues only | Domain-specific issues go in domain specs |
 | 12 | Tech Debt | Cross-cutting debt only | Domain-specific debt goes in domain specs |
 
-### Domain Spec — Sections (for `{domain-dir}/spec.md`)
+### Subsystem Spec — Sections (for `docs/specs/subsystems/{domain-slug}/spec.md`)
 
 Domain specs are created for projects with 2+ distinct subsystems. They
 are loaded via `.claude/rules/` when the agent works in that directory.

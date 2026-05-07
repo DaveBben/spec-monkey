@@ -34,13 +34,13 @@ Can the change be understood by a single diff?
   └── Yes → Use vanilla Claude Code with plan mode. No skills needed.
 
 Is it a bug?
-  └── Yes → /tpe:bug → then /tpe:execute
+  └── Yes → /tpe:bug → produces bug spec → /tpe:execute
 
-Is it a new feature or capability?
-  └── Yes → /tpe:think → /tpe:plan → /tpe:execute
+Want to think through a change before implementing?
+  └── Yes → /tpe:spec → then plan mode
 
-Don't know where the change lives or what it touches?
-  └── Yes → /tpe:think (investigation phase surfaces this before any planning)
+Ready to implement (you already have a spec or clear prompt)?
+  └── Yes → Plan mode directly, or /tpe:execute
 
 Want a second set of eyes on what you're writing?
   └── Yes → /tpe:review (four-agent parallel review — never writes code)
@@ -52,12 +52,11 @@ Want a second set of eyes on what you're writing?
 
 | Skill | What it does | Artifacts produced |
 |---|---|---|
-| `/tpe:onboard` | Sets up context for a new or existing codebase | `CLAUDE.md`, `spec.md` |
-| `/tpe:think` | Investigates scope, surfaces consequences, gets human decisions before planning | `brainstorm.md` |
-| `/tpe:plan` | Reads approved brainstorm, writes implementation plan, decomposes to task JSONs | `plan.md`, `plan.json`, `task_{N}.json` |
-| `/tpe:execute` | Implements tasks: dispatches code-implementor per task, regression checks, deep review | Branch, commits |
-| `/tpe:bug` | Captures symptom, investigates root cause, produces task JSONs directly | `task_{N}.json` (no plan.md intermediate) |
-| `/tpe:review` | Four-agent parallel review (security, reliability, maintainability, performance) | Consolidated review report |
+| `/tpe:onboard` | Sets up context for a new or existing codebase | `CLAUDE.md`, `docs/specs/spec.md`, `docs/specs/subsystems/*/spec.md` |
+| `/tpe:spec` | Thinking partner + spec producer — challenges your approach, then writes the spec | `docs/specs/features/{slug}/spec.md` |
+| `/tpe:execute` | Reads a spec, implements changes, reviews each commit against the spec, verifies | Branch, commits |
+| `/tpe:bug` | Investigates a bug symptom, traces root cause, produces a bug spec | `docs/specs/bugs/{slug}/spec.md` |
+| `/tpe:review` | Spec-grounded code review — checks changes against the spec that defined them | Review report |
 
 ---
 
@@ -70,67 +69,39 @@ Run this first on any codebase — new or existing. The skill reads the reposito
 - **`CLAUDE.md`** — quick-reference context that Claude Code loads on every conversation
 - **`spec.md`** — living specification describing what the system does, key decisions, and known constraints
 
-Once onboarded, `/tpe:think` and `/tpe:bug` have rich context to work from, increasing the chances that AI agents implement changes without breaking existing data contracts.
+Once onboarded, `/tpe:spec` and `/tpe:bug` have rich context to work from, increasing the chances that AI agents implement changes without breaking existing data contracts.
 
-### `/tpe:think`
+### `/tpe:spec`
 
-Investigative conversation that clarifies scope, constraints, and approach — **before** any planning or implementation. The human makes architectural decisions here; the AI investigates and surfaces consequences.
+Thinking partner + spec producer in one conversation. You describe a change, Claude reads the codebase (not just CLAUDE.md/spec.md — the actual source files), challenges your assumptions with specific grounded concerns, then produces a complete spec ready for plan mode.
 
-Runs three parallel Explore agents (blast radius, existing patterns, data shapes), synthesizes findings, and asks:
-1. Impact surface — what does this change touch?
-2. At-risk tests — which tests must not break? (requires human confirmation)
-3. Approach — human states their approach first, AI presents alternatives, human decides
+**Phase 1 — Understand and Challenge:** Claude reads the relevant code and pushes back on your approach using techniques from cognitive science research: pre-mortem ("it shipped and broke — why?"), alternatives analysis, second-order thinking, and operational readiness. It's a conversation with a senior engineer, not an interview.
 
-Produces **`brainstorm.md`** — the contract between think and plan. Plan will not start until Status is `Approved`.
+**Phase 2 — Produce the Spec:** Claude investigates for precise file:line references, symbols, verification commands. Runs the `spec-reviewer` agent to check for seven evidence-backed failure modes before presenting the spec.
 
-### `/tpe:plan`
-
-Reads the approved `brainstorm.md`, deepens targeted investigation, and produces:
-
-- **`plan.md`** — implementation plan with real code, constraints, and pattern references (100–200 lines)
-- **`plan.json`** — machine-readable plan metadata
-- **`task_{N}.json`** files — one per vertical slice, each with: files (max 4), symbol, single reference, dependency chain, at-risk tests, acceptance criteria (GIVEN/WHEN/THEN), verification command, and explicit scope boundaries
-
-Runs a `plan-verifier` agent to fact-check all file:line references before producing task JSONs.
+Produces **`docs/specs/features/{slug}/spec.md`** — a contract between the human (who decides what and why) and the AI agent (who implements how). Hand it to plan mode to implement.
 
 ### `/tpe:execute`
 
-Takes a plan directory and processes all task JSONs:
+Reads a spec and implements it:
 
-1. Pre-flight: branch safety, validate task JSONs, test baseline, spec freshness
-2. For each task: dispatch `code-implementor` agent at appropriate complexity tier (haiku/sonnet/opus, maxTurns 20–75)
-3. Trust-but-verify: run `regressionCheck` after each task — hard stop on failure
-4. Per-task commit after verification passes (rollback granularity)
-5. Handoff check when next task depends on the completed one
-6. `/tpe:review` after all tasks for the repo
-7. Full test suite + lint
+1. Pre-flight: branch safety, test baseline, validate spec file references, run linters
+2. Implement changes following the spec's Approach, Constraints, Edge cases, and Do NOT
+3. After each logical commit: review the change against the spec (spec compliance, edge case coverage, logic errors)
+4. Run the spec's verification command — not done until it passes
+5. Full test suite + lint as final check
 
-Does not push or create PRs
+Does not push or create PRs. Uses subagents for parallel work when the spec involves independent concerns.
 
 ### `/tpe:bug`
 
-Bugs start from a symptom, not a change request, so they skip the think→plan path. Guides through: symptom description, reproduction steps, root cause investigation via two parallel agents, then produces task JSONs directly:
-
-- `task_0`: write the failing reproduction test
-- `task_1`: fix (blocked by task_0, done when repro test goes green)
-- `task_2`: edge case tests (optional)
-
-Same task JSON schema as features — `/tpe:execute` does not need to know whether it's running a bug or feature.
-
-If the investigation finds that the bug touches many files across multiple concerns, the skill warns and offers to escalate to `/tpe:think` → `/tpe:plan` → `/tpe:execute`.
+Bugs start from a symptom, not a change request. Claude reads the code, traces the root cause using dual-frame analysis (backward from symptom + forward from suspected cause), and produces a bug spec with intended/actual behavior, repro steps, root cause, and mitigation approach. Feeds into `/tpe:execute` the same way feature specs do.
 
 ### `/tpe:review`
 
-Four agents run in parallel, each focused on one dimension:
+Spec-grounded code review. One general reviewer (not 4 specialists — research shows 1 well-contexted agent outperforms a panel of same-model specialists). Reviews changes against the spec that defined them, checking for: spec compliance, missed edge cases, constraint violations, and logic errors. Linters and type checkers handle style and mechanical issues.
 
-| Agent | Focus |
-|---|---|
-| `security-reviewer` | Injection, access control, data exposure |
-| `reliability-reviewer` | Correctness, race conditions, resource lifecycle |
-| `maintainability-reviewer` | Readability, compatibility, conventions |
-| `performance-reviewer` | N+1 queries, blocking I/O, resource leaks |
-
-Results are consolidated into a single report. Used automatically by `/tpe:execute` after all tasks for a repo complete. Can also be invoked standalone on any code.
+Can be invoked standalone on any branch or diff.
 
 ---
 
@@ -138,54 +109,152 @@ Results are consolidated into a single report. Used automatically by `/tpe:execu
 
 | Agent | Role | Used by |
 |---|---|---|
-| `plan-verifier` | Fact-checks plan.md references against the codebase | `/tpe:plan` |
-| `code-implementor` | Reads task JSON, implements code, verifies against acceptance criteria | `/tpe:execute` |
-| `task-handoff-checker` | Checks export/import consistency between completed and dependent tasks | `/tpe:execute` |
-| `security-reviewer` | Injection, access control, data exposure | `/tpe:review` |
-| `reliability-reviewer` | Correctness, race conditions, resource lifecycle | `/tpe:review` |
-| `maintainability-reviewer` | Readability, compatibility, conventions | `/tpe:review` |
-| `performance-reviewer` | N+1 queries, blocking I/O, resource leaks | `/tpe:review` |
+| `spec-reviewer` | Checks specs for 7 evidence-backed failure modes before presenting to user | `/tpe:spec` |
 
 ---
 
 ## Artifact Storage
 
-Plans and tasks are stored per-project inside `.claude/`:
+Specs live under `docs/specs/`, bug tasks under `.claude/bugs/`:
 
 ```
 {project-root}/
-  .claude/
-    features/
-      {slug}/
-        brainstorm.md
-        plan.md
-        plan.json
-        tasks/
-          task_0.json
-          task_1.json
-    bugs/
-      {slug}/
-        tasks/
-          task_0.json
-          task_1.json
-        repro-test.[ext]
+  docs/
+    specs/
+      spec.md                          ← project-level spec (produced by /tpe:onboard)
+      subsystems/
+        {domain-slug}/
+          spec.md                      ← subsystem spec (produced by /tpe:onboard)
+      features/
+        {feature-slug}/
+          spec.md                      ← feature/change spec (produced by /tpe:spec)
+      bugs/
+        {bug-slug}/
+          spec.md                      ← bug spec (produced by /tpe:bug)
 ```
 
-`brainstorm.md` records human decisions and confirmed at-risk tests. `plan.md` contains the implementation approach and constraints. `task_{N}.json` files contain individual tasks: files, symbol, dependency chain, at-risk tests, acceptance criteria, and verification commands.
+The project-level `docs/specs/spec.md` contains a **Spec Index** — a table of contents listing all subsystem and feature specs with descriptions. This is how agents discover related specs without loading every file into context.
+
+Feature specs are persistent artifacts that collectively document how the codebase was built. Each contains: intent, current behavior, constraints, edge cases, approach, rejected alternatives, scope boundaries, file references with symbols, and verification commands.
 
 ---
 
 ## Design Principles
 
-**Human decides before AI plans.** `/tpe:think` surfaces consequences and alternatives; the human chooses the approach. The AI never recommends — it presents options and waits.
+**Human decides, AI challenges, then AI implements.** `/tpe:spec` reads the code and pushes back on assumptions. The human makes the final call. The spec captures the decision.
 
-**Brainstorm → Plan → Execute is a verified handoff chain.** Each skill consumes artifacts from the previous one. Plan blocks if brainstorm is unapproved or has unverified tests. Execute validates task JSONs before touching code.
+**The spec is the contract.** One artifact, under 300 words, with everything the implementing agent needs and nothing it doesn't. Every token must earn its place.
 
-**Context density over context volume.** Every field in a task JSON must earn its place. Wrong context is worse than no context — so at-risk tests are human-confirmed, references are capped at one, and files are capped at four.
+**Context density over context volume.** Wrong context is worse than no context. Specs are reviewed by the `spec-reviewer` agent for seven evidence-backed failure modes before the human sees them.
 
 **Regression prevention is the primary quality metric.** Targeted at-risk tests (human-confirmed, specific) reduce regressions 72%. Generic TDD instructions without targeted context increase them. The pipeline is designed around this finding.
 
 **Skip the skills when you don't need them.** One- or two-line changes do not need a plan file. Use vanilla Claude Code with plan mode.
+
+---
+
+## The Evidence-Based Prompt
+
+Independent of the TPE pipeline, research shows that a well-constructed prompt to a frontier model in plan mode can handle most coding tasks effectively. Based on findings from SWE-bench, METR, ORACLE-SWE, and other benchmarks (see [research.md](research.md) for full citations), here is an example prompt with every element justified by measured evidence.
+
+### Example: Adding webhook retry logic
+
+```
+Add exponential backoff retry logic to the webhook delivery system.
+
+**Last updated**: 2026-05-07
+
+## What and why
+The webhook dispatcher currently fires once and discards on failure.
+Customers lose events when their endpoints have transient outages.
+Add retry with exponential backoff so transient failures recover
+without manual intervention.
+
+## Current behavior
+Webhook dispatch is fire-and-forget: dispatcher.ts:47 sendWebhook()
+calls the endpoint, logs on failure, and moves to the next event.
+No retry, no status tracking beyond "sent" or "failed".
+
+## Constraints
+- Max 5 retries per event, backoff: 1s, 2s, 4s, 8s, 16s
+- After final failure, mark event as "dead_letter" (do not delete)
+- Retries must not block the main dispatch loop (use the existing
+  background job queue in src/jobs/)
+- Must not retry on 4xx responses (client errors are permanent)
+
+## Edge cases
+- Endpoint returns 429 (rate limited): treat as retryable, not a 4xx client error
+- Endpoint times out (>30s): treat as failure, retry
+- Event payload exceeds 1MB: skip retry, mark dead_letter immediately
+- Webhook URL is unreachable (DNS failure): retryable
+
+## Approach
+Use the existing background job queue (src/jobs/queue.ts) to schedule
+retries asynchronously. On failure, enqueue a retry job with a
+calculated delay rather than blocking the dispatch loop.
+
+## Alternatives rejected
+- Inline retry with sleep — rejected because it blocks the dispatch
+  loop, delaying delivery to other webhooks
+- Separate retry service/process — rejected as over-engineered for
+  the current scale; the existing job queue is sufficient
+
+## Do NOT
+- Do not add a new database table; use the existing `webhook_events`
+  table (add columns if needed via migration)
+- Do not refactor the existing WebhookDispatcher class interface;
+  callers should not need to change
+- Do not add circuit breaker logic; that's a separate concern for later
+- Do not modify the webhook registration or configuration endpoints
+
+## Files that matter
+- src/webhooks/dispatcher.ts:sendWebhook() — the dispatch method to modify
+- src/webhooks/types.ts:WebhookEvent — type definition, needs retry fields
+- src/jobs/queue.ts:enqueue() — the method to call for background retries
+- src/db/migrations/ — where to add the migration
+- tests/webhooks/dispatcher.test.ts — existing tests to keep passing
+
+## Verification
+- Run: npm test -- --grep "webhook"
+- All existing webhook tests must continue to pass
+- New test: dispatching to a consistently-failing endpoint should
+  result in exactly 5 retry attempts with increasing delays
+- New test: dispatching to an endpoint returning 400 should NOT retry
+- After 5 failures, webhook_events row should have status="dead_letter"
+  and retry_count=5
+
+Keep going until all tests pass and the verification criteria are met.
+If you hit a problem, investigate and fix it rather than stopping.
+```
+
+### Why each element is included
+
+| Element | Evidence |
+|---------|----------|
+| **What and why** | CGO (ECOOP 2025): goal-oriented framing outperforms procedural step-by-step with fewer tokens |
+| **Current behavior with location** | ORACLE-SWE: reproduction context is the #1 oracle signal (85.2%). Pinpointing the entry point eliminates 60-80% of agent search cost (Stanford 2026) |
+| **Constraints** | Fault Localization Study (2026): precise specs produce 15-17x improvement over vague ones |
+| **Edge cases** | "More Than a Score" (AACL-IJCNLP 2025): explicit edge-case handling is a key driver of improvement |
+| **Approach** | CGO (ECOOP 2025): goal-oriented framing outperforms procedural. Captures the agreed strategy; prevents agent from choosing a different path |
+| **Alternatives rejected** | Google design docs: "Alternatives Considered" unanimously described as the most valuable section. Prevents relitigating settled decisions |
+| **Do NOT list** | Practitioner consensus: explicit negation measurably reduces scope creep |
+| **Files + symbols** | Fault Localization Study: file + element-level context = 63.4% vs file-only = 54.5% — ~9pp from adding function names |
+| **Verification with assertions** | ORACLE-SWE: gap between vague verification (39.4%) and specific reproduction tests (85.2%) is 46pp |
+| **Persistence** | OpenAI GPT-4.1: three simple agentic instructions = ~20% improvement on SWE-bench |
+| **Plain, short (~250 words)** | Context length degrades performance even with perfect retrieval (EMNLP 2025). Prompt engineering saturates after ~5 hours of work (Softcery 2026) |
+
+### What is deliberately excluded
+
+| Omitted | Why |
+|---------|-----|
+| "You are an expert" | Negligible on frontier models (literature consensus) |
+| Step-by-step instructions | METR (2026): elaborate scaffolding did not beat generic ReAct. Frontier models do CoT internally |
+| Impact analysis section | Model handles this internally (Augment Code finding). "Do NOT" list + file list serve the same function with fewer tokens |
+| Design option exploration | CGO: direct objectives outperform exploratory prompts. Do design exploration in a separate prior conversation to avoid context degradation (SlopCodeBench) |
+| TDD instructions | Net-negative for agentic flows (METR; practitioner consensus) |
+| Few-shot examples | No published ablation for agentic coding. High context cost, unmeasured benefit |
+
+Full research with all citations: [research.md](research.md)
 
 ---
 

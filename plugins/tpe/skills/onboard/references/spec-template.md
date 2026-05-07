@@ -5,7 +5,7 @@ Copy-paste starting point for spec.md. Fill in each section following the guidan
 
 **For multi-domain projects** (2+ subsystems): this root spec stays slim and system-level.
 Domain-specific content (external deps, testing gaps, known issues, tech debt, domain
-boundaries) moves to `{domain-dir}/spec.md`. See `domain-spec-template.md`.
+boundaries) moves to `docs/specs/subsystems/{domain-slug}/spec.md`. See `domain-spec-template.md`.
 
 ## Contents
 
@@ -18,7 +18,7 @@ boundaries) moves to `{domain-dir}/spec.md`. See `domain-spec-template.md`.
 - [Boundaries & Constraints](#boundaries--constraints)
 - [Gotchas](#gotchas) — optional
 - [Ownership](#ownership)
-- [Domain Specs](#domain-specs) — multi-domain only
+- [Spec Index](#spec-index)
 - [Known Issues](#known-issues)
 - [Tech Debt](#tech-debt)
 
@@ -47,6 +47,7 @@ boundaries) moves to `{domain-dir}/spec.md`. See `domain-spec-template.md`.
 - [Boundaries & Constraints](#boundaries--constraints)
 - [Gotchas](#gotchas)
 - [Ownership](#ownership)
+- [Spec Index](#spec-index)
 - [Known Issues](#known-issues)
 - [Tech Debt](#tech-debt)
 
@@ -58,9 +59,10 @@ boundaries) moves to `{domain-dir}/spec.md`. See `domain-spec-template.md`.
 actually implemented and working today. No future tense.
 For multi-domain projects: keep this system-level. Each domain spec has its own Current State. -->
 
-[e.g., "The API accepts invoice submission via POST /invoices and stores them in PostgreSQL.
-Reconciliation runs nightly via a cron job and creates Linear tickets for discrepancies.
-The Stripe integration is complete (src/integrations/stripe.ts)."]
+[e.g., "The API accepts invoice submission via POST /invoices (src/api/invoices.ts:createInvoice())
+and stores them in PostgreSQL. Reconciliation runs nightly via a cron job
+(src/jobs/reconcile.ts:runReconciliation()) and creates Linear tickets for discrepancies.
+The Stripe integration is complete (src/integrations/stripe.ts:createPaymentIntent())."]
 
 **Not yet implemented:**
 - [e.g., NetSuite integration — stubbed in src/integrations/netsuite.ts, throws NotImplementedError]
@@ -141,6 +143,10 @@ conventions go in domain specs.]
 - **Integration tests**: [how to run them, any setup needed]
 - **E2E tests** (optional): [framework, how to run]
 
+**Coverage summary:** [1-2 lines: which areas are well-tested, which have partial coverage,
+which have no tests. e.g., "Service layer is well-covered; webhook handler has no tests
+and is the highest-risk area; E2E tests cover the happy path only."]
+
 **Testing conventions:**
 - [e.g., "Use real database for integration tests, not mocks"]
 
@@ -203,18 +209,22 @@ Cross-cutting gotchas only; domain-specific gotchas go in domain specs. -->
 
 ---
 
-## Domain Specs
+## Spec Index
 
-[For multi-domain projects only. Remove this section for single-domain projects.]
+### Subsystems
+| Spec | Path | Description |
+|------|------|-------------|
+| [e.g., Billing] | `docs/specs/subsystems/billing/spec.md` | [e.g., "payment intents, refunds, Stripe integration"] |
 
-| Domain | Path | Owns |
-|--------|------|------|
-| [e.g., Billing] | `src/billing/spec.md` | [e.g., "payment intents, refunds, Stripe integration"] |
-| [e.g., Auth] | `src/auth/spec.md` | [e.g., "authentication, sessions, JWT handling"] |
+### Features
+| Spec | Path | Description |
+|------|------|-------------|
 
-Each domain spec contains: domain-specific current state, conventions,
-interface contracts, external deps, testing gaps, boundaries, known issues,
-and gotchas. Loaded via `.claude/rules/` when working in that directory.
+Subsystem specs contain: domain-specific current state, conventions,
+interface contracts, external deps, testing gaps, boundaries, known
+issues, and gotchas. Loaded via `.claude/rules/` when working in
+that directory. Feature specs are created by `/tpe:spec` and document
+individual code changes.
 
 ---
 

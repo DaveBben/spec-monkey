@@ -59,9 +59,13 @@ because it appeared first.
 - 2-4 concrete sentences describing what is implemented and working today
 - A named **"Not yet implemented"** list for any stubs, placeholders, or intentionally
   incomplete features — do not bury these in prose
-- Reference key modules, endpoints, or integrations by their actual path or identifier
+- Reference key modules, endpoints, or integrations by their actual path, identifier,
+  and entry-point function — e.g., `PipelineController.processNext()` not just
+  `PipelineController`. Including the symbol name eliminates search time when an
+  agent needs to find where behavior originates. Research shows agents spend 60-80%
+  of their tokens locating relevant code; naming the entry point collapses that cost.
 - Be specific — "Stripe integration is complete" is less useful than "Stripe integration is
-  complete (src/integrations/stripe.ts)"
+  complete (src/integrations/stripe.ts:createPaymentIntent())"
 
 ### The "Not Yet Implemented" list
 
@@ -190,11 +194,20 @@ This way the agent gets the right testing context for the domain it's working in
 - Mention any setup requirements (database seeding, env vars, Docker containers)
 - State whether mocks or real services are preferred
 - **Flag gaps, not just coverage.** Note which test categories exist AND which are missing or thin. A testing strategy that only lists what exists without flagging gaps misleads the AI into thinking coverage is complete.
+- **Include a coverage summary** — a 1-2 line statement of which areas are well-tested,
+  which have partial coverage, and which have no tests. This is the single most actionable
+  context for an agent writing verification commands. Research (ORACLE-SWE) shows that
+  reproduction/verification context is the #1 most valuable signal for coding agents —
+  knowing where tests exist (and don't) directly determines whether verification can rely
+  on existing tests or needs new ones.
 - Bad: "We have tests" (useless)
 - Bad: only listing what exists with no mention of gaps
 - Good: "Integration tests use a real PostgreSQL instance via testcontainers. Run
   `pnpm test:integration` — Docker must be running. Unit tests cover the service layer;
   the webhook handler has no tests and is the highest-risk area."
+- Good coverage summary: "Pipeline stages are well-covered in CoreTests; UI view models
+  have partial coverage (SettingsRoutingModelTests only); AppleScript integration tests
+  exist but are local-only (skipped in CI)."
 
 ---
 

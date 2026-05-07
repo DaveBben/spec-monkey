@@ -176,7 +176,13 @@ After verification passes:
 2. Update the spec's "Last updated" date if implementation revealed
    new constraints or edge cases worth recording.
 
-3. Present a summary:
+3. Flip the spec's `Status` from `Waiting Implementation` to
+   `Implemented` — both in the spec file's header and in its row
+   in the Spec Index (`docs/specs/spec.md`). If the spec lives
+   under `docs/specs/bugs/`, update the Bugs table; otherwise
+   update the Features table.
+
+4. Present a summary:
    - **Branch**: name and commit count
    - **What was done**: 2-3 sentences
    - **Verification**: pass/fail status

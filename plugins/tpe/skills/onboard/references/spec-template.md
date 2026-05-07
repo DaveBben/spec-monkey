@@ -217,8 +217,14 @@ Cross-cutting gotchas only; domain-specific gotchas go in domain specs. -->
 | [e.g., Billing] | `docs/specs/subsystems/billing/spec.md` | [e.g., "payment intents, refunds, Stripe integration"] |
 
 ### Features
-| Spec | Path | Description |
-|------|------|-------------|
+| Spec | Path | Status | Description |
+|------|------|--------|-------------|
+
+Status values: `Waiting Implementation` | `Implemented` | `Removed`.
+`/tpe:spec` writes new entries as `Waiting Implementation`;
+`/tpe:execute` flips to `Implemented` when verification passes;
+abandoned or deleted features are marked `Removed` (row kept for
+audit trail).
 
 Subsystem specs contain: domain-specific current state, conventions,
 interface contracts, external deps, testing gaps, boundaries, known

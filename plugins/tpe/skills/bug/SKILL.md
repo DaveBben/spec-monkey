@@ -27,6 +27,12 @@ description: >
 
 ## Phase 1 — Understand the Symptom
 
+**Branch check.** Run `git rev-parse --abbrev-ref HEAD`. If on
+`main`/`master`, note that you'll create a feature branch before
+writing anything to disk in Phase 4 (the slug isn't known yet). If
+on another branch, proceed — the spec will be written there. Never
+write spec files or update the Spec Index on main.
+
 Read `$ARGUMENTS`. If empty, ask:
 
 > "Describe what you saw — the symptom, not the cause. For example:
@@ -140,6 +146,12 @@ Assemble the investigation into a bug spec. Write to
 **Slug:** derive from the symptom (lowercase, hyphens, max 40
 chars).
 
+**Branch.** Before writing anything to disk, check the current
+branch. If on `main`/`master`, create and switch to
+`fix/{slug}`. If on another branch, confirm with the user that
+this is where they want the spec committed. Never write spec files
+on main.
+
 Then launch the `spec-reviewer` agent using the Agent tool with
 `subagent_type: "spec-reviewer"`. Pass the spec path. Fix any
 failures before presenting.
@@ -152,14 +164,20 @@ After the reviewer passes, present the spec and ask:
 > `/tpe:execute docs/specs/bugs/{slug}/spec.md`"
 
 Update the Spec Index in `docs/specs/spec.md` — add or update the
-entry in a Bugs table (create the table if it doesn't exist):
+entry in a Bugs table (create the table if it doesn't exist). New
+entries use status `Waiting Implementation`:
 
 ```markdown
 ### Bugs
-| Spec | Path | Description |
-|------|------|-------------|
-| {title} | `docs/specs/bugs/{slug}/spec.md` | {one-line description} |
+| Spec | Path | Status | Description |
+|------|------|--------|-------------|
+| {title} | `docs/specs/bugs/{slug}/spec.md` | Waiting Implementation | {one-line description} |
 ```
+
+Status values: `Waiting Implementation` | `Implemented` | `Removed`.
+`/tpe:execute` flips to `Implemented` when verification passes. If
+the bug is abandoned (e.g., turns out to be expected behavior), set
+status to `Removed` rather than deleting the row.
 
 ---
 
@@ -168,6 +186,7 @@ entry in a Bugs table (create the table if it doesn't exist):
 ```
 {One-line symptom description}
 
+**Status**: Waiting Implementation
 **Last updated**: {YYYY-MM-DD}
 
 ## Intended behavior

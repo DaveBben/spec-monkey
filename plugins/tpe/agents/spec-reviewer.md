@@ -52,9 +52,18 @@ behavior is noise.
 ### 2. Contradictions
 
 Contradictions between sections force the agent to resolve ambiguity,
-and it may resolve it wrong (Anthropic context engineering).
+and it may resolve it wrong.
 
 Cross-read these section pairs for conflicts:
+- **Why vs Summary**: does the Summary describe a change that
+  actually addresses the problem stated in Why? (e.g., Why says
+  "tests are flaky" but Summary describes adding a feature
+  unrelated to flakiness)
+- **Domain sections vs Constraints/Do NOT**: if the spec has custom
+  reviewer-facing sections (tool definitions, state tables,
+  migration plans, etc.), do they align with what Constraints
+  requires and what Do NOT forbids? A schema or table that drifts
+  from the binding contract is a contradiction.
 - **Constraints vs Edge cases**: does an edge case require violating
   a constraint? (e.g., constraint says "max 5 retries" but edge case
   says "retry indefinitely on 429s")
@@ -64,30 +73,36 @@ Cross-read these section pairs for conflicts:
   touching something that's out of scope?
 - **Files that matter vs Do NOT**: is a file listed as needing changes
   but also listed as "do not modify"?
+- **Approach vs Files that matter**: does the Approach reference a
+  file that isn't in Files that matter, or vice versa?
 
 **FAIL if any contradiction found.** Quote both conflicting statements.
 
-### 3. Stale References (measured: 0.5-2pp worse than no references)
+### 3. Stale References
 
 Wrong file/symbol references are worse than no references at all —
 the agent trusts them and builds against a wall it can't see (ETH
 Zurich AGENTS.md study).
 
 For every entry in "Files that matter":
-- Verify the file exists at that path
-- Verify the symbol (function, class, type) exists in that file
-  (grep for it)
+- Verify the file exists at that path.
+- Each entry may list one anchor or several (e.g., `symbolA (:N)`,
+  `symbolB (:M)`, `module docstring (:start-end)`). Grep for every
+  named symbol; verify each line range contains what the spec
+  claims.
 - If "Current behavior" cites a file:line, verify the line contains
-  what the spec claims
+  what the spec claims.
+- If a domain section (tool definitions, state tables, etc.)
+  references files or symbols not listed in "Files that matter",
+  flag the omission.
 
 **FAIL if any reference is wrong.** Report what the spec says vs
-what actually exists. If the file exists but the symbol doesn't,
+what actually exists. If the file exists but a symbol doesn't,
 grep the repo for the symbol to find its actual location.
 
 ### 4. Vague Constraints (measured: 15-17x improvement from precision)
 
-Precise specifications produce 15-17x improvement over vague ones
-(Fault Localization Study, April 2026). Constraints the agent can't
+Precise specifications produce 15-17x improvement over vague ones. Constraints the agent can't
 test are constraints the agent will ignore.
 
 For each constraint, ask: can the implementing agent verify this by
@@ -102,11 +117,7 @@ Flag as vague:
 **FAIL if any constraint is not testable.** For each vague constraint,
 suggest a concrete replacement or recommend removing it.
 
-### 5. Weak Verification (measured: 46pp gap between vague and specific)
-
-The gap between "run tests" and specific reproduction tests is 46
-percentage points — the largest measured gap in the research
-(ORACLE-SWE, April 2026).
+### 5. Weak Verification
 
 Check the Verification section for:
 - **Is there an exact command to run?** (not "run the tests" but the
@@ -121,10 +132,10 @@ Check the Verification section for:
 **FAIL if verification is vague.** Quote the vague parts and suggest
 specific replacements based on what the spec describes.
 
-### 6. Untestable NFRs (measured: no effect on quality metrics)
+### 6. Untestable NFRs
 
 Prompt patterns show no significant difference on maintainability,
-security, or reliability metrics (EASE 2025). Vague NFRs add tokens
+security, or reliability metrics. Vague NFRs add tokens
 without improving outcomes.
 
 Scan the spec for non-functional requirements that are not quantified:
@@ -136,10 +147,10 @@ Scan the spec for non-functional requirements that are not quantified:
 it (e.g., "response time under 200ms") or removing it — vague NFRs
 are token waste.
 
-### 7. Scope Creep (measured: adherence drops with more requirements)
+### 7. Scope Creep
 
 When models receive many simultaneous requirements, adherence to
-each individual requirement drops (Stanford "Curse of Instructions").
+each individual requirement drops.
 Review effectiveness drops sharply beyond 400 lines (multiple
 empirical studies) — catching oversized specs here is far cheaper
 than catching them after implementation.

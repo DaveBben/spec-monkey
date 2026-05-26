@@ -70,6 +70,15 @@ sections. These are your boundaries.
   subagents in parallel using the Agent tool. Each subagent gets
   the spec + the specific files it should modify. Merge their
   work and verify the combined result.
+- **Prefer Haiku agents for simple file edits.** For mechanical
+  changes — renames, import updates, applying a known pattern to
+  several files, boilerplate scaffolding, straightforward
+  refactors — dispatch the agent with `model: "haiku"`. Haiku is
+  faster and cheaper, and the work doesn't need Opus-level
+  reasoning. Reserve the default model for edits that require
+  judgment: novel logic, ambiguous specs, cross-cutting changes,
+  or anything where getting the design right matters more than
+  throughput.
 - **For sequential work, implement directly.** If changes must
   happen in order (e.g., type changes before call site updates),
   implement in the main session without subagents.
@@ -95,7 +104,7 @@ use that approach it was explicitly rejected during planning.
 
 **After each logical unit of work, run linters, then dispatch the
 `commit-reviewer` agent before committing.** Do not self-review —
-models fail to correct their own errors 64.5% of the time.
+models fail to correct their own errors.
 
 Run linters and type checkers first. Fix any mechanical issues so
 the reviewer focuses on logic and spec compliance, not style.
@@ -133,6 +142,23 @@ judgment that the code is correct — run the actual commands.
 
 If verification fails after five fix attempts, stop and report the
 failure to the user with details. Do not keep retrying in a loop.
+
+---
+
+## Staff Review
+
+Before finalizing, dispatch a subagent to review the entire feature
+diff with fresh eyes. Use the Agent tool with the general-purpose
+agent type and `model: "opus"` — this review needs strong reasoning,
+not throughput. Pass the full diff (`git diff <base-branch>...HEAD`)
+and the instruction:
+
+> Review this code as if you were a staff engineer preparing to
+> approve a PR.
+
+Fix all BLOCKING and high-value findings before moving on. Lower-
+value nits can be deferred or skipped if they're out of scope, but
+note any you skip and why.
 
 ---
 

@@ -22,7 +22,11 @@ Resolve `$ARGUMENTS` to a spec file:
 
 1. **Full path** (`docs/specs/features/{slug}/spec.md`): use directly
 2. **Slug**: try `docs/specs/features/{slug}/spec.md`
-3. **No input**: glob `docs/specs/features/*/spec.md`, present choices
+3. **No input**: glob `docs/specs/features/*/spec.md` and
+   `docs/specs/bugs/*/spec.md`. Read each spec's YAML frontmatter and
+   filter to those with `Status: Waiting Implementation`. Present the
+   matching specs as a numbered menu showing slug and title, then ask
+   the user to choose. If none are waiting, tell the user.
 
 Read the spec in full. This is your contract.
 

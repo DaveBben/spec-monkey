@@ -142,29 +142,34 @@ failure to the user with details. Do not keep retrying in a loop.
 
 ## Final Review
 
-Before finalizing, launch three review agents **in parallel** — a
-single message with three Agent tool calls. Do not self-review —
+Before finalizing, launch four review agents **in parallel** — a
+single message with four Agent tool calls. Do not self-review —
 models fail to correct their own errors.
 
 1. **`staff-reviewer`** (`subagent_type: "staff-reviewer"`) —
    multi-pass review of the code: security, correctness,
    performance, reliability.
-2. **`qa-reviewer`** (`subagent_type: "qa-reviewer"`) — test
+2. **`code-quality-reviewer`** (`subagent_type:
+   "code-quality-reviewer"`) — rigor signaled vs. rigor enforced:
+   contracts not checked at the boundary, stated-purpose patterns
+   defeated by usage, defensive code masking contract violations,
+   broken encapsulation.
+3. **`qa-reviewer`** (`subagent_type: "qa-reviewer"`) — test
    quality, test coverage, and edge case handling.
-3. **`compliance-reviewer`** (`subagent_type:
+4. **`compliance-reviewer`** (`subagent_type:
    "compliance-reviewer"`) — did we build what the spec said we'd
    build?
 
-Pass all three the same inputs:
+Pass all four the same inputs:
 - `diff`: the full feature diff (`git diff <base-branch>...HEAD`,
   where `<base-branch>` is the branch this feature was cut from —
   usually `main` or `master`)
 - `spec_path`: the spec file path
 
-When all three return, merge their findings (deduplicate any
+When all four return, merge their findings (deduplicate any
 overlap), then resolve them:
 
-- **Staff/QA findings**: fix all BLOCKING and SHOULD_FIX findings.
+- **Staff / QA / code-quality findings**: fix all BLOCKING and SHOULD_FIX findings.
   SUGGESTIONS can be deferred or skipped if they're out of scope,
   but note any you skip and why.
 - **Compliance deviations** (NON_COMPLIANT): for each — if the spec
@@ -175,8 +180,8 @@ overlap), then resolve them:
   non-compliance remains.
 
 After fixing, re-run each reviewer whose findings you addressed (or
-whose scope your fixes touched) until staff and QA return APPROVE
-and compliance returns COMPLIANT.
+whose scope your fixes touched) until staff, code-quality, and QA
+all return APPROVE and compliance returns COMPLIANT.
 
 ---
 
@@ -203,7 +208,7 @@ After verification passes:
    - **What was done**: 2-3 sentences
    - **Verification**: pass/fail status
    - **Final review findings**: issues caught and fixed by the
-     staff and QA reviews
+     staff, code-quality, and QA reviews
    - **Compliance review**: COMPLIANT, or list of resolved
      deviations
    - **Needs attention** (if any): anything unexpected, deviations

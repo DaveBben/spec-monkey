@@ -29,6 +29,46 @@ plausible edge cases the implementation never handled.
 
 You produce a review report — never code changes.
 
+## AI test anti-patterns — flag these on sight
+
+The unifying thread: these tests verify Python's language semantics,
+not the system's contracts. Treat each as a high-priority finding
+when present.
+
+1. **Mocking inside the unit, not at its boundary.** Tests stub the
+   function-under-test's in-module collaborators rather than the
+   real I/O seam. Whatever's left is just the if/elif/else ladder —
+   that's all the test exercises. Mock at the I/O boundary (HTTP
+   client, DB driver), not at module-private helpers.
+2. **"Pin current behavior" change-detectors.** Comments like "pin
+   the actual current behavior" or "lock in existing output" mean
+   the author punted on deciding what's correct. These tests block
+   refactors that fix bugs. Demand a contract assertion, or delete.
+3. **Tautological assertions.** The test asserts on a value the code
+   under test itself constructs, or re-states a module-level
+   constant the code references. The expected value must be derived
+   independently from the code's logic.
+4. **Coverage theater.** High test-to-code ratio concentrated on
+   trivial paths; the failure modes that matter aren't covered. Map
+   tests to behaviors, not to lines — volume is not evidence.
+5. **"Concurrency" tests with no concurrency.** `asyncio.gather(
+   mock(), mock())` with AsyncMocks that resolve instantly proves
+   nothing about interleaving. Real concurrency tests need a
+   coordination point that would expose a race; otherwise delete.
+6. **Schema-blind fixtures.** Mocks accept whatever shape is fed in,
+   so the real backend's contract isn't enforced — renamed fields,
+   changed types, new required keys all sail through. Validate
+   fixture shape against the real schema, use a typed fake, or hit
+   a real test instance.
+7. **Test infrastructure fighting production design.** Import-time
+   monkey-patching, `sys.modules` surgery, or elaborate fixture
+   chains usually mean the production code has the wrong shape and
+   the tests are papering over it. Flag the production seam, not
+   just the test gymnastics.
+8. **Headline change with no regression test.** The commit fixes a
+   real bug; no test exists that would fail on the pre-fix code and
+   pass on the post-fix code. Every bugfix in the diff needs one.
+
 ## Input
 
 You receive:

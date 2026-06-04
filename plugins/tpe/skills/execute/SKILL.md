@@ -6,8 +6,8 @@ effort: high
 argument-hint: "[path to spec file]"
 description: >
   Implements a spec produced by /tpe:spec. Reads the spec, creates a
-  feature branch, implements the changes, reviews each commit against
-  the spec, and self-verifies. Does not push or create PRs.
+  feature branch, implements the changes, self-verifies, then runs
+  parallel staff and QA reviews. Does not push or create PRs.
 ---
 
 # Execute — Implement a Spec
@@ -104,28 +104,19 @@ use that approach it was explicitly rejected during planning.
 
 ---
 
-## Review Each Commit
+## Before Each Commit
 
-**After each logical unit of work, run linters, then dispatch the
-`commit-reviewer` agent before committing.** Do not self-review —
-models fail to correct their own errors.
+After each logical unit of work, before committing:
 
-Run linters and type checkers first. Fix any mechanical issues so
-the reviewer focuses on logic and spec compliance, not style.
+1. **Run linters and type checkers.** Fix any new violations.
+2. **Run the tests relevant to the change** (at minimum, the scope
+   of the spec's verification command). All must pass — never
+   commit on a red state you introduced.
 
-Then launch the `commit-reviewer` agent using the Agent tool with
-`subagent_type: "commit-reviewer"`. Pass:
-- `spec_path`: the spec file path
-- `diff`: the staged diff (output of `git diff --cached`)
-
-If the agent returns BLOCKING findings, fix them before committing.
-Address SHOULD_FIX findings unless the spec or scope makes that
-unreasonable — if you skip one, note why in the commit message.
-If PASS, commit with a clear message.
-
-Keep commits under 400 changed lines — review effectiveness drops
-sharply beyond that threshold. If a logical change exceeds 400
-lines, split it into smaller commits.
+Then commit with a clear message. Keep commits under 400 changed
+lines — review effectiveness drops sharply beyond that threshold.
+If a logical change exceeds 400 lines, split it into smaller
+commits.
 
 ---
 
@@ -149,18 +140,43 @@ failure to the user with details. Do not keep retrying in a loop.
 
 ---
 
-## Staff Review
+## Final Review
 
-Before finalizing, launch the `staff-reviewer` agent to review the
-entire feature diff with fresh eyes. Use the Agent tool with
-`subagent_type: "staff-reviewer"`. Pass:
-- `diff`: the full feature diff (`git diff <base-branch>...HEAD`)
+Before finalizing, launch three review agents **in parallel** — a
+single message with three Agent tool calls. Do not self-review —
+models fail to correct their own errors.
+
+1. **`staff-reviewer`** (`subagent_type: "staff-reviewer"`) —
+   multi-pass review of the code: security, correctness,
+   performance, reliability.
+2. **`qa-reviewer`** (`subagent_type: "qa-reviewer"`) — test
+   quality, test coverage, and edge case handling.
+3. **`compliance-reviewer`** (`subagent_type:
+   "compliance-reviewer"`) — did we build what the spec said we'd
+   build?
+
+Pass all three the same inputs:
+- `diff`: the full feature diff (`git diff <base-branch>...HEAD`,
+  where `<base-branch>` is the branch this feature was cut from —
+  usually `main` or `master`)
 - `spec_path`: the spec file path
 
-If the verdict is REQUEST CHANGES, fix all BLOCKING and SHOULD_FIX
-findings before moving on, then re-run the review. SUGGESTIONS can
-be deferred or skipped if they're out of scope, but note any you
-skip and why.
+When all three return, merge their findings (deduplicate any
+overlap), then resolve them:
+
+- **Staff/QA findings**: fix all BLOCKING and SHOULD_FIX findings.
+  SUGGESTIONS can be deferred or skipped if they're out of scope,
+  but note any you skip and why.
+- **Compliance deviations** (NON_COMPLIANT): for each — if the spec
+  is right and the code drifted, fix the code. If the deviation is
+  a reasonable amendment (an edge case the spec missed, a
+  constraint that turned out to be wrong), update the spec to
+  reflect what was built. Do not finalize while uncorrected
+  non-compliance remains.
+
+After fixing, re-run each reviewer whose findings you addressed (or
+whose scope your fixes touched) until staff and QA return APPROVE
+and compliance returns COMPLIANT.
 
 ---
 
@@ -172,38 +188,22 @@ After verification passes:
    to check for regressions beyond the spec's verification scope.
    Fix any regressions before finalizing.
 
-2. **Compliance review.** Launch the `compliance-reviewer` agent
-   with `subagent_type: "compliance-reviewer"`. Pass:
-   - `spec_path`: the spec file path
-   - `diff`: the full feature diff (`git diff <base-branch>...HEAD`,
-     where `<base-branch>` is the branch this feature was cut from
-     — usually `main` or `master`).
-
-   If the agent returns COMPLIANT, proceed. If NON_COMPLIANT, walk
-   through each deviation:
-   - If the spec is right and the code drifted: fix the code, then
-     re-run the compliance review.
-   - If the deviation is a reasonable amendment (an edge case the
-     spec missed, a constraint that turned out to be wrong, etc.):
-     update the spec to reflect what was built, then re-run.
-   - Do not finalize while uncorrected non-compliance remains.
-
-3. Update the spec's "Last updated" date if implementation revealed
+2. Update the spec's "Last updated" date if implementation revealed
    new constraints or edge cases worth recording (or if the
    compliance review prompted spec amendments).
 
-4. Flip the spec's `Status` from `Waiting Implementation` to
+3. Flip the spec's `Status` from `Waiting Implementation` to
    `Implemented` — both in the spec file's header and in its row
    in the Spec Index (`docs/specs/spec.md`). If the spec lives
    under `docs/specs/bugs/`, update the Bugs table; otherwise
    update the Features table.
 
-5. Present a summary:
+4. Present a summary:
    - **Branch**: name and commit count
    - **What was done**: 2-3 sentences
    - **Verification**: pass/fail status
-   - **Per-commit review findings**: issues caught and fixed during
-     per-commit review
+   - **Final review findings**: issues caught and fixed by the
+     staff and QA reviews
    - **Compliance review**: COMPLIANT, or list of resolved
      deviations
    - **Needs attention** (if any): anything unexpected, deviations

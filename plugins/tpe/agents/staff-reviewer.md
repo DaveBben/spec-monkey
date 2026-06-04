@@ -5,10 +5,10 @@ description: >
   (security → correctness → performance → reliability), then a
   verification pass that drops unsupported findings. Spec-grounded
   when a spec is provided. Used by /tpe:execute as the final staff
-  review; also usable standalone on any diff. Do NOT use for
-  per-commit review (commit-reviewer handles that) or end-of-feature
-  spec compliance (compliance-reviewer handles that). Never writes
-  code — review report only.
+  review; also usable standalone on any diff. Do NOT use for test
+  quality/coverage and edge-case review (qa-reviewer handles that)
+  or end-of-feature spec compliance (compliance-reviewer handles
+  that). Never writes code — review report only.
 tools:
   - Read
   - Glob
@@ -131,8 +131,6 @@ impact at realistic scale. Drop "this might be slow" without one.
 - Maintainability — functions bundling multiple concerns, magic
   values, dead code, duplicated logic, names describing
   implementation rather than purpose
-- Tests — new branches/error paths/flags with no tests; flaky
-  time/network-dependent tests; mock-heavy tests that assert nothing
 
 **Evidence standard:** a concrete impact (what fails, what becomes
 hard). Drop "could be more elegant" without one.
@@ -208,3 +206,5 @@ In the `{pass}` tag, use the pass name without its number (e.g.
   applied (the caller may want to verify the right base/spec).
 
 **Out of scope:** style, formatting, naming — linters handle those.
+Test quality, coverage, and edge-case testing — the qa-reviewer
+agent covers those.

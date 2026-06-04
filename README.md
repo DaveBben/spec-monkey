@@ -54,7 +54,7 @@ Want a second set of eyes on what you're writing?
 |---|---|---|
 | `/tpe:onboard` | Sets up context for a new or existing codebase | `CLAUDE.md`, `docs/specs/spec.md`, `docs/specs/subsystems/*/spec.md` |
 | `/tpe:spec` | Thinking partner + spec producer — challenges your approach, then writes the spec | `docs/specs/features/{slug}/spec.md` |
-| `/tpe:execute` | Reads a spec, implements changes, reviews each commit against the spec, verifies | Branch, commits |
+| `/tpe:execute` | Reads a spec, implements changes, verifies, then runs parallel staff + QA reviews | Branch, commits |
 | `/tpe:bug` | Investigates a bug symptom, traces root cause, produces a bug spec | `docs/specs/bugs/{slug}/spec.md` |
 
 ---
@@ -86,9 +86,9 @@ Reads a spec and implements it:
 
 1. Pre-flight: branch safety, test baseline, validate spec file references, run linters
 2. Implement changes following the spec's Approach, Constraints, Edge cases, and Do NOT
-3. After each logical commit: review the change against the spec (spec compliance, edge case coverage, logic errors)
+3. Before each commit: run linters, type checkers, and the relevant tests — never commit red
 4. Run the spec's verification command — not done until it passes
-5. Full test suite + lint as final check
+5. Final review in parallel: `staff-reviewer` (code) + `qa-reviewer` (tests & edge cases) + `compliance-reviewer` (spec contract), then full test suite
 
 Does not push or create PRs. Uses subagents for parallel work when the spec involves independent concerns.
 
@@ -103,9 +103,9 @@ Bugs start from a symptom, not a change request. Claude reads the code, traces t
 | Agent | Role | Used by |
 |---|---|---|
 | `spec-reviewer` | Checks specs for 7 evidence-backed failure modes before presenting to user | `/tpe:spec`, `/tpe:bug` |
-| `commit-reviewer` | Reviews each commit's staged diff against the spec (logic errors, edge cases, spec drift) | `/tpe:execute` |
-| `staff-reviewer` | Multi-pass staff-level review of the full diff (security → correctness → performance → reliability) | `/tpe:execute`, or standalone on any diff |
-| `compliance-reviewer` | End-of-feature check that the implementation matches the spec's contract | `/tpe:execute` |
+| `staff-reviewer` | Multi-pass staff-level review of the full diff (security → correctness → performance → reliability) | `/tpe:execute` final review, or standalone on any diff |
+| `qa-reviewer` | Test quality, test coverage, and edge case handling of the full diff | `/tpe:execute` final review, or standalone |
+| `compliance-reviewer` | End-of-feature check that the implementation matches the spec's contract | `/tpe:execute` final review |
 
 ---
 

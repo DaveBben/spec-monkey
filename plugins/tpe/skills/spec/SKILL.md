@@ -55,7 +55,7 @@ phases if the user only needs one.
 ### Opening
 
 **Branch check.** Run `git rev-parse --abbrev-ref HEAD`. If on
-`main`/`master`, note that you'll create a feature branch before
+`main`/`master`, note that you'll create a spec branch before
 writing anything to disk in Phase 2 (the slug isn't known yet). If
 on another branch, proceed — the spec will be written there. Never
 write spec files or update the Spec Index on main.
@@ -157,7 +157,7 @@ For each area the conversation identified:
 
 **Branch.** Before writing anything to disk, check the current
 branch. If on `main`/`master`, create and switch to
-`feature/{slug}`. If on another branch, confirm with the user that
+`spec/{slug}`. If on another branch, confirm with the user that
 this is where they want the spec committed. Never write spec files
 on main.
 

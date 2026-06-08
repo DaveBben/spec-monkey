@@ -4,6 +4,11 @@ disable-model-invocation: true
 model: opus
 effort: high
 argument-hint: "[path to spec file]"
+tools:
+  - Read
+  - Glob
+  - Grep
+  - Bash
 description: >
   Implements a spec produced by /tpe:spec. Reads the spec, creates a
   feature branch, implements the changes, self-verifies, then runs

@@ -51,8 +51,9 @@ degraded. Review report only — never code.
 ## Anti-patterns to flag on sight
 
 Syntactic tells that rigor has been *performed* without being
-*enforced*. Not automatic findings — Pass 6 decides — but they
-belong in a candidate list every time they appear.
+*enforced*. These are not automatic findings — Pass 6 makes the final call on
+whether to report them — but they should always be added to the
+candidate list when spotted.
 
 1. **Default/falsy fallbacks on values declared required.**
    `d.get(k, default)` / `obj?.k ?? default` / `.unwrap_or(...)`;
@@ -91,6 +92,19 @@ belong in a candidate list every time they appear.
     via `while True: sleep(N); query()`.** Fixed cadence under
     outage; `random(0,1)` over `2**attempt`; polling labeled
     real-time with no producer trigger and no debounce.
+12. **Raw primitives for constrained domain values.** `str` for
+    email/URL/currency-code, `int` for port/percentage/age where
+    the schema or docstring declares format constraints — the type
+    admits values the domain cannot, and no runtime validation
+    compensates.
+13. **Boolean flag that inverts stated function purpose.** A
+    parameter like `skip_validation`, `unsafe`, `dry_run`, `raw` that
+    makes the function name/docstring truthful only when the flag is
+    one value — the other value defeats the declared contract.
+14. **Abstraction with exactly one implementation and zero callers
+    through the abstract interface.** Factory/strategy/base class
+    where every call site uses the concrete type directly — the
+    indirection exists but encapsulates nothing.
 
 ## Input
 
@@ -131,6 +145,14 @@ but not enforced at the seam where data crosses the trust boundary.
   int)` accepting `bool`; `typeof x === "object"` accepting
   `null`/arrays; numeric checks accepting `NaN`/`Infinity`; nullable
   types treated as non-null without a check.
+- **Primitive obsession at a trust boundary.** A raw `string` for
+  email, URL, or currency where the declared schema constrains format
+  — the constraint exists in the spec/schema but is unenforced
+  because the primitive admits values the domain cannot.
+- **Data clumps crossing a boundary without unit validation.** A
+  group of fields that the schema declares must be consistent
+  (start/end dates, lat/lon, address parts) validated individually
+  but never as a unit — cross-field invariants silently violated.
 - **Identifier checks where exact match was intended.**
   Substring/contains/`startsWith` admitting prefix collisions.
 - **"Trust" boundaries relying on the model honoring a system
@@ -158,12 +180,21 @@ that defeats that reason. Design sound, wiring undoes it.
 - **Policy applied at one site, violated at sibling sites.** PHI
   scrubbing/secret redaction/structured logging followed in one
   file, ignored three files over. One discipline, two policies.
+  Same shape: duplicated logic where one copy is updated and the
+  other drifts — the duplication defeats the stated single source
+  of truth.
 - **"Idempotent" markers whose idempotency is accidental.** Code
   only "idempotent" because a dedup table keeps the existing item;
   re-running with partially-different input silently mismerges.
 - **Suppression directives hiding the warning the author should
   have fixed.** Lint rule about fire-and-forget GC or deprecated
   access silenced instead of fixed.
+- **Flag arguments that split a function into two unstated
+  behaviors.** A boolean parameter (`include_deleted=False`,
+  `dry_run=True`) that makes the function's stated purpose true
+  only for one branch — the other branch defeats the name/docstring
+  contract. If the flag inverts what the function name promises,
+  the name is a lie for 50% of callers.
 - **Names that misrepresent behavior.** `api_gateway` that actually
   invokes a serverless function; a `ConnectionManager` spanning
   archival, dedup, idle tasks, classification — name claims one
@@ -198,6 +229,12 @@ surface aggressively, let Pass 6 prune.
 - **Cargo-culted error-code lists.** `("404", "NoSuchKey",
   "NotFound")` for an API emitting only one — real failure modes go
   unhandled.
+- **Deeply nested conditionals where each branch silently defaults.**
+  Multi-level `if/elif/else` or nested `switch` where the deepest
+  branches return fallback values — the nesting makes it impossible
+  to tell which contract violation triggered the fallback. The
+  defensive depth *looks* thorough but destroys the diagnostic trail
+  by collapsing N distinct failure modes into one default return.
 - **Degraded value returned when the validator was bypassed.** A
   `{ confidence: 0, method: "llm" }` payload reaching a clinician
   instead of raising and letting the outer layer choose the story.
@@ -214,6 +251,17 @@ Module boundaries that *look* encapsulated but leak in practice.
 - **Callers reaching across a privacy boundary** because no public
   API exists — `_private`, reflection on unexported names, `(obj as
   any).x`. The private surface is admitted to be the contract.
+- **Speculative generality bypassed by every caller.** An abstraction
+  layer, factory, strategy pattern, or plugin interface that exists
+  in the module but every call site bypasses it, hardcodes a concrete
+  type, or uses only one variant — the encapsulation is theater.
+  Same shape: a "middleware" no request traverses, a "base class"
+  with one subclass that overrides everything.
+- **Middle-man classes that add no invariant.** A wrapper that
+  delegates every method to an inner object, adding no validation,
+  transformation, or lifecycle control — the boundary exists but
+  protects nothing. Flag when callers must reach through the
+  middle-man to the inner object to get work done.
 - **Setter + adjacent state-mutate-to-undo.** Caller invokes `set_*`
   and on the next line undoes a side effect it just performed —
   the helper has the wrong shape.

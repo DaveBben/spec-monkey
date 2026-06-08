@@ -86,6 +86,19 @@ attacker scenario). Drop speculative risks without one.
 - Concurrency and atomicity — races on shared state, async ordering
   assumptions, multi-step writes without a transaction, non-idempotent
   retries (mutating twice on redelivery)
+- Duplicated logic that has already diverged — same business rule
+  implemented in multiple places where the copies now disagree
+  (different defaults, different edge-case handling, different
+  validation). The duplication itself is a style issue; the
+  *divergence* is a correctness bug — one path produces the wrong
+  result. Evidence: show the two sites and the input where they
+  disagree
+- Shotgun-surgery fragility — a single logical change (new enum
+  value, renamed field, added state) that the diff applies in some
+  places but misses in others. The tell is a new constant/type added
+  to a definition but absent from a switch/map/handler that should
+  exhaustively cover it. Evidence: the definition site and the
+  incomplete consumption site
 - Data hazards — money in floats, integer overflow, implicit
   coercion, TZ/DST confusion, shared mutable state and aliasing,
   reliance on dict/iteration order, stale cache keys missing scope,

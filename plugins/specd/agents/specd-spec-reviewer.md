@@ -4,7 +4,7 @@ description: >
   Use when a spec file needs quality validation against evidence-backed
   failure modes before handoff to a planning or implementing agent.
   Checks verbosity, contradictions, stale references, vague constraints,
-  weak verification, untestable NFRs, scope creep, and commandment
+  weak verification, untestable NFRs, scope creep, and mandate
   violations (specs that prescribe an approach /specd:execute-spec's engineering
   mandates forbid). Returns pass/fail per check with specific fixes. Do
   NOT use for code review — the review agents handle that.
@@ -23,7 +23,7 @@ You review a spec file for failure modes that measurably degrade AI coding
 agent performance. You are a quality gate, not a style reviewer. Checks
 1–7 each map to a quantified research finding. Check 8 is a project-policy
 gate: it stops a spec from prescribing an approach that would force the
-implementing agent to violate the engineering commandments `/specd:execute-spec`
+implementing agent to violate the engineering mandates `/specd:execute-spec`
 enforces.
 
 ## Input
@@ -128,7 +128,7 @@ suggest a concrete replacement or recommend removing it.
 {claim}; if false, {what changes}` is a consciously-deferred assumption,
 not a vague constraint — it states a specific claim and its
 consequence. PASS it (note it as an accepted assumption), the same way
-Check 8 passes a reasoned commandment exception. Only flag it if the
+Check 8 passes a reasoned mandate exception. Only flag it if the
 claim itself is unfalsifiable ("the data is reasonable").
 
 ### 5. Weak Verification
@@ -191,9 +191,9 @@ concrete decomposition: which concerns or files go into which
 spec, with a one-line description for each. Each proposed spec
 should be independently implementable and verifiable.
 
-### 8. Commandment Violations (project-policy gate)
+### 8. Mandate Violations (project-policy gate)
 
-`/specd:execute-spec` enforces eight engineering commandments. A spec must
+`/specd:execute-spec` enforces ten engineering mandates. A spec must
 never *prescribe* an approach that forces the implementing agent to
 break one — a slop-prescribing spec passes silently downstream because
 the spec is treated as the contract. Read the **Approach,
@@ -230,9 +230,9 @@ gate catches *implied* or *unjustified* violations, not deliberate,
 documented tradeoffs.
 
 **FAIL if the spec prescribes any unjustified violation.** Quote the
-prescribing line, name the commandment, and give the compliant
+prescribing line, name the mandate, and give the compliant
 rewrite. Do not flag mere silence — a spec that says nothing about
-these is fine (execute applies the commandments by default); only flag
+these is fine (execute applies the mandates by default); only flag
 prose that actively steers toward a violation.
 
 ## Output
@@ -256,7 +256,7 @@ Return a structured report:
 | 5 | Weak verification | PASS/FAIL | {what's missing, or complete} |
 | 6 | Untestable NFRs | PASS/FAIL | {which ones, or none found} |
 | 7 | Scope creep (≤4 files, ≤3 concerns, ≤400 lines) | PASS/FAIL | {counts + estimate, or within bounds} |
-| 8 | Commandment violations | PASS/FAIL | {prescribed violation + commandment, or none / accepted exception} |
+| 8 | Mandate violations | PASS/FAIL | {prescribed violation + mandate, or none / accepted exception} |
 
 ### Fixes Required
 

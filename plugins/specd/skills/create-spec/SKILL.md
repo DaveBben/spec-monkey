@@ -18,13 +18,28 @@ description: >
 
 ## How to behave
 
-**Challenge, don't interview.** The difference:
+**Challenge, don't interview.** Put the burden on yourself, not the
+user — read the code, find the real problem, bring it.
 - Interview: "What are the edge cases?" (burden on the user)
 - Challenge: "Your pipeline passes classification confidence scores
   to the ranking step — SetFit scores are 0-1 probabilities but
   the LLM returns a 1-5 scale. If you swap with a flag, ranking
   thresholds will silently produce wrong results." (you read the
   code and found a real problem)
+
+A grounded challenge takes a few shapes — reach for whichever fits:
+- **Name the finding, then the consequence**: "I noticed [finding].
+  That means [consequence]. How does your approach handle that?"
+- **Stipulate the failure** instead of asking what might go wrong:
+  "Imagine this ships and causes an incident next month. Based on the
+  code, the most realistic way that happens is [scenario]."
+- **Frame the tradeoff** when the change has downstream cost: "This
+  makes [X] easier, but [Y] gets harder later. Okay with that?"
+- **Offer a concrete alternative** only when you genuinely have a
+  better path: "[alternative] trades [X] for [Y] but avoids [problem]
+  entirely."
+
+Always "here's what worries me," never "have you considered X?"
 
 **Read the code.** CLAUDE.md, Agents.md and spec.md give orientation, but you
 need to understand how the affected system actually works. Read the
@@ -39,27 +54,28 @@ Stop once you have a thorough understanding.
 **Surface every ambiguity that materially changes the design** —
 grounded in what you found in the code. Usually that's 2-3 concerns,
 but a genuinely ambiguous change has more; don't drop a material one to
-hit a number, or pad a clear change to reach one. Frame as "here's
-what worries me" not "have you considered X?" If the approach looks
+hit a number, or pad a clear change to reach one. If the approach looks
 solid, say so, don't manufacture concerns.
 
-**Stay inside the commandments.** The approaches, alternatives, and
-constraints you propose must respect the engineering commandments
-`/specd:execute-spec` enforces — don't steer the design toward buffering
+**Stay inside the mandates.** Invoke the `specd:engineering-mandates`
+skill so its full text loads into context — these are the same mandates
+`/specd:execute-spec` enforces during implementation, and the
+approaches, alternatives, and constraints you propose must respect them. Don't steer the design toward buffering
 unbounded data, swallowing base exceptions, regex over structured
 formats (HTML/XML/JSON), blocking an async loop with sync I/O, mutating
 global runtime state, or hand-rolling what a project standard already
-does. If the *user's* stated approach requires one of these, raise it
-as a concern rather than encoding it into the spec. A spec may record a
+does — those are the common pitfalls; the skill is the full list. If
+the *user's* stated approach requires one of these, raise it as a
+concern rather than encoding it into the spec. A spec may record a
 deliberate exception — but only an explicit, reasoned one (e.g. "must
 buffer the whole payload to checksum it"), never an implied default.
 
 **This is one conversation, not a pipeline.** Don't force both
 phases if the user only needs one.
 
-**Move to spec production when:**
-- The major risks are identified and either accepted or mitigated
-- The approach is clear (or the user decided to rethink)
+**Only move to spec production when all of the following are true:**
+- All major risks are identified and either accepted or mitigated
+- The approach is clear and offers little to no ambiguity
 - The boundaries are set (what this will and won't do)
 
 ---
@@ -74,7 +90,7 @@ writing anything to disk in Phase 2 (the slug isn't known yet). If
 on another branch, proceed — the spec will be written there. Never
 write spec files or update the Spec Index on main.
 
-Read `$ARGUMENTS`. Read `CLAUDE.md` and `spec.md` if they exist.
+Read `$ARGUMENTS`. Read `CLAUDE.md`, `AGENTS.md` and `spec.md` if they exist.
 
 **Check for existing specs.** If `docs/specs/spec.md` exists, read
 the Features table in the Spec Index. If the requested change
@@ -104,12 +120,11 @@ If the change is trivial, say so:
 
 ### Conversation
 
-**Intent & acceptance** (first, whenever anything about *what* to build
-or *how you'll know it's right* isn't fixed by the code). The challenge
-style above is code-grounded by design — but intent and the definition
-of done usually aren't in the code. This is the deliberate complement
-to "don't ask what you can answer from the code": here you ask
-precisely what the code *can't* tell you.
+The shapes above are *how* you raise a concern. These are the
+*dimensions* worth raising — probe each when it applies:
+
+**Intent & acceptance** (first — ask exactly what the code can't tell
+you: the intent and the definition of done):
 
 > "The code can't tell me the intent here. What's the rule — the
 > target (precision/recall, a latency budget), the business rule,
@@ -119,35 +134,7 @@ precisely what the code *can't* tell you.
 
 Where the bar is a user-observable behavior, pin it as Given/When/Then
 ("given [state], when [action], then [measurable outcome]") so a test
-can be written from it directly. Whatever you settle on becomes the
-acceptance bar that Phase 2's Verification operationalizes into an
-exact command — don't let Phase 2 quietly invent the definition of done
-that this conversation should have set.
-
-**Pre-mortem** (when the user may be overlooking risks). Stipulate
-failure, don't ask what might go wrong:
-
-> "Imagine this ships and causes an incident next month. Based on
-> the code, the most realistic way that happens is [scenario].
-> What's your take?"
-
-
-**Poking holes** (when you found a gap in the code):
-
-> "I noticed [finding]. That means [consequence]. How does your
-> approach handle that?"
-
-**Alternatives** (only when you genuinely think there's a better
-path):
-
-> "Have you considered [alternative]? It trades [X] for [Y], but
-> avoids [specific problem] entirely."
-
-**Second-order effects** (when the change has downstream
-consequences):
-
-> "This makes [X] easier, but [Y] gets harder later. Okay with
-> that tradeoff?"
+can be written from it directly.
 
 **Operational readiness** (when the change touches I/O, external
 services, concurrency, or unbounded data):
@@ -159,10 +146,6 @@ services, concurrency, or unbounded data):
 > names the seam. Which inputs here are unbounded, which calls can
 > hang, and what should happen when they do?"
 
-The point isn't to lecture the agent on resilience — `/specd:execute-spec`
-already enforces those defaults. It's to pin the *specific* seams in
-*this* change so the agent applies the right primitive at the right
-`file:line`. Whatever you settle on lands in Constraints.
 
 **Trust boundaries** (when the change ingests data from an external
 or untrusted source — network responses, fetched/uploaded files,
@@ -254,7 +237,7 @@ Then launch the `specd-spec-reviewer` agent using the Agent tool with
 `subagent_type: "specd-spec-reviewer"`. Pass the spec path. The reviewer
 checks eight failure modes: the seven evidence-backed ones (verbosity,
 contradictions, stale references, vague constraints, weak
-verification, untestable NFRs, scope creep) plus commandment
+verification, untestable NFRs, scope creep) plus mandate
 violations — a spec that prescribes an approach `/specd:execute-spec`'s
 engineering mandates forbid, without a stated reasoned exception.
 
@@ -287,7 +270,7 @@ a thinking partner, not a checkpoint). If the user consciously accepts
 an assumption rather than resolving it, record it inline in the spec
 (Constraints or Approach) as `ASSUMPTION (accepted by {who}): {claim};
 if false, {what changes}` — the same explicit, reasoned-exception
-pattern the commandment gate uses, so the deferred ambiguity stays
+pattern the mandate gate uses, so the deferred ambiguity stays
 visible in the contract instead of traveling silently into the build.
 
 **If the user requests changes:** apply them to the spec file, then

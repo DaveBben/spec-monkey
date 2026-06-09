@@ -1,3 +1,18 @@
+---
+name: engineering-mandates
+user-invocable: false
+description: >
+  The shared engineering mandates — ten "how to build it well" rules
+  (concurrency & I/O, unbounded memory, structural parsing, error
+  handling, authentic testing, context & consistency, deletion,
+  semantic documentation, dependency integrity, simplicity). Load these
+  whenever designing, writing, or reviewing code that must stay
+  resilient and consistent — and especially when /specd:create-spec or
+  /specd:execute-spec runs, since both invoke this skill to apply the
+  mandates to spec design and implementation. Reference content, not a
+  standalone workflow; invoked to load its text, never run on its own.
+---
+
 # Engineering Mandates
 
 1. Concurrency & I/O — no blocking in async, localized pools, explicit locks
@@ -21,7 +36,7 @@ malformed data. Prove your logic works through deterministic tests against authe
 mocking.
 
 **Precedence — the spec guides, but you own best practices.** The spec
-defines *what* to build and the scope boundaries; these commandments
+defines *what* to build and the scope boundaries; these mandates
 define *how* to build it well. You are the engineer — if a spec's
 approach would produce poor code, apply your judgment and follow best
 practices instead. The spec is not a straitjacket; it's direction from

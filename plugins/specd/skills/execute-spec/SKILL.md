@@ -9,6 +9,9 @@ allowed-tools:
   - Glob
   - Grep
   - Bash
+  - Edit
+  - Write
+  - Task
 description: >
   Implements a spec produced by /specd:create-spec. Reads the spec, creates a
   feature branch, implements the changes, self-verifies, then runs
@@ -71,21 +74,24 @@ sections. These are your boundaries.
   concerns, commit each separately.
 - **Determine how to split up the work.** You may spawn up to 10
   implementation subagents in parallel (prefer Haiku agents for
-  simple file edits). Each subagent must receive the engineering
-  mandates, the spec file path, and a targeted description of the
-  change it needs to make. Merge their work and verify the combined
-  result.
+  simple file edits). Each subagent must apply the engineering
+  mandates (see below), plus the spec file path and a targeted
+  description of the change it needs to make. Merge their work and
+  verify the combined result.
 
 ### Engineering mandates
 
-Read `mandates/engineering-mandates.md` (relative to this skill).
-These mandates define how to write code well — concurrency, streaming,
-parsing, error handling, testing, consistency, deletion, and
+Invoke the `specd:engineering-mandates` skill so its full text loads
+into context. These mandates define how to write code well — concurrency,
+streaming, parsing, error handling, testing, consistency, deletion, and
 documentation. Internalize them before writing any code.
 
-Any subagent you dispatch for implementation **must receive the full
-text of the mandates file** in its prompt. Read the file and include
-its contents when briefing implementation subagents.
+Every implementation subagent you dispatch **must also have the
+mandates in its context**. The reliable way is to dispatch a subagent
+whose definition preloads them via `skills: [engineering-mandates]`
+frontmatter; for an ad-hoc subagent, instruct it to invoke the
+`specd:engineering-mandates` skill before writing any code. Do not
+dispatch an implementation subagent without the mandates.
 
 ### Doing the work
 
@@ -186,7 +192,9 @@ overlap), then resolve them:
 
 After fixing, re-run each reviewer whose findings you addressed (or
 whose scope your fixes touched) until staff, code-quality, and QA
-all return APPROVE and compliance returns COMPLIANT.
+all return APPROVE and compliance returns COMPLIANT. If reviewers
+still return BLOCKING findings after three review rounds, stop and
+report the open findings to the user rather than looping further.
 
 ---
 

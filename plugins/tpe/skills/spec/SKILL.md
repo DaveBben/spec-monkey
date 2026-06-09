@@ -36,9 +36,12 @@ files involved to understand:
 
 Cap at 8-10 files. Enough to understand, not enough to burn context.
 
-**Raise 2-3 specific concerns** grounded in what you found in the
-code. Frame as "here's what worries me" not "have you considered
-X?" If the approach looks solid, say so, don't manufacture concerns.
+**Surface every ambiguity that materially changes the design** —
+grounded in what you found in the code. Usually that's 2-3 concerns,
+but a genuinely ambiguous change has more; don't drop a material one to
+hit a number, or pad a clear change to reach one. Frame as "here's
+what worries me" not "have you considered X?" If the approach looks
+solid, say so, don't manufacture concerns.
 
 **Stay inside the commandments.** The approaches, alternatives, and
 constraints you propose must respect the engineering commandments
@@ -101,6 +104,26 @@ If the change is trivial, say so:
 
 ### Conversation
 
+**Intent & acceptance** (first, whenever anything about *what* to build
+or *how you'll know it's right* isn't fixed by the code). The challenge
+style above is code-grounded by design — but intent and the definition
+of done usually aren't in the code. This is the deliberate complement
+to "don't ask what you can answer from the code": here you ask
+precisely what the code *can't* tell you.
+
+> "The code can't tell me the intent here. What's the rule — the
+> target (precision/recall, a latency budget), the business rule,
+> which goal wins when two conflict, who consumes the output? And how
+> will we *know* it's correct — what observable signal (a number, a
+> behavior, a threshold) separates done from not-done?"
+
+Where the bar is a user-observable behavior, pin it as Given/When/Then
+("given [state], when [action], then [measurable outcome]") so a test
+can be written from it directly. Whatever you settle on becomes the
+acceptance bar that Phase 2's Verification operationalizes into an
+exact command — don't let Phase 2 quietly invent the definition of done
+that this conversation should have set.
+
 **Pre-mortem** (when the user may be overlooking risks). Stipulate
 failure, don't ask what might go wrong:
 
@@ -141,6 +164,23 @@ already enforces those defaults. It's to pin the *specific* seams in
 *this* change so the agent applies the right primitive at the right
 `file:line`. Whatever you settle on lands in Constraints.
 
+**Trust boundaries** (when the change ingests data from an external
+or untrusted source — network responses, fetched/uploaded files,
+third-party APIs, user input):
+
+> "Where does untrusted data enter here, and what boundary does it
+> cross before it's trusted? Name the concrete threat — injection,
+> a malicious or oversized payload, an SSRF/path target, a secret
+> that could leak into logs or output — and what the code must do at
+> that seam. 'Validate the input' isn't an answer: which input,
+> checked against what, and what happens when the check fails?"
+
+Security requirements that come out of this are constraints, not
+afterthoughts — pin them at the `file:line` seam in Constraints, the
+same as any other (e.g. "reject non-`https` URLs in `fetch.py` before
+the request"). Silence here is the happy-path default the implementing
+agent will otherwise take.
+
 **Scope** (when the change is growing):
 
 > "What's explicitly NOT part of this change?"
@@ -176,7 +216,12 @@ For each area the conversation identified:
 4. **Tests**: find existing tests that must keep passing. Identify
    new tests needed from the edge cases discussed in Phase 1 — flag
    any that need authentic/minimized fixtures (a real small file, an
-   in-memory DB) rather than mocked returns.
+   in-memory DB) rather than mocked returns. Where a behavior is
+   really a *property* that should hold across many inputs
+   (idempotence, round-trips, an invariant, a bound that must never be
+   exceeded), call for a property-based test (e.g. Hypothesis) over a
+   handful of enumerated examples — and name the property, not just the
+   function under test.
 
 5. **Verification command**: the exact command to run, plus
    specific assertions for new behavior, including at least one
@@ -198,8 +243,9 @@ branch. If on `main`/`master`, create and switch to
 this is where they want the spec committed. Never write spec files
 on main.
 
-Write the draft spec to `docs/specs/features/{slug}/spec.md`.
-Create the directory if it doesn't exist.
+Write the draft spec to `docs/specs/features/{slug}/spec.md`,
+following the structure in `reference/spec-template.md` (read it now if
+you haven't this session). Create the directory if it doesn't exist.
 
 Then launch the `spec-reviewer` agent using the Agent tool with
 `subagent_type: "spec-reviewer"`. Pass the spec path. The reviewer
@@ -214,12 +260,32 @@ each fix the reviewer recommends. Don't ask the user to fix
 reviewer findings — these are quality issues you should resolve.
 
 **After the reviewer passes** (or after you've fixed its findings),
-present the spec in chat and explicitly ask for approval:
+surface your *own* residual ambiguity before asking for approval. The
+challenge conversation surfaced the user's blind spots; this surfaces
+yours. A spec is a confident artifact — it reads as settled even where
+you were interpreting a vague request, and the implementing agent will
+never see your uncertainty. State the **2-3 load-bearing assumptions**
+you baked in (the ones that, if wrong, change the spec) plus any
+ambiguity you could not resolve, then present and ask:
 
 > "Here's the spec at `docs/specs/features/{slug}/spec.md` — it
 > passed all quality checks.
 >
+> Assumptions I baked in — flag any that are wrong:
+> 1. {load-bearing assumption}; if wrong → {what changes}.
+> 2. {…}
+> {Open question I couldn't resolve from the code or our conversation,
+> if any.}
+>
 > Do you approve it as-is, or want changes?"
+
+Don't gate on this — surface it and let the user decide (this skill is
+a thinking partner, not a checkpoint). If the user consciously accepts
+an assumption rather than resolving it, record it inline in the spec
+(Constraints or Approach) as `ASSUMPTION (accepted by {who}): {claim};
+if false, {what changes}` — the same explicit, reasoned-exception
+pattern the commandment gate uses, so the deferred ambiguity stays
+visible in the contract instead of traveling silently into the build.
 
 **If the user requests changes:** apply them to the spec file, then
 judge how substantial the round of edits was:
@@ -234,31 +300,11 @@ judge how substantial the round of edits was:
 Loop until the user explicitly approves. Do not assume approval
 from silence or from a non-committal response.
 
-**Only after explicit approval**, update the Spec Index. Add or
-update the entry in the Features table of `docs/specs/spec.md`. New
-specs use status `Waiting Implementation`:
-
-```markdown
-| {Spec title} | `docs/specs/features/{slug}/spec.md` | Waiting Implementation | {YYYY-MM-DD} | {one-line description} |
-```
-
-The status values are:
-- **Waiting Implementation** — spec written, not yet implemented
-- **Implemented** — `/tpe:execute` finished and verification passed
-- **Superseded** — replaced by a newer spec that covers this change
-- **Deprecated** — spec abandoned or its feature was removed
-- **Needs Revision** — spec needs changes before it can be implemented
-
-The **Updated** column tracks the spec lifecycle — set it to today's
-date (`YYYY-MM-DD`) on every lifecycle event:
-- **Creating**: new row, status `Waiting Implementation`, Updated =
-  today.
-- **Updating**: refresh Updated whenever you edit the spec or change
-  its status (e.g. to `Needs Revision`). Update the description too if
-  the scope changed.
-- **Deleting**: never delete the row — set status to `Superseded` or
-  `Deprecated` and refresh Updated. Keeping the row preserves the
-  audit trail so the decision isn't relitigated.
+**Only after explicit approval**, update the Spec Index — add or
+update the entry in the Features table of `docs/specs/spec.md` with
+status `Waiting Implementation`. The row format, the full set of status
+values, and the Updated-column lifecycle rules are in
+`reference/spec-index.md`; read it and follow them.
 
 Tell the user:
 
@@ -270,117 +316,13 @@ Tell the user:
 
 ---
 
-## Spec Template
+## Spec template
 
-The spec serves two audiences with one document. Above the
-"Implementation contract" divider: motivation, summary, current
-state, alternatives, edge cases — what a human reviewer needs to
-approve the approach. Below: the binding contract for the
-implementing agent — Approach, Constraints, Do NOT, Files,
-Verification — deliberately redundant across sections.
-
-```
-{One-line summary of the change}
-
-**Status**: Waiting Implementation
-**Last updated**: {YYYY-MM-DD}
-
-## Why
-{1-3 sentences on motivation — the problem today, why it's worth
-doing now.}
-
-## Summary
-{1-3 sentences on the change itself — intent, not procedure. Why +
-Summary together is the reviewer's TLDR.}
-
-## Current behavior
-{What the code does today. file:line, function name. Specific
-enough that the implementing agent doesn't need to search.}
-
-{Optional domain sections — add 0+ sections here when a structured
-artifact aids review and doesn't fit elsewhere. Examples:
-- "Tool definitions" with code blocks for new schemas
-- "Two-state implementation" with a markdown state table covering
-  an in-flight dependency
-- "Migration plan" with a phased table
-Skip entirely if the change is straightforward.}
-
-## Alternatives rejected
-{Bulleted. Bold the alternative for scan-readability:
-- **{alternative}** — rejected because {reason}.
-Prevents the agent from relitigating settled decisions.}
-
-## Edge cases
-{Bulleted: "condition: expected behavior". Use a markdown table
-when the same case has parallel behaviors across multiple
-domains/callsites: `| Case | Domain A | Domain B |`. Include cases
-from both Phase 1 and the investigation. Probe the categories
-happy-path specs leak: dependency failures (timeout, partial or
-malformed response), malformed/oversized input, and empty/boundary
-values — each as "condition: expected behavior" so it binds both the
-code and a test.}
-
----
-
-## Implementation contract
-
-> The sections below are written for the implementing agent —
-> bullet-dense, identifier-rich, and deliberately redundant across
-> Constraints / Do NOT / Files that matter.
-
-## Approach
-{Single-area change: 1-3 sentences naming the approach and the key
-reason it was chosen. Multi-file change: numbered list keyed by
-file:
-1. **`path/to/file.py`** — what changes, what stays unchanged.
-2. **`other/file.py`** — what changes here.
-If the implementing agent hits a blocker the reasoning didn't
-anticipate, it should flag it rather than silently switching
-approaches.}
-
-## Constraints
-{Bulleted. Specific numbers, not vague qualifiers. Each testable.
-Deliberately overlaps Do NOT and Files that matter — redundancy is
-a feature in the implementation contract, not noise. Where the change
-touches unbounded data, calls that can hang, concurrency, or untrusted
-input, pin the decision as a named seam — "stream the download in
-`fetch.py`, never buffer the whole body"; "5s timeout on the X call,
-raise on timeout"; "reuse `FooValidator`, don't hand-roll validation"
-— never a generic "be robust" (the reviewer will flag that as a vague
-constraint).}
-
-## Do NOT
-{Bulleted. Explicit scope boundaries. Name specific files,
-functions, or behaviors that must NOT change.}
-
-## Files that matter
-{Index — see Approach for what changes in each. Line numbers anchor
-the relevant symbols and ranges. 6-10 files. Single anchor:
-- `path/file.ext` — `symbolName()` (`:line`), brief role.
-Multiple anchors per file:
-- `path/file.ext` — `symbolA` (`:N`), `symbolB` (`:M`); module
-  docstring (`:start-end`).}
-
-## Verification
-{Exact command to run, then specific assertions. Group with bold
-subheaders when verification covers multiple surfaces:
-
-**{Surface — symbol or feature name}**
-- {assertion: expected input → expected output}
-- {assertion}
-
-**{Other surface}**
-- {assertion}
-
-**Manual sanity check (not a test):** {any non-automated check —
-deploys, integration runs, dashboards — explicitly called out as
-not-a-test.}}
-
-Keep going until all tests pass and the verification criteria are
-met. If you hit a problem, investigate and fix it rather than
-stopping. If you discover the spec is wrong (a constraint can't be
-met as stated, a referenced file doesn't exist, a rejected
-alternative now looks correct), surface it before working around it
-— don't silently change the approach.
-```
+The full template lives in `reference/spec-template.md` — read it when
+you reach "Write the draft spec" above. It serves two audiences with
+one document: above the "Implementation contract" divider is what a
+human reviewer needs to approve the approach (Why, Summary, Current
+behavior, Alternatives, Edge cases); below it is the binding,
+deliberately-redundant contract for the implementing agent (Approach,
+Constraints, Do NOT, Files that matter, Verification).
 

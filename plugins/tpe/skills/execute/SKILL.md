@@ -152,9 +152,11 @@ models fail to correct their own errors.
 2. **`code-quality-reviewer`** (`subagent_type:
    "code-quality-reviewer"`) — architectural hallucinations in
    AI-generated code: where it will hang, OOM, deadlock, corrupt
-   state, or fail silently under real OS/network/concurrency
-   conditions, plus craftsmanship gaps (schema-validation bypass,
-   broad exception swallowing, double-encoding, protocol ignorance).
+   state, fail silently, or pull a fabricated/malicious dependency
+   under real OS/network/concurrency conditions, plus craftsmanship
+   gaps (schema-validation bypass, broad exception swallowing,
+   double-encoding, protocol ignorance, over-engineering, and stub
+   placeholders left in real code).
 3. **`qa-reviewer`** (`subagent_type: "qa-reviewer"`) — test
    quality, test coverage, and edge case handling.
 4. **`compliance-reviewer`** (`subagent_type:

@@ -5,13 +5,14 @@ description: >
   AI-generated code — the failure mode where code compiles cleanly
   and reads beautifully but will hang, exhaust memory, deadlock,
   corrupt state, or fail silently under real network and filesystem
-  conditions. Ten single-focus passes in two tiers — 🔴 architectural
+  conditions. Thirteen single-focus passes in two tiers — 🔴 architectural
   (concurrency/thread-starvation, eager-loading/streaming fallacy,
   global-state hijacking, boundary-trust mismatches, brittle parsing
-  of structured data) and 🟡 craftsmanship (primitive type-juggling
-  over schema validation, broad exception swallowing, redundant
-  escaping / double-encoding, comment noise & documentation drift,
-  protocol ignorance, and architectural drift / dead-code accretion).
+  of structured data, fabricated dependencies & hallucinated APIs) and
+  🟡 craftsmanship (primitive type-juggling over schema validation,
+  broad exception swallowing, redundant escaping / double-encoding,
+  comment noise & documentation drift, protocol ignorance, architectural
+  drift / dead-code accretion, and needless complexity / over-engineering).
   Used by /tpe:execute in parallel
   with staff-reviewer, qa-reviewer, and compliance-reviewer. Do NOT
   use for generic correctness/security/perf bugs with no architectural
@@ -68,18 +69,19 @@ unsanitized input usually lives outside the hunk.
 
 You work in **multiple single-focus passes**
 — one concern per pass, no jumping ahead. Each pass holds exactly one
-lens to the whole diff, then moves on. Eleven passes in two groups:
+lens to the whole diff, then moves on. Thirteen passes in two groups:
 
-- **🔴 Architectural hallucinations (Passes 1–5)** — catastrophic:
-  the code will hang, OOM, deadlock, corrupt state, or breach a trust
-  boundary under real OS/network/concurrency conditions.
-- **🟡 Craftsmanship & idiom (Passes 6–11)** — brittleness and
+- **🔴 Architectural hallucinations (Passes 1–6)** — catastrophic:
+  the code will hang, OOM, deadlock, corrupt state, breach a trust
+  boundary, or pull a fabricated/malicious dependency under real
+  OS/network/concurrency conditions.
+- **🟡 Craftsmanship & idiom (Passes 7–13)** — brittleness and
   maintainability: code that works on the happy path but ignores the
   project's architectural standards, masks its own bugs, fights its
-  frameworks, or leaves the codebase less coherent than it found it.
-  Rarely catastrophic, reliably corrosive.
+  frameworks, over-builds the solution, or leaves the codebase less
+  coherent than it found it. Rarely catastrophic, reliably corrosive.
 
-Work through all eleven in order. Listed checks are illustrative, not
+Work through all thirteen in order. Listed checks are illustrative, not
 exhaustive. Record candidates (`file:line` + evidence + suggested
 fix) as you go — every candidate faces Verification before it is
 reported. If a pass doesn't apply to this diff, mark it
@@ -168,7 +170,35 @@ attribute order changes, or a quote style flips. Enforce that code
 manipulating structured data uses the appropriate parsing library for
 that structure, no matter how "simple" the extraction seems.
 
-### 🟡 Pass 6 — Primitive Type Juggling over Schema Validation
+### 🔴 Pass 6 — Fabricated Dependencies & Hallucinated APIs
+
+**Instruction:** Verify that every dependency and external symbol the
+diff introduces actually exists. For each newly added import or
+package-manifest entry, confirm the package resolves to a real,
+maintained library — present in the project's existing
+lockfile/manifest, or a well-known package. For each method,
+attribute, or function the diff calls on a third-party library,
+confirm that symbol actually exists in the version the project pins.
+Flag: (a) an import of a package absent from the lockfile/manifest and
+not a stdlib/well-known library; (b) a call to a method the library
+does not expose in the pinned version; (c) a dependency added with a
+loose or floating version specifier (`*`, `+`, `latest`, a bare range
+where the project pins exactly).
+
+**Why:** AI invents plausible-sounding package names and API methods
+that do not exist — it predicts what a library *probably* exports
+rather than checking what it does. A hallucinated import is not just a
+crash on install: attackers pre-register the common hallucinated names
+("slopsquatting"), so an invented dependency can resolve to malware on
+the next `install` — a supply-chain trust breach (BLOCKING). A
+hallucinated method on a real library is a latent
+`AttributeError`/`NoSuchMethod` on the first uncovered path. A loose
+version pin makes the build non-deterministic, silently pulling a
+different — possibly breaking or malicious — version on each install.
+Confirm names and symbols against the lockfile and the library's
+actual surface, never against what "sounds right."
+
+### 🟡 Pass 7 — Primitive Type Juggling over Schema Validation
 
 **Instruction:** Audit all code that parses external data (JSON, XML,
 external APIs). Flag any logic that uses deep, nested, manual
@@ -187,7 +217,7 @@ typeof obj.field === 'string')` checks — brittle and verbose. Check
 the project's existing dependencies first: this is a finding mainly
 when a standard already exists and is being bypassed.
 
-### 🟡 Pass 7 — Broad Exception Swallowing ("Fake Resilience")
+### 🟡 Pass 8 — Broad Exception Swallowing ("Fake Resilience")
 
 **Instruction:** Flag any `catch`/`except` block that intercepts the
 base exception class (`Exception`, `Error`, `Throwable`) without
@@ -203,7 +233,7 @@ masks its own internal errors under the guise of "graceful
 degradation." Exception handling must be strictly scoped to the
 specific errors the invoked libraries are known to throw.
 
-### 🟡 Pass 8 — Redundant Escaping & Mistrust of Framework Boundaries
+### 🟡 Pass 9 — Redundant Escaping & Mistrust of Framework Boundaries
 
 **Instruction:** Flag any manual encoding, escaping, or sanitization
 (URL encoding, SQL string escaping, HTML sanitization) that occurs
@@ -219,7 +249,7 @@ chosen framework rather than reinventing (and corrupting) them. The
 mirror image of Pass 4: there the boundary is under-trusted, here it
 is redundantly distrusted.
 
-### 🟡 Pass 9 — Comment Noise & Documentation Drift (the "why", not the "what")
+### 🟡 Pass 10 — Comment Noise & Documentation Drift (the "why", not the "what")
 
 **Instruction:** Flag three comment failures: (a) comments that
 *explain how the language or standard library works* rather than why
@@ -243,7 +273,7 @@ one: it actively misleads the next reader. (This is the one pass that
 touches comments — it is about *lying/noise documentation*, not
 formatting, so it is in scope where linters are not.)
 
-### 🟡 Pass 10 — Protocol Ignorance (Reinventing the Wheel)
+### 🟡 Pass 11 — Protocol Ignorance (Reinventing the Wheel)
 
 **Instruction:** Flag logic that ignores established network protocols
 in favor of manual payload inspection — code that determines data
@@ -258,7 +288,7 @@ the first few bytes. Enforce adherence to standard protocol mechanics
 resource-intensive workarounds. Where this also buffers an unbounded
 body, it compounds with Pass 2 — tag both.
 
-### 🟡 Pass 11 — Architectural Drift & Dead-Code Accretion
+### 🟡 Pass 12 — Architectural Drift & Dead-Code Accretion
 
 **Instruction:** Flag two ways this diff leaves the codebase less
 coherent than it found it.
@@ -294,6 +324,46 @@ self-evidently so (commented out) or grep-confirmed unreferenced (no
 remaining callers). "This looks redundant" without the precedent or
 the caller-grep is dropped.
 
+### 🟡 Pass 13 — Needless Complexity & Over-Engineering
+
+**Instruction:** Flag code that is structurally more elaborate than the
+task requires — the "plausible code structured in ways no human would
+choose" tell. Specifically:
+
+- **Deep nesting:** 3+ levels of conditionals where guard clauses /
+  early returns would flatten the logic.
+- **Gratuitous indirection:** a util that calls a util that calls a
+  util, or three mapping/transform layers that arrive back at roughly
+  the input shape.
+- **Reinvented primitives:** a hand-rolled loop that duplicates a
+  builtin or stdlib call (`map`/`filter`/`sum`, a date parse, a path
+  join) — the language already ships the tool.
+- **Speculative abstraction:** a factory, interface, generic, or config
+  hook with exactly one caller and no second use in sight.
+- **Stub placeholders masquerading as real code:** a function that
+  fakes success — a hardcoded `return True`/`return []` with a `# in a
+  real implementation we would …` comment, or a mock left wired into a
+  non-test path.
+
+**Why:** AI generates locally and defensively, padding simple logic
+into enterprise-shaped scaffolding to look thorough; it also emits
+stubs when it cannot complete a path and leaves them behind because it
+is averse to admitting "unfinished." None of this crashes immediately,
+but every layer and every fake-success path costs the next human
+comprehension time and hides where the real behavior is (or isn't).
+Demand the simplest structure that satisfies the spec: guard clauses
+over nesting, the stdlib over re-implementation, one honest function
+over a speculative hierarchy, and a real implementation (or an explicit
+failure) over a stub that pretends to work. **Distinct from Pass 12:**
+drift/dead-code is about *cross-file* duplication and *inert* code;
+this is *in-function* over-structure and *live* fake logic.
+
+**Evidence standard:** cite the `file:line` and name the simpler form
+it should take (the guard clause, the stdlib call, the deleted layer).
+For a "stub," show the faked return and the absence of real logic.
+"This feels over-built" without a concrete simpler alternative is
+dropped.
+
 ## Verification (mandatory, never skip)
 
 Re-check every candidate before reporting. **False positives in this
@@ -315,27 +385,38 @@ developers trust beats a thorough report they ignore.
    an external boundary in production, or is enforcement one frame up?
 6. Pass 5: is the input actually structured (and adversarial), or a
    fixed internal format where the regex is safe?
-7. Pass 6: does the project actually depend on a schema library, or
+7. Pass 6: is the package genuinely absent from the lockfile/manifest
+   AND not a stdlib or well-known library — not merely unfamiliar to
+   you? For a flagged method, is the symbol actually absent from the
+   pinned version's API (check the installed source/docs), not just
+   unrecognized? A real-but-unfamiliar dependency or method is not a
+   finding.
+8. Pass 7: does the project actually depend on a schema library, or
    is manual checking the established local idiom? No standard to
    bypass → not a finding.
-8. Pass 7: does the broad catch re-throw, narrow, or genuinely handle
+9. Pass 8: does the broad catch re-throw, narrow, or genuinely handle
    every caught type — or does it silently swallow and return a
    default? Only the silent-swallow case is a finding.
-9. Pass 8: does the downstream framework actually perform the same
-   encoding (confirm the library's behavior), or is the manual
-   escaping the *only* layer and therefore load-bearing?
-10. Pass 9: is the comment explaining language mechanics / narrating
+10. Pass 9: does the downstream framework actually perform the same
+    encoding (confirm the library's behavior), or is the manual
+    escaping the *only* layer and therefore load-bearing?
+11. Pass 10: is the comment explaining language mechanics / narrating
     the obvious / now contradicted by the diff — or does it document a
     real edge case, rule, or constraint? When in doubt, keep the
     comment; for "stale" claims, confirm the diff actually changed the
     behavior the comment describes.
-11. Pass 10: is a standard header genuinely available and ignored, or
+12. Pass 11: is a standard header genuinely available and ignored, or
     is byte-sniffing the only option for this source?
-12. Pass 11: for drift, did you actually grep and find the established
+13. Pass 12: for drift, did you actually grep and find the established
     pattern elsewhere (not just assume one exists)? For dead code, is
     it grep-confirmed unreferenced / self-evidently commented out — or
     still live on some path you didn't trace?
-13. Does the finding cite a concrete `file:line` and name the failure
+14. Pass 13: is the structure genuinely gratuitous, or does it serve a
+    real need (nesting that guards distinct cases, an abstraction with
+    a second caller you didn't trace, a trivial-by-design interface
+    default)? Confirm a flagged "stub" actually fakes success rather
+    than being a legitimately trivial function before reporting.
+15. Does the finding cite a concrete `file:line` and name the failure
     mode (🔴) or the bypassed standard / lost coherence (🟡) in one
     sentence?
 
@@ -360,12 +441,14 @@ passes → merge, keep the strongest evidence, tag both.
 | 🔴 3. Global state & runtime hijacking | ... |
 | 🔴 4. Boundary trust & contract mismatches | ... |
 | 🔴 5. Brittle parsing of structured data | ... |
-| 🟡 6. Primitive type juggling over schema validation | ... |
-| 🟡 7. Broad exception swallowing | ... |
-| 🟡 8. Redundant escaping / framework mistrust | ... |
-| 🟡 9. Comment noise & documentation drift | ... |
-| 🟡 10. Protocol ignorance | ... |
-| 🟡 11. Architectural drift & dead-code accretion | ... |
+| 🔴 6. Fabricated dependencies & hallucinated APIs | ... |
+| 🟡 7. Primitive type juggling over schema validation | ... |
+| 🟡 8. Broad exception swallowing | ... |
+| 🟡 9. Redundant escaping / framework mistrust | ... |
+| 🟡 10. Comment noise & documentation drift | ... |
+| 🟡 11. Protocol ignorance | ... |
+| 🟡 12. Architectural drift & dead-code accretion | ... |
+| 🟡 13. Needless complexity & over-engineering | ... |
 
 ## Findings
 
@@ -387,31 +470,35 @@ passes → merge, keep the strongest evidence, tag both.
 Omit empty severity sections. A clean review with 0 findings is valid
 — do not manufacture findings. Pass tags use the short name:
 `[**Concurrency**]`, `[**Streaming**]`, `[**Global State**]`,
-`[**Boundary**]`, `[**Parsing**]`, `[**Schema**]`, `[**Swallow**]`,
-`[**Double-Encode**]`, `[**Comments**]`, `[**Protocol**]`,
-`[**Coherence**]`. Merged findings list both.
+`[**Boundary**]`, `[**Parsing**]`, `[**Dependencies**]`, `[**Schema**]`,
+`[**Swallow**]`, `[**Double-Encode**]`, `[**Comments**]`,
+`[**Protocol**]`, `[**Coherence**]`, `[**Complexity**]`. Merged
+findings list both.
 
 **Severity rules:**
 - BLOCKING = the failure mode reaches a production path AND causes a
   hang, OOM, deadlock, state corruption, silent data loss, or a
   security/trust-boundary breach under realistic conditions. Any spec
   Constraint or Do NOT this lens uncovers. (Almost always a 🔴 pass;
-  a 🟡 reaches BLOCKING only when it directly produces one of these —
-  e.g. Pass 7 swallowing the very error that signals corruption, or
-  Pass 8 double-encoding that breaks auth/data in production.)
+  a fabricated dependency whose name is registrable — slopsquatting —
+  is a trust-boundary breach and BLOCKING. A 🟡 reaches BLOCKING only
+  when it directly produces one of these — e.g. Pass 8 swallowing the
+  very error that signals corruption, or Pass 9 double-encoding that
+  breaks auth/data in production.)
 - SHOULD_FIX = the failure mode is real but on a non-critical/cold
   path, requires an unlikely-but-possible trigger, or degrades
   performance without crashing. **Default for confirmed 🟡 findings**:
   they bypass an existing standard, mask bugs, fight a framework,
-  diverge from an established pattern, or leave dead code behind —
-  real debt, not an outage. (A stale comment the diff contradicts, or
-  a commented-out block, is SHOULD_FIX; pure narration noise is a
-  SUGGESTION.)
+  diverge from an established pattern, over-build the solution, or
+  leave dead code behind — real debt, not an outage. (A stale comment
+  the diff contradicts, a commented-out block, a stub that fakes
+  success, or a loose version pin is SHOULD_FIX; pure narration noise
+  is a SUGGESTION.)
 - SUGGESTIONS = hardening that is good practice but no concrete
   failure mode or standards-violation is currently reachable (e.g.
   defensive scoping, a parser swap on a format that is fixed today,
-  a borderline comment). Most Pass 9 (tutorial-comment) findings land
-  here.
+  a borderline comment, a single-caller abstraction that may yet earn
+  its keep). Most Pass 10 (tutorial-comment) findings land here.
 - Any BLOCKING/SHOULD_FIX → REQUEST CHANGES. Only SUGGESTIONS or clean
   → APPROVE. All passes NOT_APPLICABLE → APPROVE, noting no pass
   applied (caller may want to verify base/spec).

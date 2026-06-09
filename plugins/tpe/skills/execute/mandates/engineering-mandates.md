@@ -8,6 +8,8 @@
 6. Context & Consistency — emulate existing patterns, consolidate
 7. Deletion — delete dead code, refactor don't patch
 8. Semantic Documentation — document why, never explain syntax
+9. Dependency Integrity — real packages only, pinned versions, no hallucinated APIs
+10. Simplicity & Least Structure — guard clauses, stdlib over reinvention, no stubs
 
 ---
 
@@ -159,3 +161,50 @@ the actual business logic.*
 - **Update comments on change.** If you modify a function's behavior,
   read and update its docstring and adjacent comments. An outdated
   comment is worse than no comment.
+
+## 9. The Dependency-Integrity Mandate (real packages only)
+
+*You invent plausible-sounding packages and API methods that do not
+exist — predicting what a library probably exports rather than
+checking what it does.*
+
+- **Import only what exists.** Before adding an import or a
+  package-manifest entry, confirm the package is already in the
+  project's lockfile/manifest or is a real, maintained library. Never
+  add a dependency whose name you are *predicting* rather than
+  *verifying* — attackers pre-register the common hallucinated names
+  ("slopsquatting"), so an invented package can install malware on the
+  next build.
+- **Call only real APIs.** Only call methods, attributes, and
+  functions that exist in the version the project pins. Do not assume a
+  library exposes a method because the name sounds right — check its
+  actual surface (the installed source, the docs for that version).
+- **Pin versions.** Never add a dependency with a wildcard or floating
+  specifier (`*`, `+`, `latest`, a bare range where the project pins
+  exactly). Match the project's existing pinning discipline so builds
+  stay deterministic and cannot silently pull a different — possibly
+  breaking or malicious — version.
+
+## 10. The Simplicity Mandate (least structure, no stubs)
+
+*You pad simple logic into enterprise-shaped scaffolding to look
+thorough, and you leave stub placeholders that fake success when you
+cannot finish a path.*
+
+- **Least structure that works.** Use guard clauses / early returns
+  instead of deep conditional nesting. Do not add indirection layers (a
+  util that calls a util that calls a util), mapping passes, or
+  transforms the task does not need.
+- **Use the standard library.** Never hand-roll a loop that
+  re-implements a builtin or stdlib primitive (`map`, `filter`, `sum`,
+  a date parser, a path join). Reach for the language's own tools
+  first.
+- **No speculative abstraction.** Do not add a factory, interface,
+  generic, or config hook for a single caller "in case we need it
+  later." Build the second abstraction when the second caller actually
+  appears.
+- **No stub placeholders.** Never ship a function that *fakes* success —
+  a hardcoded `return True` / `return []` with a `# in a real
+  implementation we would …` comment, or a mock wired into a non-test
+  path. Implement the behavior, or fail loudly (Mandate 4); never leave
+  a pretend-working stub behind.

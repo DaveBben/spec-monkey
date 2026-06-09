@@ -121,6 +121,13 @@ Flag as vague:
 **FAIL if any constraint is not testable.** For each vague constraint,
 suggest a concrete replacement or recommend removing it.
 
+**Carve-out:** a line explicitly labeled `ASSUMPTION (accepted by …):
+{claim}; if false, {what changes}` is a consciously-deferred assumption,
+not a vague constraint — it states a specific claim and its
+consequence. PASS it (note it as an accepted assumption), the same way
+Check 8 passes a reasoned commandment exception. Only flag it if the
+claim itself is unfalsifiable ("the data is reasonable").
+
 ### 5. Weak Verification
 
 Check the Verification section for:
@@ -239,7 +246,7 @@ Return a structured report:
 
 | # | Check | Result | Detail |
 |---|-------|--------|--------|
-| 1 | Verbosity (≤300 words) | PASS/FAIL | {word count, or what to cut} |
+| 1 | Verbosity (≤300 lines) | PASS/FAIL | {line count, or what to cut} |
 | 2 | Contradictions | PASS/FAIL | {conflicting statements, or clean} |
 | 3 | Stale references | PASS/FAIL | {wrong refs, or all verified} |
 | 4 | Vague constraints | PASS/FAIL | {which ones, or all testable} |

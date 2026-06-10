@@ -6,7 +6,7 @@ reference while drafting or reviewing — do NOT include this text in the output
 ## Contents
 
 - [Status Field](#status-field)
-- [**Current State**](#current-state) ← most important, goes first
+- [Current State](#current-state)
 - [What This Project Does](#what-this-project-does)
 - [System Context](#system-context)
 - [Architecture Overview](#architecture-overview)
@@ -64,16 +64,47 @@ because it appeared first.
 - The root should not repeat domain-level detail — point to domain specs instead.
 
 ### What it should contain
-- 2-4 concrete sentences describing what is implemented and working today
-- A named **"Not yet implemented"** list for any stubs, placeholders, or intentionally
-  incomplete features — do not bury these in prose
-- Reference key modules, endpoints, or integrations by their actual path, identifier,
-  and entry-point function — e.g., `PipelineController.processNext()` not just
-  `PipelineController`. Including the symbol name eliminates search time when an
-  agent needs to find where behavior originates. Research shows agents spend 60-80%
-  of their tokens locating relevant code; naming the entry point collapses that cost.
-- Be specific — "Stripe integration is complete" is less useful than "Stripe integration is
-  complete (src/integrations/stripe.ts:createPaymentIntent())"
+
+Two parts — a navigation layer, **not** a knowledge dump:
+
+1. **System summary** — 2-4 concrete sentences on what runs end-to-end today and how the
+   pieces connect at the system level: the data flow, the orchestration entry point, the
+   handoff. No future tense.
+2. **Component index** — one line per component, and *only* one line:
+   `file — entry-point symbol — one-clause role — → feature-spec`. The list maps each stage
+   to where it lives and where its full spec is; it does not re-explain the stage.
+
+Plus a named **"Not yet implemented"** list for any stubs, placeholders, or intentionally
+incomplete features — do not bury these in prose.
+
+**Anchor exactly one symbol per component — its entry point** (e.g.
+`PipelineController.processNext()`, not just `PipelineController`). Naming the entry point
+eliminates the agent's search cost — research shows agents spend 60-80% of their tokens
+locating relevant code — so name it, then stop. Internal helpers, config values, concurrency
+knobs, and edge cases do NOT belong in Current State; they live in the component's feature
+spec and in the code. If you find yourself adding a second sentence, or a parenthetical
+inside a parenthetical, to a component line, that is the signal it belongs in the feature
+spec instead.
+
+### Keep it a navigation layer, not a re-spec
+
+The most common failure here is a Current State that grows a full paragraph per component —
+every symbol, every setting, every failure mode — until it duplicates the feature specs and
+no human can read it. The whole-project budget is 100-200 lines (single-domain); a Current
+State that alone runs longer than that has become the dump it was meant to index.
+
+- **Bad** (per-component knowledge dump — unreadable, duplicates the feature spec):
+  > - **Fetch stage** (`freshrss.py`) — `FreshRSSClient`: sync httpx client for the Greader
+  >   API. `fetch_articles(categories)` does one ClientLogin, then paginates each category
+  >   stream in feeds.yaml order — the category name URL-quoted into the stream path, a fresh
+  >   params dict per category (no continuation leakage) — windowed server-side on crawl time
+  >   (`ot` = now − `LOOKBACK_DAYS`)… *[continues for 30 more lines]*
+- **Good** (one line, anchored at the entry point, detail delegated):
+  > **Components** (detail in each feature spec):
+  > - Fetch — `freshrss.py` (`FreshRSSClient.fetch_articles`): paginates FreshRSS streams,
+  >   crawl-time window, abort-on-failure. → freshrss-fetch
+  > - Classify — `classifier.py` (`Classifier.classify`): forced tool-call KEEP/SKIP via
+  >   local llama-server, fail-open to unclassified. → llm-classifier
 
 ### The "Not Yet Implemented" list
 

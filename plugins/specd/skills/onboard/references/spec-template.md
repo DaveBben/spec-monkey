@@ -55,14 +55,25 @@ boundaries) moves to `docs/specs/subsystems/{domain-slug}/spec.md`. See `domain-
 
 ## Current State
 
-<!-- THIS IS THE MOST IMPORTANT SECTION. Write 2-4 concrete sentences describing what is
-actually implemented and working today. No future tense.
+<!-- THE MOST IMPORTANT SECTION. A navigation layer, NOT a knowledge dump. Two parts:
+1. System summary — 2-4 sentences on what runs end-to-end today and how the pieces connect
+   at the system level (the data flow, the entry point, the handoff). No future tense.
+2. A "Components" list with EXACTLY ONE line per component:
+   `file — entry-point symbol — one-clause role — → feature-spec`. Anchor only the single
+   entry-point function (e.g. FreshRSSClient.fetch_articles), never internal symbols, config
+   values, or edge cases — those live in the component's feature spec and in the code. If a
+   line wants a second sentence, it belongs in that feature spec, not here.
 For multi-domain projects: keep this system-level. Each domain spec has its own Current State. -->
 
-[e.g., "The API accepts invoice submission via POST /invoices (src/api/invoices.ts:createInvoice())
-and stores them in PostgreSQL. Reconciliation runs nightly via a cron job
-(src/jobs/reconcile.ts:runReconciliation()) and creates Linear tickets for discrepancies.
-The Stripe integration is complete (src/integrations/stripe.ts:createPaymentIntent())."]
+[System summary, e.g.:]
+The stage-1 pipeline runs end-to-end from the CLI: fetch → dedup → classify → output.
+`main()` (`src/__main__.py`) orchestrates a bounded producer/consumer pipeline with
+crash-safe verdict-before-seen ordering; survivors hand off to a manual stage-2 review.
+CI is green.
+
+**Components** (detail in each feature spec):
+- [Fetch — `freshrss.py` (`FreshRSSClient.fetch_articles`): paginates FreshRSS streams, crawl-time window, abort-on-failure. → freshrss-fetch]
+- [Classify — `classifier.py` (`Classifier.classify`): forced tool-call KEEP/SKIP via local llama-server, fail-open to unclassified. → llm-classifier]
 
 **Not yet implemented:**
 - [e.g., NetSuite integration — stubbed in src/integrations/netsuite.ts, throws NotImplementedError]

@@ -27,7 +27,6 @@ user — read the code, find the real problem, bring it.
   thresholds will silently produce wrong results." (you read the
   code and found a real problem)
 
-A grounded challenge takes a few shapes — reach for whichever fits:
 - **Name the finding, then the consequence**: "I noticed [finding].
   That means [consequence]. How does your approach handle that?"
 - **Stipulate the failure** instead of asking what might go wrong:
@@ -59,10 +58,8 @@ Dispatch broad greps and fan-out searches to subagents (e.g. the
 spec gets written in.
 
 **Surface every ambiguity that materially changes the design** —
-grounded in what you found in the code. Usually that's 2-3 concerns,
-but a genuinely ambiguous change has more; don't drop a material one to
-hit a number, or pad a clear change to reach one. If the approach looks
-solid, say so, don't manufacture concerns.
+grounded in what you found in the code. If the approach looks solid,
+say so, don't manufacture concerns.
 
 **This is one conversation, not a pipeline.** Don't force both
 phases if the user only needs one.
@@ -115,8 +112,7 @@ If the change is trivial, say so:
 
 ### Conversation
 
-The shapes above are *how* you raise a concern. These are the
-*dimensions* worth raising — probe each when it applies:
+Dimensions worth raising — probe each when it applies:
 
 **Intent & acceptance** (first — ask exactly what the code can't tell
 you: the intent and the definition of done):
@@ -170,7 +166,7 @@ agent will otherwise take.
 ### Engineering principles
 
 The approach, constraints, and alternatives you write must respect these
-principles . Apply them as you shape the spec:
+principles. Apply them as you shape the spec:
 
 - **Verify, don't predict.** Every import, package, and API method must
   exist in the version this project pins — check the lockfile or
@@ -191,16 +187,11 @@ principles . Apply them as you shape the spec:
 
 ### Decomposition check (before producing)
 
-Before producing the spec, size the change. Task horizon is the
-strongest predictor of implementation failure. If this change would 
-**modify more than 4 files**, span **more than 3
-independent concerns**, or run past **~400 lines of change**, propose
-splitting it into multiple specs with an explicit ordering (which ships
-first, what each depends on) and let the user decide.
-
-When the thinking is done, shift to investigation mode. Now you're
-reading code for **precision** — finding the exact files, symbols,
-lines, and verification commands.
+Before producing the spec, size the change. If this change would
+**modify more than 4 files**, span **more than 3 independent
+concerns**, or run past **~400 lines of change**, propose splitting it
+into multiple specs with an explicit ordering (which ships first, what
+each depends on) and let the user decide.
 
 ### Investigate
 
@@ -265,9 +256,7 @@ reviewer findings — these are quality issues you should resolve.
 **After the reviewer passes** (or after you've fixed its findings),
 surface your *own* residual ambiguity before asking for approval. The
 challenge conversation surfaced the user's blind spots; this surfaces
-yours. A spec is a confident artifact — it reads as settled even where
-you were interpreting a vague request, and the implementing agent will
-never see your uncertainty. State the **2-3 load-bearing assumptions**
+yours. State the **2-3 load-bearing assumptions**
 you baked in (the ones that, if wrong, change the spec) plus any
 ambiguity you could not resolve, then present and ask:
 
@@ -321,16 +310,10 @@ Tell the user:
 ## Spec template
 
 The full template lives in `reference/spec-template.md` — read it when
-you reach "Write the draft spec" above. It serves two audiences with
-one document: above the "Implementation contract" divider is what a
-human reviewer needs to understand and approve the approach (Why,
-Summary, Current behavior, Alternatives, Edge cases, and the Approach
-itself — prose strategy, the hinge the reviewer signs off on); below it
-is the binding contract that pins that strategy to specifics —
-Constraints, Do NOT, Files that matter, and Verification (deliberately
-redundant with each other — keep it that way). A constraint repeated
-across these sections is exactly what survives context compaction and
-mid-context attention loss during a long implementation; this is one of
-the few places where saying something twice is the research-backed move,
-not bloat. If a reviewer flags the repetition, defend it.
+you reach "Write the draft spec" above. Below the "Implementation
+contract" divider, Constraints, Do NOT, Files that matter, and
+Verification are deliberately redundant with each other — a constraint
+repeated across them is what survives context compaction during a long
+implementation. Keep that redundancy; defend it if a reviewer flags it
+as bloat.
 

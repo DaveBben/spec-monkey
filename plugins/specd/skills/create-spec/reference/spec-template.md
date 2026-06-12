@@ -6,8 +6,9 @@ precision described in the placeholders.
 
 The spec serves two audiences with one document. Above the
 "Implementation contract" divider: motivation, summary, current state,
-alternatives, edge cases, and the Approach — everything a human
-reviewer needs to understand and approve *how* the change will be made.
+alternatives, edge cases, the assumptions the change rests on, and the
+Approach — everything a human reviewer needs to understand and approve
+*how* the change will be made.
 The Approach is the hinge: prose strategy the reviewer signs off on and
 the direction the implementer then executes. Below the divider: the
 binding contract that pins that strategy to specifics — Constraints, Do
@@ -74,6 +75,18 @@ happy-path specs leak: dependency failures (timeout, partial or
 malformed response), malformed/oversized input, and empty/boundary
 values — each as "condition: expected behavior" so it binds both the
 code and a test.}
+
+## Assumptions
+{The 2-3 load-bearing assumptions this spec rests on — the ones that,
+if wrong, change the spec. Required: state them even when the user
+confirmed them, so the reasoning survives after the authoring
+conversation is cleared. One bullet each:
+- {load-bearing assumption}; if wrong → {what changes}.
+Mark any the user consciously accepted rather than verified with
+"(accepted by {who})". An open question you could not resolve from the
+code or the conversation belongs here too, flagged UNRESOLVED. This is
+the spec-level list; a constraint that itself rests on an accepted
+assumption is *also* pinned inline at its seam in Constraints below.}
 
 ## Approach
 {The strategy, not the keystrokes — written so a human reviewer can

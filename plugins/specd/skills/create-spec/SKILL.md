@@ -197,6 +197,20 @@ each depends on) and let the user decide.
 
 For each area the conversation identified:
 
+**Offload the raw enumeration, keep the judgment.** Steps 2-4 below are
+mostly grep work — locating callers, type defs, related tests, and
+precedent patterns. Dispatch that mechanical search to the
+`specd-spec-investigator` agent (`subagent_type:
+"specd-spec-investigator"`, a cheaper Sonnet model): pass it the change
+description and the symbols/seams you've already identified as relevant.
+It returns a structured index of `file:line` anchors — each with a
+one-line role — plus the related tests and precedent-pattern locations,
+keeping raw grep noise out of your (expensive) context. You then
+**curate**: decide what's genuinely relevant and why, drop what isn't,
+and write the sections. The investigator locates; you judge. Write
+step 1 (Current behavior prose) and step 5 (Verification) yourself —
+they depend on your whole-conversation mental model, not on enumeration.
+
 1. **Current behavior**: plain prose a newcomer can read top to bottom,
    explaining how the affected part works today. Precise locations
    belong in "Files that matter," not here — spend only a sparing
@@ -243,27 +257,62 @@ Write the draft spec to `docs/specs/features/{slug}/spec.md`,
 following the structure in `reference/spec-template.md` (read it now if
 you haven't this session). Create the directory if it doesn't exist.
 
+**First, a cheap reference pre-pass.** Before the full review, dispatch
+the `specd-reference-linter` agent (`subagent_type:
+"specd-reference-linter"`) with the spec path. It runs a fast,
+mechanical pass — every `file:line`, symbol, named existing test, and
+third-party package in the spec, checked for existence against the repo
+and lockfile — and returns pass/fail rows. Fix every MISSING/MISLOCATED
+reference it reports before going further; glance at any REVIEW rows.
+This catches mechanical staleness cheaply, so the more expensive
+reviewer's rounds are spent on judgment, not greps. It is an
+accelerator, not the gate — the reviewer's own reference check stays
+authoritative.
+
 Then launch the `specd-spec-reviewer` agent using the Agent tool with
-`subagent_type: "specd-spec-reviewer"`. Pass the spec path. The reviewer
-checks seven evidence-backed failure modes: verbosity, contradictions,
-stale references, vague constraints, weak verification, untestable
-NFRs, and scope creep.
+`subagent_type: "specd-spec-reviewer"`. Pass the spec path — and only
+the spec path. Frame it as an independent review of an unknown author's
+spec, not "review my work": don't pass your reasoning, your defense of
+the choices, or context arguing the spec is good. The reviewer's value
+is its independence; the less it inherits of your thinking, the more of
+your blind spots it can catch. It runs its full evidence-backed check
+suite and returns pass/fail per check with specific fixes.
 
-**If any check fails:** fix the spec before presenting it. Apply
-each fix the reviewer recommends. Don't ask the user to fix
-reviewer findings — these are quality issues you should resolve.
+**If any check fails:** fix the spec before presenting it. Apply each
+fix the reviewer recommends — these are quality issues you should
+resolve, not ones to hand the user.
 
-**After the reviewer passes** (or after you've fixed its findings),
+**Then re-run the reviewer on the fixed spec — don't trust your own
+fixes.** A fix you applied is self-graded until the independent reviewer
+confirms it; a plausible-looking edit can miss the finding or introduce
+a new contradiction or stale reference. Re-dispatch a fresh
+`specd-spec-reviewer` (same independent framing — spec path only) and
+let it re-check. Loop fix → re-review until it returns a clean pass,
+with a ceiling of **3 rounds**: if it still fails after the third, stop
+self-correcting and present the remaining findings to the user with what
+you tried, rather than churning. Keep each round's fixes targeted to the
+findings — don't rewrite passing sections, which only gives the
+re-review new surface to fault.
+
+**After the reviewer passes** (on the first run or a re-review),
 surface your *own* residual ambiguity before asking for approval. The
 challenge conversation surfaced the user's blind spots; this surfaces
-yours. State the **2-3 load-bearing assumptions**
-you baked in (the ones that, if wrong, change the spec) plus any
-ambiguity you could not resolve, then present and ask:
+yours.
+
+Record the **2-3 load-bearing assumptions** you baked in (the ones
+that, if wrong, change the spec) in the spec's `## Assumptions` section
+— this is a required field of the spec file, not just a chat message.
+You instruct the user to clear context before implementation (below),
+so an assumption that lives only in the conversation evaporates exactly
+when the build begins; written into the spec, the defensibility trail
+survives into execution. Then present those same assumptions for the
+user to check:
 
 > "Here's the spec at `docs/specs/features/{slug}/spec.md` — it
 > passed all quality checks.
 >
-> Assumptions I baked in — flag any that are wrong:
+> Assumptions I baked in (now recorded in the spec's Assumptions
+> section) — flag any that are wrong:
 > 1. {load-bearing assumption}; if wrong → {what changes}.
 > 2. {…}
 > {Open question I couldn't resolve from the code or our conversation,
@@ -272,11 +321,13 @@ ambiguity you could not resolve, then present and ask:
 > Do you approve it as-is, or want changes?"
 
 Don't gate on this — surface it and let the user decide (this skill is
-a thinking partner, not a checkpoint). If the user consciously accepts
-an assumption rather than resolving it, record it inline in the spec
-(Constraints or Approach) as `ASSUMPTION (accepted by {who}): {claim};
-if false, {what changes}`, so the deferred ambiguity stays visible in
-the contract instead of traveling silently into the build.
+a thinking partner, not a checkpoint). When the user resolves an
+assumption, update the section to match; when they consciously accept
+one rather than resolving it, mark it `(accepted by {who})` there. For
+an assumption that pins a specific seam, *also* record it inline at that
+seam (Constraints or Approach) as `ASSUMPTION (accepted by {who}):
+{claim}; if false, {what changes}`, so it's visible both as a
+spec-level premise and in the contract the implementing agent reads.
 
 **If the user requests changes:** apply them to the spec file, then
 judge how substantial the round of edits was:

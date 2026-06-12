@@ -30,11 +30,22 @@ Resolve `$ARGUMENTS` to a spec file:
 
 1. **Full path** (`docs/specs/features/{slug}/spec.md`): use directly
 2. **Slug**: try `docs/specs/features/{slug}/spec.md`
-3. **No input**: glob `docs/specs/features/*/spec.md` and
-   `docs/specs/bugs/*/spec.md`. Read each spec's YAML frontmatter and
-   filter to those with `Status: Waiting Implementation`. Present the
-   matching specs as a numbered menu showing slug and title, then ask
-   the user to choose. If none are waiting, tell the user.
+3. **No input**: build the menu with a single shell pass — don't read
+   every spec into your context just to filter it (that's mechanical
+   I/O burning the expensive window). Grep for the waiting status across
+   both spec roots, e.g.:
+
+   ```bash
+   grep -lE '(\*\*)?Status(\*\*)?:[[:space:]]*Waiting Implementation' \
+     docs/specs/features/*/spec.md docs/specs/bugs/*/spec.md 2>/dev/null
+   ```
+
+   (The pattern matches the status whether it's written as a
+   `**Status**:` body line or a plain frontmatter key, so it doesn't
+   depend on which form the spec uses.) For each match, read only its
+   first line for the title. Present the matches as a numbered menu
+   showing slug and title, then ask the user to choose. If none match,
+   tell the user.
 
 Read the spec in full. This is your contract.
 
@@ -43,26 +54,63 @@ if it exists.
 
 ---
 
+## Running tests and checks (always delegate)
+
+**Never run a test suite, linter, or type-checker inline.** Their output
+is large and noisy — progress lines, passing-test spam, coverage tables
+— and it lands in your expensive, long-lived context where it crowds out
+the contract across a session that already runs long. Instead, **every
+time** you need to run the verification command, the test suite, a
+linter, or a type-checker — at baseline, before each commit, in the
+verification fix-loop, and at finalize — dispatch the `specd-test-runner`
+agent (`subagent_type: "specd-test-runner"`, a cheap Haiku model). Pass
+it the exact command and the repo root.
+
+It returns a compact digest: exit code, pass/fail counts, the **exact**
+failing/errored test IDs verbatim, and the runner's own failure detail
+(tracebacks, assertion diffs, lint violation lines) copied verbatim —
+noise stripped, signal intact. You keep the digest; the raw stdout stays
+out of your window.
+
+The runner only runs and reports. **You** make every judgment: which
+failures matter, what to fix, whether a baseline failure is pre-existing.
+Treat the failing-test IDs it returns as authoritative and verbatim —
+they define the pre-existing-failure set you must not later expand. If a
+digest's failure detail isn't enough to debug a specific failure, ask the
+runner to re-run that one test with more verbosity (e.g. `-vv`), rather
+than running the whole suite inline. (This delegation is for *running*
+checks only — the "Diff the tests" judgment below stays yours.)
+
+---
+
 ## Pre-flight
 
 1. **Branch**: if on `main`/`master`, create `feature/{slug}`. If on
    another branch, confirm with user. Never execute on main.
 
-2. **Test baseline**: run the verification command from the spec.
-   Record the pass/fail state, including the **exact names of any
-   already-failing tests**. If tests already fail, warn the user before
+2. **Test baseline**: have the test-runner run the verification command
+   from the spec (see *Running tests and checks*). Record the pass/fail
+   state, including the **exact names of any already-failing tests**. If tests already fail, warn the user before
    proceeding, and treat precisely those named tests as the
    pre-existing-failure set. Those are excluded from the must-pass set;
    every other test must pass and no currently-passing test may
    regress. Do not expand this set later to excuse a failure you
    introduced.
 
-3. **Validate the spec**: verify that files listed in "Files that
-   matter" exist on disk. If any are missing, stop and report.
+3. **Validate the spec**: dispatch the `specd-reference-linter` agent
+   (`subagent_type: "specd-reference-linter"`) with the spec path. It's
+   a cheap Haiku pass that checks — against the *current* repo and
+   lockfile — that the files, symbols, named existing tests, and
+   dependencies the spec references still exist (the spec may have been
+   authored against an older state of the repo, then drifted). If it
+   reports any MISSING or MISLOCATED references, stop and report to the
+   user before implementing: a spec pointing at code that has since moved
+   or vanished is a stale contract, not a starting point. (Glance at
+   REVIEW rows — they're usually new things the spec intends to create.)
 
 4. **Run linters and type checkers** if available (check CLAUDE.md
-   for commands). Record baseline. These catch mechanical issues
-   for free.
+   for commands) — via the test-runner. Record baseline. These catch
+   mechanical issues for free.
 
 ---
 
@@ -130,10 +178,11 @@ use that approach, it was explicitly rejected during planning.
 
 After each logical unit of work, before committing:
 
-1. **Run linters and type checkers.** Fix any new violations.
-2. **Run the tests relevant to the change** (at minimum, the scope
-   of the spec's verification command). All must pass — never
-   commit on a red state you introduced.
+1. **Run linters and type checkers** (via the test-runner). Fix any new
+   violations.
+2. **Run the tests relevant to the change** (via the test-runner; at
+   minimum, the scope of the spec's verification command). All must pass
+   — never commit on a red state you introduced.
 3. **Diff the tests.** Run `git diff` (and `git status`) against the
    test directories specifically. For every test file the change
    modified, deleted, or skipped, confirm the change is justified by
@@ -153,13 +202,14 @@ commits.
 
 **You are not done until the spec's verification criteria pass.**
 
-Run the verification command from the spec. Check every assertion:
+Have the test-runner run the verification command from the spec. Check
+every assertion:
 - All existing tests listed must still pass
 - All new behaviors described must be verified
-- If any check fails, fix it and re-verify
+- If any check fails, fix it and re-verify (re-run via the test-runner)
 
-Run linters and type checkers again. Fix any new violations
-introduced by your changes.
+Run linters and type checkers again (via the test-runner). Fix any new
+violations introduced by your changes.
 
 Do not commit until verification passes. Do not rely on your own
 judgment that the code is correct — run the actual commands.
@@ -238,8 +288,8 @@ report the open findings to the user rather than looping further.
 After verification passes:
 
 1. Run the full test suite (from CLAUDE.md's operational commands)
-   to check for regressions beyond the spec's verification scope.
-   Fix any regressions before finalizing.
+   via the test-runner to check for regressions beyond the spec's
+   verification scope. Fix any regressions before finalizing.
 
 2. Update the spec's "Last updated" date if implementation revealed
    new constraints or edge cases worth recording (or if the

@@ -43,13 +43,10 @@ The generated CLAUDE.md should contain these five sections in this order. Omit a
 
 ### 1. Project Identity
 
-1-3 sentences covering what the project does, why it exists, and who it serves. This is the "elevator
-pitch" that gives Claude the context to make decisions aligned with the project's purpose.
+1-3 sentences covering what the project does, why it exists, and who it serves. This is the "elevator pitch" that gives Claude the context to make decisions aligned with the project's purpose.
 
 **Good:**
-> Internal billing reconciliation service that pulls invoices from Stripe and NetSuite nightly,
-> detects discrepancies, and opens tickets in Linear for the finance team to review. Exists because
-> manual reconciliation was missing ~3% of mismatches each quarter.
+> Internal billing reconciliation service that pulls invoices from Stripe and NetSuite nightly, detects discrepancies, and opens tickets in Linear for the finance team to review. Exists because manual reconciliation was missing ~3% of mismatches each quarter.
 
 **Bad:**
 > This is a Python project that uses AWS CDK and boto3.
@@ -60,8 +57,7 @@ The bad example describes *how* (technology), not *what* or *why*. Technology be
 
 ### 2. Tech Stack and Codebase Map
 
-List the primary language and framework with versions, the package manager, and a brief directory
-layout. This section helps Claude locate code and understand the toolchain.
+List the primary language and framework with versions, the package manager, and a brief directory layout. This section helps Claude locate code and understand the toolchain.
 
 **Include:**
 - Language and version (e.g., "Python 3.11")
@@ -104,8 +100,7 @@ Keep the directory layout to top-level directories only. Claude can explore subd
 
 ### 3. Operational Commands
 
-Exact, copy-pasteable shell commands for the most common operations. One command per line with a brief
-description. These are the commands Claude will actually run.
+Exact, copy-pasteable shell commands for the most common operations. One command per line with a brief description. These are the commands Claude will actually run.
 
 **Include:** build, test, lint, format, run/deploy — whatever applies to the project.
 
@@ -127,16 +122,13 @@ description. These are the commands Claude will actually run.
 - Install dependencies first
 ```
 
-The bad example describes *what to do*, not *how to do it*. Claude needs exact commands, not
-instructions to figure them out.
+The bad example describes *what to do*, not *how to do it*. Claude needs exact commands, not instructions to figure them out.
 
 ---
 
 ### 4. Critical Constraints
 
-Hard rules that MUST or MUST NOT be followed in this project. These are the guardrails — things that
-would cause real damage if violated. Only include constraints that are universally applicable and
-not already enforced by tooling.
+Hard rules that MUST or MUST NOT be followed in this project. These are the guardrails — things that would cause real damage if violated. Only include constraints that are universally applicable and not already enforced by tooling.
 
 **Good:**
 - Never commit `.env` files or credentials
@@ -149,18 +141,15 @@ not already enforced by tooling.
 - Follow best practices
 - Be careful with the database
 
-The bad examples are vague and unverifiable. If you cannot write a test or check for it, it is not
-a constraint — it is a wish.
+The bad examples are vague and unverifiable. If you cannot write a test or check for it, it is not a constraint — it is a wish.
 
-If you have no hard constraints, leave the HTML comment placeholder. An empty section is better than
-a section full of vague guidance.
+If you have no hard constraints, leave the HTML comment placeholder. An empty section is better than a section full of vague guidance.
 
 ---
 
 ### 5. Pointers to Deeper Docs
 
-One line per document: file path + dash + purpose. These point Claude to authoritative references
-without copying their content into CLAUDE.md.
+One line per document: file path + dash + purpose. These point Claude to authoritative references without copying their content into CLAUDE.md.
 
 **Good:**
 ```markdown
@@ -175,7 +164,6 @@ without copying their content into CLAUDE.md.
 - See the docs folder for more information
 ```
 
-The bad example gives no specific paths and no descriptions. Claude cannot efficiently find what it
-needs without concrete pointers.
+The bad example gives no specific paths and no descriptions. Claude cannot efficiently find what it needs without concrete pointers.
 
 Only list docs that exist. Do not list aspirational documents.

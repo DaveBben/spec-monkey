@@ -1,12 +1,8 @@
 # Domain Spec Template
 
-Contains everything specific to this subsystem. The root spec.md stays
-system-level; this file holds the domain knowledge that matters when an
-agent works in this directory.
+Contains everything specific to this subsystem. The root spec.md stays system-level; this file holds the domain knowledge that matters when an agent works in this directory.
 
-**Hard cap: 100 lines.** Omit sections with no meaningful content rather
-than including empty placeholders. If it's longer, the domain needs
-splitting or content belongs at root.
+**Hard cap: 100 lines.** Omit sections with no meaningful content rather than including empty placeholders. If it's longer, the domain needs splitting or content belongs at root.
 
 ---
 
@@ -32,8 +28,7 @@ splitting or content belongs at root.
 
 ## Current State
 
-[2-3 sentences. What is implemented and working in this domain today.
-No future tense. Update after every significant change.]
+[2-3 sentences. What is implemented and working in this domain today. No future tense. Update after every significant change.]
 
 ---
 
@@ -72,8 +67,7 @@ No future tense. Update after every significant change.]
 
 ## Testing
 
-[Coverage gaps and conventions specific to this domain. Framework and
-runner commands are in the root spec — don't repeat them here.]
+[Coverage gaps and conventions specific to this domain. Framework and runner commands are in the root spec — don't repeat them here.]
 
 **Well-covered:** [e.g., "payment creation, refund flow"]
 **Missing or thin:** [e.g., "webhook idempotency, partial refund edge cases"]

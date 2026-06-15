@@ -1,26 +1,10 @@
 # Spec Template
 
-Read this when producing the spec in Phase 2. The implementing agent
-(`/specd:execute-spec`) consumes the result, so fill every section with the
-precision described in the placeholders.
+Read this when producing the spec in Phase 2. The implementing agent (`/specd:execute-spec`) consumes the result, so fill every section with the precision described in the placeholders.
 
-The spec serves two audiences with one document. Above the
-"Implementation contract" divider: motivation, summary, current state,
-alternatives, edge cases, the assumptions the change rests on, and the
-Approach — everything a human reviewer needs to understand and approve
-*how* the change will be made.
-The Approach is the hinge: prose strategy the reviewer signs off on and
-the direction the implementer then executes. Below the divider: the
-binding contract that pins that strategy to specifics — Constraints, Do
-NOT, Files, and Verification, deliberately redundant with each other.
+The spec serves two audiences with one document. Above the "Implementation contract" divider: motivation, summary, current state, alternatives, edge cases, the assumptions the change rests on, and the Approach — everything a human reviewer needs to understand and approve *how* the change will be made. The Approach is the hinge: prose strategy the reviewer signs off on and the direction the implementer then executes. Below the divider: the binding contract that pins that strategy to specifics — Constraints, Do NOT, Files, and Verification, deliberately redundant with each other.
 
-**Writing style.** The prose sections — Why, Summary, Current behavior,
-Approach, Things to consider, and the Edge-case descriptions — follow the
-readable style in `writing-style.md` (this directory): one idea per
-sentence, actor-first, caveats split into their own sentence, conclusion
-first. The implementation-contract sections below the divider are exempt —
-there, identifier density and redundancy are load-bearing, so keep them
-dense.
+**Writing style.** The prose sections — Why, Summary, Current behavior, Approach, Things to consider, and the Edge-case descriptions — follow the readable style in `writing-style.md` (this directory): one idea per sentence, actor-first, caveats split into their own sentence, conclusion first. The implementation-contract sections below the divider are exempt — there, identifier density and redundancy are load-bearing, so keep them dense.
 
 ```
 {One-line summary of the change}

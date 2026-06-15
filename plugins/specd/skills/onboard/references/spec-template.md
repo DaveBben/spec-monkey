@@ -1,11 +1,8 @@
 # Project Spec Template
 
-Copy-paste starting point for spec.md. Fill in each section following the guidance in
-`spec-section-guidance.md`. Sections marked (optional) can be omitted if not applicable.
+Copy-paste starting point for spec.md. Fill in each section following the guidance in `spec-section-guidance.md`. Sections marked (optional) can be omitted if not applicable.
 
-**For multi-domain projects** (2+ subsystems): this root spec stays slim and system-level.
-Domain-specific content (external deps, testing gaps, known issues, tech debt, domain
-boundaries) moves to `docs/specs/subsystems/{domain-slug}/spec.md`. See `domain-spec-template.md`.
+**For multi-domain projects** (2+ subsystems): this root spec stays slim and system-level. Domain-specific content (external deps, testing gaps, known issues, tech debt, domain boundaries) moves to `docs/specs/subsystems/{domain-slug}/spec.md`. See `domain-spec-template.md`.
 
 ## Contents
 
@@ -85,9 +82,7 @@ CI is green.
 
 ## What This Project Does
 
-[2-4 sentences. What the project is, who uses it, and what it accomplishes. No implementation
-details. This grounds every decision — if an AI is unsure about something, this section tells
-it what the project is trying to accomplish.]
+[2-4 sentences. What the project is, who uses it, and what it accomplishes. No implementation details. This grounds every decision — if an AI is unsure about something, this section tells it what the project is trying to accomplish.]
 
 ---
 
@@ -108,8 +103,7 @@ Omit this section entirely for standalone projects with no adjacent service boun
 
 ## Architecture Overview
 
-[High-level description of the major components and how they relate. An ASCII diagram is
-fine for complex systems. Focus on inter-domain data flows, not domain internals.]
+[High-level description of the major components and how they relate. An ASCII diagram is fine for complex systems. Focus on inter-domain data flows, not domain internals.]
 
 ```
 [Client] → [API Gateway] → [Service Layer] → [Database]
@@ -123,8 +117,7 @@ fine for complex systems. Focus on inter-domain data flows, not domain internals
 
 ### Shared External Dependencies
 
-[Dependencies used by 2+ domains or the project as a whole. Domain-specific deps
-go in that domain's spec.md instead.]
+[Dependencies used by 2+ domains or the project as a whole. Domain-specific deps go in that domain's spec.md instead.]
 
 | Dependency | Normal Behavior | Failure Behavior | Constraints / Can't Do |
 |------------|----------------|------------------|------------------------|
@@ -142,8 +135,7 @@ go in that domain's spec.md instead.]
 
 ## Testing Strategy
 
-[Project-wide testing infrastructure only. Domain-specific coverage gaps and
-conventions go in domain specs.]
+[Project-wide testing infrastructure only. Domain-specific coverage gaps and conventions go in domain specs.]
 
 **Framework:** [name and version]
 **Location:** [where test files live relative to source]
@@ -154,9 +146,7 @@ conventions go in domain specs.]
 - **Integration tests**: [how to run them, any setup needed]
 - **E2E tests** (optional): [framework, how to run]
 
-**Coverage summary:** [1-2 lines: which areas are well-tested, which have partial coverage,
-which have no tests. e.g., "Service layer is well-covered; webhook handler has no tests
-and is the highest-risk area; E2E tests cover the happy path only."]
+**Coverage summary:** [1-2 lines: which areas are well-tested, which have partial coverage, which have no tests. e.g., "Service layer is well-covered; webhook handler has no tests and is the highest-risk area; E2E tests cover the happy path only."]
 
 **Testing conventions:**
 - [e.g., "Use real database for integration tests, not mocks"]
@@ -167,18 +157,15 @@ and is the highest-risk area; E2E tests cover the happy path only."]
 
 [How the app gets from code to production.]
 
-**CI/CD:** [e.g., "GitHub Actions — tests run on every PR, deploy to staging on merge to
-`staging`, deploy to production on manual approval after merge to `main`"]
+**CI/CD:** [e.g., "GitHub Actions — tests run on every PR, deploy to staging on merge to `staging`, deploy to production on manual approval after merge to `main`"]
 
 **Environments:**
 - **Production**: [URL, hosting platform, e.g., "AWS ECS behind ALB"]
 - **Staging**: [URL, how it's triggered]
 
-**Infrastructure:** [Key infra components, e.g., "RDS PostgreSQL, ElastiCache Redis,
-S3 for file storage, CloudFront CDN"]
+**Infrastructure:** [Key infra components, e.g., "RDS PostgreSQL, ElastiCache Redis, S3 for file storage, CloudFront CDN"]
 
-**Environment variables:** [How they're managed, e.g., "AWS Secrets Manager — see
-.env.example for the full list of required variables"]
+**Environment variables:** [How they're managed, e.g., "AWS Secrets Manager — see .env.example for the full list of required variables"]
 
 ---
 
@@ -231,33 +218,20 @@ Cross-cutting gotchas only; domain-specific gotchas go in domain specs. -->
 | Spec | Path | Status | Updated | Description |
 |------|------|--------|---------|-------------|
 
-Status values: `Waiting Implementation` | `Implemented` |
-`Superseded` | `Deprecated` | `Needs Revision`.
+Status values: `Waiting Implementation` | `Implemented` | `Superseded` | `Deprecated` | `Needs Revision`.
 
-The `Updated` column tracks the spec lifecycle — it always holds the
-`YYYY-MM-DD` date of the most recent lifecycle event:
-- **Created**: `/specd:create-spec` adds the row as `Waiting Implementation`,
-  `Updated` = creation date.
-- **Updated**: any edit refreshes `Updated`. `/specd:execute-spec` flips
-  status to `Implemented` when verification passes; a spec needing
-  changes before implementation is set to `Needs Revision`.
-- **Deleted**: never remove the row — set status to `Superseded`
-  (replaced by a newer spec) or `Deprecated` (abandoned or feature
-  removed) and refresh `Updated`. Keeping the row preserves the audit
-  trail.
+The `Updated` column tracks the spec lifecycle — it always holds the `YYYY-MM-DD` date of the most recent lifecycle event:
+- **Created**: `/specd:create-spec` adds the row as `Waiting Implementation`, `Updated` = creation date.
+- **Updated**: any edit refreshes `Updated`. `/specd:execute-spec` flips status to `Implemented` when verification passes; a spec needing changes before implementation is set to `Needs Revision`.
+- **Deleted**: never remove the row — set status to `Superseded` (replaced by a newer spec) or `Deprecated` (abandoned or feature removed) and refresh `Updated`. Keeping the row preserves the audit trail.
 
-Subsystem specs contain: domain-specific current state, conventions,
-interface contracts, external deps, testing gaps, boundaries, known
-issues, and gotchas. Loaded via `.claude/rules/` when working in
-that directory. Feature specs are created by `/specd:create-spec` and document
-individual code changes.
+Subsystem specs contain: domain-specific current state, conventions, interface contracts, external deps, testing gaps, boundaries, known issues, and gotchas. Loaded via `.claude/rules/` when working in that directory. Feature specs are created by `/specd:create-spec` and document individual code changes.
 
 ---
 
 ## Known Issues
 
-[Cross-cutting issues only. Domain-specific issues go in domain specs.
-Write "None known." if clean.]
+[Cross-cutting issues only. Domain-specific issues go in domain specs. Write "None known." if clean.]
 
 - **[Issue]**: [description, severity, workaround if any]
 
@@ -267,11 +241,7 @@ Write "None known." if clean.]
 
 [Cross-cutting tech debt only. Domain-specific debt goes in domain specs.]
 
-- [e.g., "No database connection pooling — using a single connection. Acceptable at current
-  load (<100 req/min) but will need addressing before scaling. Ticket: #87."]
+- [e.g., "No database connection pooling — using a single connection. Acceptable at current load (<100 req/min) but will need addressing before scaling. Ticket: #87."]
 ```
 
-> **Target: 60-100 lines for multi-domain projects.** The root spec is a navigation
-> layer, not a knowledge dump. Domain-specific content lives in domain specs.
-> For single-domain projects, include all content in the root spec (no domain
-> specs needed) — target 100-200 lines.
+> **Target: 60-100 lines for multi-domain projects.** The root spec is a navigation layer, not a knowledge dump. Domain-specific content lives in domain specs. For single-domain projects, include all content in the root spec (no domain specs needed) — target 100-200 lines.

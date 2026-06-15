@@ -1,10 +1,7 @@
 ---
 name: onboard
 description: >
-  Use when onboarding a new or existing repository. Creates CLAUDE.md (quick-reference
-  context), spec.md (living project specification), and .claude/rules/ files (spec
-  maintenance and technical domain-scoped context loading). For multi-technical-domain projects, also creates
-  technical domain-scoped spec.md files.
+  Use when onboarding a new or existing repository. Creates CLAUDE.md (quick-reference context), spec.md (living project specification), and .claude/rules/ files (spec maintenance and technical domain-scoped context loading). For multi-technical-domain projects, also creates technical domain-scoped spec.md files.
 disable-model-invocation: true
 argument-hint: "[output-path]"
 model: opus
@@ -29,13 +26,7 @@ effort: high
 
 ---
 
-**Write the prose to be read on one pass.** When you draft the prose in
-these docs — Current State, Architecture overview, Gotchas, Project
-Identity — follow the readable style in `references/writing-style.md` (read
-it when you reach Phase 3 and Phase 4). It shapes sentences only. It
-complements — it does not loosen — the density rules in
-`references/quality-guide.md` and `references/spec-standards.md` (semantic
-density, named lists, exact commands, "Not yet implemented" lists).
+**Write the prose to be read on one pass.** When you draft the prose in these docs — Current State, Architecture overview, Gotchas, Project Identity — follow the readable style in `references/writing-style.md` (read it when you reach Phase 3 and Phase 4). It shapes sentences only. It complements — it does not loosen — the density rules in `references/quality-guide.md` and `references/spec-standards.md` (semantic density, named lists, exact commands, "Not yet implemented" lists).
 
 ## Workflow
 
@@ -80,14 +71,7 @@ The core question is: **if you wrote one spec section covering both areas, would
 - Independent CI jobs or test suites
 - Can fail independently — one area breaking does not break the other
 
-**Structured evaluation:** For each pair of candidate directories,
-answer three questions: (1) Do they share a deployment target?
-(2) Do they communicate through direct imports or through contracts?
-(3) Are they governed by the same constraints? If all three answers
-are shared/direct/same → one domain. If any answer is
-separate/contract/different → likely separate domains. This makes
-the evaluation systematic rather than intuitive — intuitive grouping
-defaults to directory structure, which is the anti-pattern.
+**Structured evaluation:** For each pair of candidate directories, answer three questions: (1) Do they share a deployment target? (2) Do they communicate through direct imports or through contracts? (3) Are they governed by the same constraints? If all three answers are shared/direct/same → one domain. If any answer is separate/contract/different → likely separate domains. This makes the evaluation systematic rather than intuitive — intuitive grouping defaults to directory structure, which is the anti-pattern.
 
 **Consolidation check:** If two candidate directories share the same deployment target, communicate through direct imports, and are governed by the same constraints, they are one technical domain even if they live in separate directories.
 
@@ -124,13 +108,7 @@ Present all mature-codebase questions at once (unlike the new-project interview 
 If the exploration found existing files, ask about each in a single interaction:
 
 - **CLAUDE.md found**: "A CLAUDE.md already exists. Would you like to **(a)** update it to match best-practice format while preserving your content, or **(b)** start fresh?"
-- **spec.md found** (also check `SPEC.md`, `PROJECT-SPEC.md`): Before asking the user, compare the Current State section against what discovery found. If they diverge, show the specific drift:
-  > "spec.md exists but its Current State appears stale:
-  > - Spec says: '[quote from Current State]'
-  > - Code shows: '[what discovery found]'
-  >
-  > Would you like to **(a)** update it (I'll fix the drift and match best-practice
-  > format), or **(b)** start fresh?"
+- **spec.md found** (also check `SPEC.md`, `PROJECT-SPEC.md`): Before asking the user, compare the Current State section against what discovery found. If they diverge, show the specific drift: "spec.md exists but its Current State appears stale: - Spec says: '[quote from Current State]' - Code shows: '[what discovery found]' Would you like to **(a)** update it (I'll fix the drift and match best-practice format), or **(b)** start fresh?"
 
 Then ask: **"This workflow creates both CLAUDE.md and spec.md. If you only need CLAUDE.md, say so now — otherwise we'll proceed with both."**
 
@@ -225,13 +203,7 @@ Before presenting to the user, review the spec.md draft against these checks fro
 
 Fix any issues found. Maximum 2 passes of the checklist above — after that, note remaining findings for the user.
 
-**Decision-gap check (separate from the checklist passes above):** After the checklist passes, step back and
-classify the project: is it greenfield, mature monolith, multi-service
-platform, or internal tool? The risk profile differs — a greenfield
-project's invisible walls are framework limitations and external API
-constraints; a mature monolith's are legacy conventions and
-undocumented side effects. Anchor the questions below to this
-classification.
+**Decision-gap check (separate from the checklist passes above):** After the checklist passes, step back and classify the project: is it greenfield, mature monolith, multi-service platform, or internal tool? The risk profile differs — a greenfield project's invisible walls are framework limitations and external API constraints; a mature monolith's are legacy conventions and undocumented side effects. Anchor the questions below to this classification.
 
 Then ask: *"If I got this wrong, what would break silently, be hard to reverse, or require a production fix?"* Generate exactly one question per category below — only if discovery surfaced a specific candidate. If a category has no candidate, skip it rather than inventing one.
 

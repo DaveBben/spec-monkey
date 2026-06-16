@@ -41,18 +41,13 @@ Precision stays (names, numbers) — unpack across sentences, don't drop detail.
 
 ### Opening
 
-**Branch check.** Run `git rev-parse --abbrev-ref HEAD`. If on `main`/`master`, note that you'll create a spec branch before writing anything to disk in Phase 2 (the slug isn't known yet). If on another branch, proceed — the spec will be written there. Never write spec files or update the Spec Index on main.
+**Branch check.** Run `git rev-parse --abbrev-ref HEAD`. On `main`/`master`, create a spec branch before writing anything to disk in Phase 2. Never write spec files or update the Spec Index on main.
 
-Read `$ARGUMENTS`. Read `CLAUDE.md`, `AGENTS.md` and `spec.md` if they exist.
+Read `$ARGUMENTS`, plus `CLAUDE.md`, `AGENTS.md`, and `spec.md` if they exist.
 
-**Check for existing specs.** If `docs/specs/spec.md` exists, read the Features table in the Spec Index. If the requested change **closely matches an existing spec**, stop and ask the user whether they want to **modify that spec** or **create a new one** — don't decide for them.
+**Check for existing specs.** If `docs/specs/spec.md` exists, read its Features table. If the change **closely matches an existing spec**, ask the user whether to **modify** it or **create new** — don't decide for them. To modify: start from the existing content, focus on what's changing, and update the file in Phase 2 (preserve unchanged sections, bump the "Last updated" date).
 
-- **Modify**: read the existing spec and use its current content as the starting point for the new version. Focus the conversation on what's changing, and update the existing file in Phase 2 (preserving unchanged sections, updating the "Last updated" date).
-- **Create new**: proceed with a fresh spec as normal.
-
-Read along the path the user described. Then reflect back what you found in 2-3 sentences and raise your **top concerns**, grounded in the code. Let the user respond before continuing.
-
-Don't ask what the code can answer. Start with substance.
+Read along the path the user described. Reflect back what you found in 2-3 sentences and raise your **top concerns**, grounded in the code. Let the user respond before continuing. Don't ask what the code can answer.
 
 If the change is trivial, say so:
 
@@ -62,27 +57,27 @@ If the change is trivial, say so:
 
 Probe each dimension when it applies.
 
-**Intent & acceptance** (first; ask what the code can't tell you):
+**Intent & acceptance** (first):
 
-> "What's the intent? The target (precision/recall, a latency budget), the business rule, which goal wins on conflict, who consumes the output? And how will we *know* it's correct: what number, behavior, or threshold separates done from not-done?"
+> "What's the intent — the target, the business rule, which goal wins on conflict, who consumes the output? And how will we *know* it's correct: what number, behavior, or threshold separates done from not-done?"
 
-Pin user-observable behavior as Given/When/Then ("given [state], when [action], then [outcome]") so a test can be written from it directly.
+Pin user-observable behavior as Given/When/Then so a test can be written from it directly.
 
 **Operational readiness** (when the change touches I/O, external services, concurrency, or unbounded data):
 
-> "If this runs for a year against real conditions, what do you wish you'd built in? Implementing agents default to the happy path: unbounded inputs, hanging calls, unscoped thread pools, silent bad data. Which inputs here are unbounded, which calls can hang, and what should happen when they do?"
+> "If this runs for a year against real conditions, what do you wish you'd built in? Which inputs are unbounded, which calls can hang, and what should happen when they do?"
 
-**Trust boundaries** (when the change ingests untrusted data: network responses, fetched/uploaded files, third-party APIs, user input):
+**Trust boundaries** (when the change ingests untrusted data — network responses, fetched/uploaded files, third-party APIs, user input):
 
-> "Where does untrusted data enter, and what boundary does it cross before it's trusted? Name the threat (injection, oversized payload, SSRF/path target, a secret leaking into logs) and what the code must do at that seam. 'Validate the input' isn't an answer: which input, checked against what, and what happens on failure?"
+> "Where does untrusted data enter, and what boundary does it cross before it's trusted? Name the threat (injection, oversized payload, SSRF/path target, leaked secret) and what the code must do at that seam — which input, checked against what, and what happens on failure?"
 
-Pin the resulting security requirements at the `file:line` seam in Constraints, like any other (e.g. "reject non-`https` URLs in `fetch.py` before the request").
+Pin the resulting security requirements at the `file:line` seam in Constraints (e.g. "reject non-`https` URLs in `fetch.py` before the request").
 
-**Implied work** (when a requirement leans on a platform/library capability, an external system, or a scheduled/triggered action):
+**Implied work** (when a requirement leans on a platform/library capability, an external system, or a scheduled action):
 
-> "Does any requirement assume a capability that exists natively — and does it? A scheduled trigger that toggles a resource reads like config, but with no native target that one sentence expands into a new component, its permissions, and its tests. Name the shim now, not mid-build. And where a new behavior overlays an existing one (a schedule meeting a missing-data rule, a flag meeting a wrapper), what's the *combined* behavior, including its boundary and failure case?"
+> "Does any requirement assume a native capability — and does it exist? A scheduled trigger reads like config, but with no native target it expands into a new component, its permissions, and its tests. And where a new behavior overlays an existing one, what's the *combined* behavior, including its boundary and failure case?"
 
-The shim and the composite behavior go in **Things to consider**; the combined outcome that must hold is also pinned in Constraints or Edge cases.
+Put the shim and composite behavior in **Things to consider**; pin the combined outcome in Constraints or Edge cases.
 
 **Scope** (when the change is growing):
 
@@ -90,7 +85,7 @@ The shim and the composite behavior go in **Things to consider**; the combined o
 
 ### Decomposition check
 
-Before moving to Phase 2, size the change. If it would **modify more than 4 files**, span **more than 3 independent concerns**, or run past **~400 lines**, propose splitting it into multiple specs with an explicit ordering (which ships first, what each depends on) and let the user decide.
+Size the change before Phase 2. If it would **modify more than 4 files**, span **more than 3 independent concerns**, or run past **~400 lines**, propose splitting it into multiple specs with explicit ordering and let the user decide.
 
 ---
 

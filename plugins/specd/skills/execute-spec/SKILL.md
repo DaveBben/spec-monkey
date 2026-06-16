@@ -30,11 +30,11 @@ Resolve `$ARGUMENTS` to a spec file:
 3. **No input**: build the menu with a single shell pass — don't read every spec into your context just to filter it. Grep for the waiting status across both spec roots, e.g.:
 
    ```bash
-   grep -lE '(\*\*)?Status(\*\*)?:[[:space:]]*Waiting Implementation' \
+   grep -liE '(\*\*)?status(\*\*)?:[[:space:]]*Waiting Implementation' \
      docs/specs/features/*/spec.md docs/specs/bugs/*/spec.md 2>/dev/null
    ```
 
-   (The pattern matches the status whether it's written as a `**Status**:` body line or a plain frontmatter key, so it doesn't depend on which form the spec uses.) For each match, read only its first line for the title. Present the matches as a numbered menu showing slug and title, then ask the user to choose. If none match, tell the user.
+   (The `-i` makes it case-insensitive, so it matches the YAML front-matter `status:` key and still catches any older bold `**Status**:` body line.) For each match, read the **one-line summary** — the first non-empty line *after* the closing `---` of the front-matter, not the literal first line (which is `---`). Present the matches as a numbered menu showing slug and title, then ask the user to choose. If none match, tell the user.
 
 Read the spec in full. This is your contract.
 
@@ -145,9 +145,9 @@ After verification passes:
 
 1. Run the full test suite (from CLAUDE.md's operational commands) via the test-runner to check for regressions beyond the spec's verification scope. Fix any regressions before finalizing.
 
-2. Update the spec's "Last updated" date if implementation revealed new constraints or edge cases worth recording (or if the compliance review prompted spec amendments).
+2. Update the spec's front-matter `modified` date to today if implementation revealed new constraints or edge cases worth recording (or if the compliance review prompted spec amendments). Also fill in the front-matter `model` field with the model that did this execution. Optionally record `tokens`, `cost`, and `reasoning_effort` if you have them; otherwise leave them blank.
 
-3. Flip the spec's `Status` from `Waiting Implementation` to `Implemented` — both in the spec file's header and in its row in the Spec Index (`docs/specs/spec.md`). Also refresh that row's `Updated` column to today's date (matching the spec file's "Last updated"). If the spec lives under `docs/specs/bugs/`, update the Bugs table; otherwise update the Features table. **If the spec was amended during execution, do not flip to `Implemented` without explicit user confirmation** — present the amendments first (step 4) and wait.
+3. Flip the spec's front-matter `status` from `Waiting Implementation` to `Implemented` — both in the spec file's front-matter and in its row in the Spec Index (`docs/specs/spec.md`). Also refresh that row's `Updated` column to today's date (matching the spec file's `modified`). If the spec lives under `docs/specs/bugs/`, update the Bugs table; otherwise update the Features table. **If the spec was amended during execution, do not flip to `Implemented` without explicit user confirmation** — present the amendments first (step 4) and wait.
 
 4. Present a summary:
    - **Branch**: name and commit count

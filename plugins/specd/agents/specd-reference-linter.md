@@ -24,6 +24,14 @@ You receive the path to a spec file (e.g. `docs/specs/features/{slug}/spec.md`).
 
 Go through the spec and extract every concrete reference, then verify each against the real repo. Use Read/Glob/Grep and `test -f`; read the lockfile/manifest directly.
 
+0. **Front-matter schema** — the spec MUST open with a YAML front-matter block (`---` on line 1, a closing `---`, then the body). Check it mechanically:
+   - The block exists and is well-formed: line 1 is `---`, a matching `---` closes it, and every line between is `key: value` (or a list).
+   - Required keys are present: `status`, `created`, `modified`, `drafter`. MISSING if any is absent or has an empty value.
+   - `status` is one of: `Waiting Implementation`, `Implemented`, `Superseded`, `Deprecated`, `Needs Revision`. Any other value is MISSING (invalid enum).
+   - `created` and `modified` match `YYYY-MM-DD`. A malformed date is MISLOCATED.
+   - `depends_on`, if present, is a list. Each entry SHOULD name a spec that exists (`test -f` the path, or glob `docs/specs/*/{slug}/spec.md`); a dangling dependency is a REVIEW row, not a hard miss.
+   - `model`, `tokens`, `cost`, `reasoning_effort` are optional — blank is fine (they're filled at execute time). Don't flag them empty.
+
 1. **Files that matter** — first read the entry's tag, then check accordingly:
    - **`[modify]` or `[context]`** names code that must already exist — verify it as below.
    - **`[new]`** is something the change creates: confirm it does NOT already exist (a name collision deserves a REVIEW row), then skip the existence checks for it.
@@ -62,6 +70,9 @@ Go through the spec and extract every concrete reference, then verify each again
 
 | Reference (spec claim) | Kind | Status | Detail |
 |---|---|---|---|
+| front-matter: required keys | front-matter | VERIFIED | `status`, `created`, `modified`, `drafter` all present |
+| front-matter: `status` enum | front-matter | MISSING | value `In Progress` not a valid status |
+| `depends_on: auth-rework` | front-matter | REVIEW | no spec found at that slug — may be planned |
 | `[modify] output.py:54` → `append_record` | file/symbol | VERIFIED | found at :54 |
 | `[modify] __main__.py:219` → `_persist` | file/symbol | MISLOCATED | symbol is at :231, not :219 |
 | `[modify] cdk.json` → `monitoring` block | file/symbol | MISSING | tagged `[modify]` but no `monitoring` key exists; should be `[new]` |

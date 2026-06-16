@@ -6,11 +6,30 @@ The spec serves two audiences with one document. Above the "Implementation contr
 
 **Writing style.** The prose sections — Why, Summary, Current behavior, Approach, Things to consider, and the Edge-case descriptions — follow the readable style in `writing-style.md` (this directory): one idea per sentence, actor-first, caveats split into their own sentence, conclusion first. The implementation-contract sections below the divider are exempt — there, identifier density and redundancy are load-bearing, so keep them dense.
 
-```
-{One-line summary of the change}
+**Front-matter.** Every spec opens with a YAML front-matter block (`---` fences) so a deterministic linter can validate it. Fill the fields as follows:
 
-**Status**: Waiting Implementation
-**Last updated**: {YYYY-MM-DD}
+- `status` — lifecycle state. One of: `Waiting Implementation` | `Implemented` | `Superseded` | `Deprecated` | `Needs Revision`. New specs start at `Waiting Implementation`.
+- `created` — `YYYY-MM-DD`, set once when the spec is first written; never changes.
+- `modified` — `YYYY-MM-DD`, refreshed on every edit or status change. Equals `created` at creation. This is the date the Spec Index "Updated" column mirrors.
+- `drafter` — who authored the spec; default to the git identity (`git config user.name`).
+- `model` — the model that *implemented* the spec. Leave blank during curation; `/specd:execute-spec` fills it at finalize. Omit, don't guess.
+- `tokens`, `cost`, `reasoning_effort` — optional execution metadata, also filled (if at all) at execute time. Leave blank during curation.
+- `depends_on` — optional, ordered list of other specs this one needs completed first (slugs or paths). Empty list when none.
+
+```
+---
+status: Waiting Implementation
+created: {YYYY-MM-DD}
+modified: {YYYY-MM-DD}
+drafter: {name}
+model:
+tokens:
+cost:
+reasoning_effort:
+depends_on: []
+---
+
+{One-line summary of the change}
 
 ## Why
 {1-3 sentences on motivation — the problem today, why it's worth

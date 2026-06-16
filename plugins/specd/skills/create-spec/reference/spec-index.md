@@ -20,7 +20,7 @@ New specs use status `Waiting Implementation`:
 
 ## Updated column
 
-The **Updated** column tracks the spec lifecycle — set it to today's date (`YYYY-MM-DD`) on every lifecycle event:
+The **Updated** column mirrors the spec's front-matter `modified` date — set both to today's date (`YYYY-MM-DD`) on every lifecycle event:
 
 - **Creating**: new row, status `Waiting Implementation`, Updated = today.
 - **Updating**: refresh Updated whenever you edit the spec or change its status (e.g. to `Needs Revision`). Update the description too if the scope changed.

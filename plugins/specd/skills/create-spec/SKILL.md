@@ -45,7 +45,7 @@ Precision stays (names, numbers) — unpack across sentences, don't drop detail.
 
 Read `$ARGUMENTS`, plus `CLAUDE.md`, `AGENTS.md`, and `spec.md` if they exist.
 
-**Check for existing specs.** If `docs/specs/spec.md` exists, read its Features table. If the change **closely matches an existing spec**, ask the user whether to **modify** it or **create new** — don't decide for them. To modify: start from the existing content, focus on what's changing, and update the file in Phase 2 (preserve unchanged sections, bump the "Last updated" date).
+**Check for existing specs.** If `docs/specs/spec.md` exists, read its Features table. If the change **closely matches an existing spec**, ask the user whether to **modify** it or **create new** — don't decide for them. To modify: start from the existing content, focus on what's changing, and update the file in Phase 2 (preserve unchanged sections, bump `modified` in the front-matter to today).
 
 Read along the path the user described. Reflect back what you found in 2-3 sentences and raise your **top concerns**, grounded in the code. Let the user respond before continuing. Don't ask what the code can answer.
 
@@ -116,7 +116,7 @@ Dispatch steps 2–4 to `specd-spec-investigator` (`subagent_type: "specd-spec-i
 
 Check the branch. If on `main`/`master`, create and switch to `spec/{slug}`. If on another branch, confirm with the user. Never write spec files on main.
 
-Write the draft to `docs/specs/features/{slug}/spec.md` following `reference/spec-template.md` and `reference/writing-style.md` (read both if you haven't this session).
+Write the draft to `docs/specs/features/{slug}/spec.md` following `reference/spec-template.md` and `reference/writing-style.md` (read both if you haven't this session). Populate the YAML front-matter: `status: Waiting Implementation`; `created` and `modified` both set to today; `drafter` from `git config user.name`; `depends_on: []` (or the ordered specs this one needs first). Leave `model`, `tokens`, `cost`, and `reasoning_effort` blank — `/specd:execute-spec` fills those at finalize.
 
 Run `specd-reference-linter` (`subagent_type: "specd-reference-linter"`) on the spec. Fix every MISSING/MISLOCATED reference before proceeding.
 
@@ -136,7 +136,7 @@ When the user resolves an assumption, update the section. When they accept one, 
 
 For changes: minor edits (wording, typos, one bullet) — apply and re-present. Substantial edits (scope shift, new constraints, approach change) — re-run the reviewer, fix findings, re-present. Loop until the user explicitly approves.
 
-Update the Spec Index in `docs/specs/spec.md` with status `Waiting Implementation`. Follow `reference/spec-index.md` for row format.
+Update the Spec Index in `docs/specs/spec.md` with status `Waiting Implementation`. Follow `reference/spec-index.md` for row format. The Index "Updated" column mirrors the spec's front-matter `modified` date.
 
 Tell the user:
 

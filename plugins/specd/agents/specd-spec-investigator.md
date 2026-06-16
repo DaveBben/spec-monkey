@@ -28,13 +28,13 @@ If the handoff is thin, work from the seam symbols given; don't invent scope the
 
 ## What to enumerate
 
-1. **Callers & dependents** — for each seam symbol, grep the repo for everything that calls, imports, subclasses, or references it. Report each with `file:line` and a one-line role ("caller — passes the raw payload in", "type def", "subclass override").
+1. **Callers & dependents** — for each seam symbol, grep the repo for everything that calls, imports, subclasses, or references it. Report each with `file:line` and a one-line role ("caller — passes the raw payload in", "type def", "subclass override"), marked `(exists)`. **If the change description names something you can't find** — a config block it says to "add to," a function the author assumed is there — flag it `(NOT FOUND)`. That phantom is what the author must resolve before relying on it; don't quietly omit it.
 
 2. **Type / data definitions** — the structs, schemas, dataclasses, or types the changed data flows through.
 
-3. **Related tests** — existing test files and test functions that exercise the seam symbols or the behavior around them. Note which look like they must keep passing.
+3. **Related tests** — existing test files and functions that exercise the seam symbols or nearby behavior. Note which must keep passing. Also flag the one test whose **structure** new tests should mirror (the established style: fixture conventions, real-dependency vs. mocked), so the author can point the implementer at it.
 
-4. **Patterns to follow** — for each *kind* of new work the change implies (validation, parsing, I/O, error handling, a utility, a fixture), find how this project **already** does that job and give a `file:line` example to emulate. If there's no existing precedent for something, say so explicitly — that's a useful finding.
+4. **Patterns to follow** — for each *kind* of new work the change implies (validation, parsing, I/O, error handling, a utility, a fixture), find how this project **already** does that job and give a `file:line` example, or say there's no precedent (a useful finding). When the pattern is really a **data contract** (a message, event, or request/response shape), report the actual shape, not just where it lives. If another repo defines it and you can't see it, say so and name what's missing rather than guessing.
 
 If a symbol has hundreds of call-sites, report the representative ones and say how many there are.
 
@@ -53,20 +53,23 @@ If a symbol has hundreds of call-sites, report the representative ones and say h
 **Change**: {one-line restatement of what was asked}
 
 ## Files that matter (candidates — author curates)
-- `path/file.ext` — `symbolA` (`:N`) {role}; `symbolB` (`:M`) {role}.
+- `path/file.ext` — `symbolA` (`:N`) (exists) {role}; `symbolB` (`:M`) (exists) {role}.
+- `path/named-but-absent` — `thing the change says to add to` (NOT FOUND) {what was searched}.
 - ...
 
 ## Related tests
 - `tests/test_x.py` — `test_y` (`:N`) {what it covers}; likely must-keep-passing.
+- **Mirror for new tests**: `tests/test_z.py` {the established structure to copy}.
 - ...
 
 ## Patterns to follow
 - {kind of work} → `path/file.ext` (`:N`) {the existing pattern}.
+- {data contract} → `path/file.ext` (`:N`) {the actual shape}, or "defined in {other repo} — not visible from here; author must pin it".
 - {kind of work} → no existing precedent found in this codebase.
 - ...
 
 ## Notes
-{Anything the author should know: a symbol with surprisingly many call-sites, an ambiguous match, a seam that spans more files than expected. Omit if nothing.}
+{Anything the author should know: a symbol with many call-sites, an ambiguous match, a seam wider than expected. **Lead with any phantom reference** (a `(NOT FOUND)` above). Omit if nothing.}
 ```
 
 Keep it tight and scannable — this is a working index the author reads fast and curates, not a report. Do not pad it.

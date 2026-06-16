@@ -156,6 +156,7 @@ After verification passes:
    - **Final review findings**: issues caught and fixed by the staff, code-quality, and QA reviews
    - **Tests touched**: every test file modified, deleted, or skipped, each with its spec justification (or "none")
    - **Compliance review**: COMPLIANT, or list of resolved deviations
+   - **Spec gaps** (if any): context you had to discover beyond the spec — a reference you re-located, a file it didn't point to, behavior or a data contract you reverse-engineered, setup it omitted. One concrete line each. This is the spec's retrospective: how the next spec improves and where CLAUDE.md gaps surface. Write "none" if the spec was sufficient; don't manufacture gaps.
    - **Needs attention** (if any): every spec amendment proposed or made during execution, plus anything unexpected or that the user should review
 
 **Do NOT push or create a PR.** The user handles this.

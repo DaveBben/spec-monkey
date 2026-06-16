@@ -24,7 +24,7 @@ Read it in full. If the file does not exist or is not a spec file, report the er
 
 ## The Checks
 
-Work them in order, one at a time: complete each before starting the next, and while you're in one check ignore issues that belong to another. Checks 6, 8, 9, and 11 need you to open the cited code (Read/Grep); the rest judge the spec text alone.
+Work them in order, one at a time: complete each before starting the next, and while you're in one check ignore issues that belong to another. Checks 6, 8, 9, 11, and 12 need you to open the cited code (Read/Grep); the rest judge the spec text alone.
 
 As you go, **record FAIL candidates** (the section, the quoted text, and the fix) without finalizing them. Every candidate faces the Verification pass before it reaches the report. Report each check as PASS or FAIL with specifics.
 
@@ -46,6 +46,7 @@ Contradictions force the agent to resolve ambiguity, and it may resolve it wrong
 - **Constraints vs Edge cases**: does an edge case require violating a constraint, or touch something a constraint puts out of scope?
 - **Files that matter vs Constraints**: is a file listed as needing changes also marked out of scope by a constraint?
 - **Approach vs Files that matter**: flag only a file the Approach *names* that's missing from Files that matter (or forbidden by a constraint). The Approach is intentionally general; absence of file references is not a contradiction.
+- **Verification criterion vs verification criterion (and mandated tooling)**: do two criteria collide once mechanized — e.g. a hygiene grep, linter, or check the spec mandates scans the very test code another criterion's assertion must contain ("a grep for a token returns nothing" vs. "assert that token is absent," whose test names it). Reason about what a mandated tool actually scans; this is invisible while both criteria are prose.
 
 **FAIL if any contradiction found.** Quote both statements.
 
@@ -146,13 +147,28 @@ Security at spec-time is a *constraint*, not an afterthought. Silence at the spe
 
 **FAIL if a spec that ingests untrusted data names no security constraint**, or names only a generic "validate the input" without "which input, checked against what, what happens when the check fails." Say which boundary is unguarded. Don't invent threats for a change with no untrusted surface.
 
+### 12. Interaction Completeness
+
+Nothing in a change runs in isolation; it composes with what exists, and the *composite* is what ships. The expensive misses hide here, on both the production and the verification side. The author usually reasoned about the interaction; the reasoning often never reaches the spec, so neither does the failure mode.
+
+**Production overlays.** A new behavior, setting, schedule, or flag laid over an existing default, schedule, wrapper, retry policy, or gate. A weekend-gated alarm over a "treat missing data as breaching" rule is a weekend pager storm no single line describes.
+- Identify each overlay; use Read/Grep to confirm the existing behavior works the way the composition assumes.
+- The spec must state the **combined** behavior somewhere (Edge cases, Things to consider, Constraints), with its boundary and failure case — not just the new piece alone.
+
+**Verification seams.** A criterion's truth depends on a *mechanism* — a test double, an existing helper, a mandated tool — whose limits the property alone hides.
+- A criterion the obvious test double can't express (an interrupt/cancellation signal a mock can't inject because it only raises ordinary errors).
+- A "reuse helper X" criterion where X's design doesn't cover the new behavior (a sequential-call mock vs. concurrent ones).
+- These are stated as properties with the realizing mechanism left unstated, and that gap is where the implementer round-trips. (Criteria that collide *with each other* belong to check 2.)
+
+**FAIL only on a grounded gap:** for a production overlay, quote the new behavior, cite the existing behavior in code (`file:line`), and name the unstated composite. For a verification seam, quote the criterion and name the mechanism limit it ignores (the library rule, the helper's design). Don't flag a piece that genuinely composes with nothing, and never manufacture an interaction the code doesn't support.
+
 ## Verification (mandatory, never skip)
 
 Re-check every FAIL candidate before it reaches the report:
 
 1. Open the spec section you flagged. Is the text you quoted actually there, and does it still say what your finding claims?
 2. Contradiction candidates: do the two statements truly conflict, or can both hold under a reading you missed?
-3. Grounded candidates (Checks 6, 8, 9, 11): does the cited code actually show what the finding claims? Check 9 in particular requires a `file:line` you traced.
+3. Grounded candidates (Checks 6, 8, 9, 11, 12): does the cited code actually show what the finding claims? Checks 9 and 12 in particular require a `file:line` you traced.
 4. Is the FAIL something the implementing agent would act on wrongly, or a stylistic preference dressed up as a defect?
 
 Drop candidates that fail. **False positives erode trust faster than false negatives**: a lean review the author acts on beats a noisy one they dismiss. Don't manufacture findings to fill the table.
@@ -165,7 +181,7 @@ Return a structured report:
 ## Spec Review Results
 
 **File**: {spec path}
-**Overall**: {PASS | X of 11 checks failed}
+**Overall**: {PASS | X of 12 checks failed}
 
 ### Results
 
@@ -182,6 +198,7 @@ Return a structured report:
 | 9 | Premise & mental-model grounding | PASS/FAIL | {discrepancy vs code, or grounded} |
 | 10 | Designed-in fragility | PASS/FAIL | {specified fail-soft, or none} |
 | 11 | Missing security constraint | PASS/FAIL | {unguarded boundary, or constrained/exempt} |
+| 12 | Interaction completeness | PASS/FAIL | {unstated composite (production) or unstated mechanism at a verification seam, or complete/exempt} |
 
 ### Fixes Required
 

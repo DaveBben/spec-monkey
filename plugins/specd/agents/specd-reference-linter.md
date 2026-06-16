@@ -24,10 +24,16 @@ You receive the path to a spec file (e.g. `docs/specs/features/{slug}/spec.md`).
 
 Go through the spec and extract every concrete reference, then verify each against the real repo. Use Read/Glob/Grep and `test -f`; read the lockfile/manifest directly.
 
-1. **Files that matter** — for each entry:
+1. **Files that matter** — first read the entry's tag, then check accordingly:
+   - **`[modify]` or `[context]`** names code that must already exist — verify it as below.
+   - **`[new]`** is something the change creates: confirm it does NOT already exist (a name collision deserves a REVIEW row), then skip the existence checks for it.
+   - **Untagged**: verify it as if `[modify]`, and note the missing tag in Detail.
+
+   For each entry that must exist:
    - The file exists at the given path (`test -f` or Glob).
    - Each named symbol (`symbolA (:N)`, `module docstring (:start-end)`, etc.) actually appears in that file — grep for it.
    - The cited line / range plausibly contains that symbol (read those lines and confirm the symbol is there). Exact line drift of a few lines is a MISLOCATED note, not a hard miss; a symbol absent from the file entirely is MISSING.
+   - A `[modify]` whose file or symbol is absent is MISSING — the "add to a block that isn't there" case the tag exists to catch.
 
 2. **Current behavior** — any `file:line` citation in the prose: the file exists and the cited line contains what the spec names.
 
@@ -56,8 +62,10 @@ Go through the spec and extract every concrete reference, then verify each again
 
 | Reference (spec claim) | Kind | Status | Detail |
 |---|---|---|---|
-| `output.py:54` → `append_record` | file/symbol | VERIFIED | found at :54 |
-| `__main__.py:219` → `_persist` | file/symbol | MISLOCATED | symbol is at :231, not :219 |
+| `[modify] output.py:54` → `append_record` | file/symbol | VERIFIED | found at :54 |
+| `[modify] __main__.py:219` → `_persist` | file/symbol | MISLOCATED | symbol is at :231, not :219 |
+| `[modify] cdk.json` → `monitoring` block | file/symbol | MISSING | tagged `[modify]` but no `monitoring` key exists; should be `[new]` |
+| `[new] alarm_toggler/handler.py` | file/symbol | NEW (skipped) | does not exist yet, as expected; no collision |
 | `fastjsonschema` | dependency | MISSING | not in uv.lock; project pins `jsonschema` |
 | `tests/test_x.py::test_y` | existing test | MISSING | file exists, no `test_y` in it |
 | `tests/test_z.py` | test | REVIEW | spec may intend to add this — can't tell |

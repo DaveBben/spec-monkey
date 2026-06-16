@@ -78,6 +78,12 @@ Pin user-observable behavior as Given/When/Then ("given [state], when [action], 
 
 Pin the resulting security requirements at the `file:line` seam in Constraints, like any other (e.g. "reject non-`https` URLs in `fetch.py` before the request").
 
+**Implied work** (when a requirement leans on a platform/library capability, an external system, or a scheduled/triggered action):
+
+> "Does any requirement assume a capability that exists natively — and does it? A scheduled trigger that toggles a resource reads like config, but with no native target that one sentence expands into a new component, its permissions, and its tests. Name the shim now, not mid-build. And where a new behavior overlays an existing one (a schedule meeting a missing-data rule, a flag meeting a wrapper), what's the *combined* behavior, including its boundary and failure case?"
+
+The shim and the composite behavior go in **Things to consider**; the combined outcome that must hold is also pinned in Constraints or Edge cases.
+
 **Scope** (when the change is growing):
 
 > "What's explicitly NOT part of this change?"
@@ -105,10 +111,10 @@ The approach, constraints, and alternatives you write must respect these princip
 Dispatch steps 2–4 to `specd-spec-investigator` (`subagent_type: "specd-spec-investigator"`) with the change description and relevant symbols. Write steps 1 and 5 yourself — they require your full mental model.
 
 1. **Current behavior**: plain prose a newcomer can follow. Use `file:line` sparingly.
-2. **Files that matter**: every symbol the change touches — callers, type definitions, related tests. Target 6–10 files.
-3. **Patterns to follow**: for anything new, name the existing pattern with a `file:line` example. Note if there's no precedent.
-4. **Tests**: existing tests that must keep passing, plus new tests for Phase 1 edge cases. Use real fixtures over mocks. Call for property-based tests (e.g. Hypothesis) for invariants or bounds.
-5. **Verification command**: the exact command, then a checklist — Given/When/Then for user-facing behavior, plain bullets otherwise. Include at least one error-path bullet for I/O or untrusted input.
+2. **Files that matter**: every symbol the change touches — callers, type definitions, related tests. Target 6–10 files. Tag each `[modify]`/`[context]`/`[new]` (see the template); a thing you "add to" must exist or it's `[new]`. The investigator flags references it can't locate — resolve any phantom before tagging.
+3. **Patterns to follow**: for anything new, name the existing pattern with a `file:line` example, or note there's no precedent. When the "pattern" is really a data contract (a message, event, or request/response shape), pin the actual shape — paste it or link the producer/consumer — not just its name. If another repo owns it, say so and cite the source.
+4. **Tests**: existing tests that must keep passing, plus new tests for Phase 1 edge cases. Name the test file whose structure new tests should mirror, so the implementer copies it instead of guessing. Use real fixtures over mocks. Call for property-based tests for invariants or bounds.
+5. **Verification command**: the exact setup-and-run sequence — any dependency install with the extras the tests need, service start, or env step, then the command — then a checklist: Given/When/Then for user-facing behavior, plain bullets otherwise. Include at least one error-path bullet for I/O or untrusted input. At any verification *seam* — a criterion the obvious test mechanism can't express, a "reuse helper X" where X doesn't fit the new shape, or two criteria that collide once mechanized — name the mechanism, not just the property (see the template).
 6. **Optional domain sections**: add structured artifacts (schema definitions, state tables, migration plans) between "Current behavior" and "Alternatives rejected" if they aid review.
 
 ### Review and confirm

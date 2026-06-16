@@ -64,7 +64,7 @@ It returns a compact digest and only runs and reports. **You** judge which failu
 
 ## Implementation
 
-Read the spec's Approach, Constraints, Edge cases, and Do NOT sections. These are your boundaries.
+Read the spec's Approach, Constraints, and Edge cases sections. These are your boundaries.
 
 ### Principles
 
@@ -82,7 +82,7 @@ Read the spec's Approach, Constraints, Edge cases, and Do NOT sections. These ar
 
 Read each file in "Files that matter" before modifying it. Understand what's there before changing it.
 
-Implement the changes described in the spec. Use the "Current behavior" section to find the starting point. Use "Constraints" and "Edge cases" to guide the implementation. Use "Do NOT" to stay in scope. Follow the "Approach". If you encounter a blocker the approach didn't anticipate, stop and report rather than silently switching to a different approach.
+Implement the changes described in the spec. Use the "Current behavior" section to find the starting point. Use "Constraints" and "Edge cases" to guide the implementation and stay in scope. Follow the "Approach". If you encounter a blocker the approach didn't anticipate, stop and report rather than silently switching to a different approach.
 
 If the "Alternatives rejected" section lists an approach, do not use that approach, it was explicitly rejected during planning.
 
@@ -117,7 +117,7 @@ If verification fails after five fix attempts, **or you find yourself re-applyin
 
 ## Final Review
 
-**First, re-read the spec's Constraints, Edge cases, and Do NOT sections.** This command runs long (implementation, four reviewers, up to three fix-and-re-review rounds), exactly the session length where context compaction silently drops constraints. Re-anchor on the contract rather than trust a compaction summary to have preserved it.
+**First, re-read the spec's Constraints and Edge cases sections.** This command runs long (implementation, four reviewers, up to three fix-and-re-review rounds), exactly the session length where context compaction silently drops constraints. Re-anchor on the contract rather than trust a compaction summary to have preserved it.
 
 Then launch four review agents **in parallel** (one message, four Agent calls). Don't self-review; models fail to correct their own errors.
 

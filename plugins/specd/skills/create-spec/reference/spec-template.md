@@ -2,7 +2,7 @@
 
 Read this when producing the spec in Phase 2. The implementing agent (`/specd:execute-spec`) consumes the result, so fill every section with the precision described in the placeholders.
 
-The spec serves two audiences with one document. Above the "Implementation contract" divider: motivation, summary, current state, alternatives, edge cases, the assumptions the change rests on, and the Approach — everything a human reviewer needs to understand and approve *how* the change will be made. The Approach is the hinge: prose strategy the reviewer signs off on and the direction the implementer then executes. Below the divider: the binding contract that pins that strategy to specifics — Constraints, Do NOT, Files, and Verification, deliberately redundant with each other.
+The spec serves two audiences with one document. Above the "Implementation contract" divider: motivation, summary, current state, alternatives, edge cases, the assumptions the change rests on, and the Approach — everything a human reviewer needs to understand and approve *how* the change will be made. The Approach is the hinge: prose strategy the reviewer signs off on and the direction the implementer then executes. Below the divider: the binding contract that pins that strategy to specifics — Constraints, Files, and Verification, deliberately redundant with each other.
 
 **Writing style.** The prose sections — Why, Summary, Current behavior, Approach, Things to consider, and the Edge-case descriptions — follow the readable style in `writing-style.md` (this directory): one idea per sentence, actor-first, caveats split into their own sentence, conclusion first. The implementation-contract sections below the divider are exempt — there, identifier density and redundancy are load-bearing, so keep them dense.
 
@@ -124,16 +124,18 @@ should flag it rather than silently switching approaches.}
 ## Implementation contract
 
 > The sections below are written for the implementing agent. They take
-> the Approach above and pin it to specifics: Constraints, Do NOT, and
-> Files that matter are bullet-dense, identifier-rich, and deliberately
-> redundant with each other.
+> the Approach above and pin it to specifics: Constraints and Files that
+> matter are bullet-dense, identifier-rich, and deliberately redundant
+> with each other.
 
 ## Constraints
 {Bulleted. Specific numbers, not vague qualifiers. Each testable.
-Deliberately overlaps Do NOT and Files that matter — redundancy is
-a feature in the implementation contract, not noise. Where the change
-touches unbounded data, calls that can hang, concurrency, or untrusted
-input, pin the decision as a named seam — "stream the download in
+Deliberately overlaps Files that matter — redundancy is a feature in
+the implementation contract, not noise. Scope boundaries live here too:
+state as a constraint any file, function, or behavior that must NOT
+change ("don't touch the existing `parse_row` signature"). Where the
+change touches unbounded data, calls that can hang, concurrency, or
+untrusted input, pin the decision as a named seam — "stream the download in
 `fetch.py`, never buffer the whole body"; "5s timeout on the X call,
 raise on timeout"; "reuse `FooValidator`, don't hand-roll validation"
 — never a generic "be robust" (the reviewer will flag that as a vague
@@ -141,10 +143,6 @@ constraint). If a constraint rests on an assumption the user
 consciously accepted rather than verified, record it as `ASSUMPTION
 (accepted by {who}): {claim}; if false, {what changes}` so the deferred
 ambiguity is visible, not silent.}
-
-## Do NOT
-{Bulleted. Explicit scope boundaries. Name specific files,
-functions, or behaviors that must NOT change.}
 
 ## Files that matter
 {Index — see Approach for what changes in each. Line numbers anchor

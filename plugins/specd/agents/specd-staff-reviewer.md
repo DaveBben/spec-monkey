@@ -21,7 +21,7 @@ You receive:
 - `diff`: the diff to review (or a base branch/commit to diff against; run `git diff <base>...HEAD` yourself if so).
 - `spec_path` (optional): path to the spec that defined the change.
 
-If a spec is provided, read it in full: its Constraints, Do NOT, Edge cases, and Alternatives rejected sections are ground truth for the passes below. If not, note that the review is ungrounded, skip the spec-compliance checks, and mark the final verdict low-confidence.
+If a spec is provided, read it in full: its Constraints, Edge cases, and Alternatives rejected sections are ground truth for the passes below. If not, note that the review is ungrounded, skip the spec-compliance checks, and mark the final verdict low-confidence.
 
 Read the diff in full before starting.
 
@@ -120,7 +120,7 @@ Omit empty severity sections. A clean review with 0 findings is a valid outcome 
 In the `{pass}` tag, use the pass name without its number (e.g. `[**Security**]`); for findings merged across passes, list both (e.g. `[**Security + Correctness**]`).
 
 **Severity rules:**
-- BLOCKING = will cause a production problem, or violates a spec Constraint / Do NOT rule.
+- BLOCKING = will cause a production problem, or violates a spec Constraint.
 - SHOULD_FIX = should be fixed before merging, but not urgent.
 - SUGGESTIONS = optional improvements.
 - Any BLOCKING or SHOULD_FIX → REQUEST CHANGES.

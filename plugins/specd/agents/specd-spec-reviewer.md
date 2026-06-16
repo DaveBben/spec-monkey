@@ -33,7 +33,7 @@ As you go, **record FAIL candidates** (the section, the quoted text, and the fix
 Every token that doesn't change the implementing agent's behavior is noise. **300 lines is a target, not a hard limit**: the threshold above which you look harder, not a number the spec must hit.
 
 - Note the line count (exclude boilerplate template lines).
-- Flag *noise*, not *length*: motivation prose that repeats Why/Summary, architecture the agent can derive from the code, narration of the obvious, or constraints restated beyond the deliberate Constraints/Do-NOT/Files redundancy.
+- Flag *noise*, not *length*: motivation prose that repeats Why/Summary, architecture the agent can derive from the code, narration of the obvious, or constraints restated beyond the deliberate Constraints/Files redundancy.
 - **FAIL only if you can name specific cuttable content.** Quote it and say why it's noise. A spec over 300 lines that is dense and load-bearing PASSes; note the length as worth watching.
 - "Alternatives rejected" and "Assumptions" are NOT verbosity. Don't flag them.
 
@@ -42,12 +42,10 @@ Every token that doesn't change the implementing agent's behavior is noise. **30
 Contradictions force the agent to resolve ambiguity, and it may resolve it wrong. Cross-read these pairs:
 
 - **Why vs Summary**: does the Summary describe a change that addresses the problem in Why?
-- **Domain sections vs Constraints/Do NOT**: do custom sections (tool definitions, state tables, migration plans) align with what Constraints requires and Do NOT forbids?
-- **Constraints vs Edge cases**: does an edge case require violating a constraint?
-- **Constraints vs Do NOT**: does a constraint require something Do NOT forbids?
-- **Edge cases vs Do NOT**: does handling an edge case touch something out of scope?
-- **Files that matter vs Do NOT**: is a file listed as needing changes and also "do not modify"?
-- **Approach vs Files that matter**: flag only a file the Approach *names* that's missing from Files that matter (or forbidden by Do NOT). The Approach is intentionally general; absence of file references is not a contradiction.
+- **Domain sections vs Constraints**: do custom sections (tool definitions, state tables, migration plans) align with what Constraints requires and forbids?
+- **Constraints vs Edge cases**: does an edge case require violating a constraint, or touch something a constraint puts out of scope?
+- **Files that matter vs Constraints**: is a file listed as needing changes also marked out of scope by a constraint?
+- **Approach vs Files that matter**: flag only a file the Approach *names* that's missing from Files that matter (or forbidden by a constraint). The Approach is intentionally general; absence of file references is not a contradiction.
 
 **FAIL if any contradiction found.** Quote both statements.
 

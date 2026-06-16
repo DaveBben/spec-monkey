@@ -15,7 +15,7 @@ This is measured, not stylistic. Readability tracks the cognitive load a reader 
 - **Conclusion first, then support.** The first sentence states the result. The rest explains it. A reader who stops after sentence one still has the answer.
 - **Concrete, familiar words.** Plain words decode automatically and free capacity for meaning. Keep a genuinely load-bearing term — a real API name, a number, a constraint — and define it once on first use.
 - **Tighten.** Omit needless words. Put the word that carries the point at the end of the sentence, where it lands and is remembered.
-- **Put it in positive form.** Say what is, not what isn't. "The parser rejects empty rows," not "the parser does not accept rows that aren't populated." A negation makes the reader compute "not X" and hold it; the positive form lands directly. The contract's Do NOT section is the deliberate exception — prohibitions belong there.
+- **Put it in positive form.** Say what is, not what isn't. "The parser rejects empty rows," not "the parser does not accept rows that aren't populated." A negation makes the reader compute "not X" and hold it; the positive form lands directly. A scope-boundary constraint is the deliberate exception — a prohibition (what must NOT change) belongs in the contract's Constraints, stated plainly.
 
 ## Level 2 — across sentences (don't make the reader look backward)
 
@@ -35,7 +35,7 @@ This is measured, not stylistic. Readability tracks the cognitive load a reader 
 
 ## What this does NOT touch
 
-The implementation contract — Constraints, Do NOT, Files that matter, Verification — stays dense, identifier-rich, and deliberately redundant. There, packing identifiers and numbers is load-bearing; readability is for the prose. Keep all the precision everywhere (names, numbers, `file:line`). This is about sentence *shape* and page *layout*, never about dropping detail.
+The implementation contract — Constraints, Files that matter, Verification — stays dense, identifier-rich, and deliberately redundant. There, packing identifiers and numbers is load-bearing; readability is for the prose. Keep all the precision everywhere (names, numbers, `file:line`). This is about sentence *shape* and page *layout*, never about dropping detail.
 
 ## The "if wrong → what changes" pattern
 

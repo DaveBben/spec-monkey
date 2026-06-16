@@ -149,4 +149,4 @@ Tell the user:
 
 ## Spec template
 
-The full template lives in `reference/spec-template.md`. Below the "Implementation contract" divider, Constraints, Do NOT, Files that matter, and Verification are deliberately redundant: a constraint repeated across them survives context compaction during a long implementation. Keep that redundancy; defend it if a reviewer flags it as bloat.
+The full template lives in `reference/spec-template.md`. Below the "Implementation contract" divider, Constraints, Files that matter, and Verification are deliberately redundant: a constraint repeated across them survives context compaction during a long implementation. Keep that redundancy; defend it if a reviewer flags it as bloat.

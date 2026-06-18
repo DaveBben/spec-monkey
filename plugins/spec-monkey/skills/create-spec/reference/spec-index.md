@@ -2,17 +2,17 @@
 
 Read this at the end of Phase 2, when updating the Spec Index (`docs/specs/spec.md`) after the user approves a feature. Add or update the entry in the **Features** table.
 
-A feature is one row, **not** one row per slice. The row points at the feature's `index.md`, and its status is the **rollup** computed across the feature's slices (see `reference/index-template.md`). Slice-level status lives inside `index.md`, never in the Spec Index.
+A feature is one row, **not** one row per slice. The row points at the feature's `_index.md`, and its status is the **rollup** computed across the feature's slices (see `reference/index-template.md`). Slice-level status lives inside `_index.md`, never in the Spec Index.
 
 ## Row format
 
-One row per feature, pointing at `index.md`:
+One row per feature, pointing at `_index.md`:
 
 ```markdown
-| {Feature title} | `docs/specs/features/{slug}/index.md` | {rollup status} | {YYYY-MM-DD} | {one-line description} |
+| {Feature title} | `docs/specs/features/{slug}/_index.md` | {rollup status} | {YYYY-MM-DD} | {one-line description} |
 ```
 
-The Status column mirrors `index.md`'s front-matter `status` verbatim — one of these three rollup forms:
+The Status column mirrors `_index.md`'s front-matter `status` verbatim — one of these three rollup forms:
 
 - `Waiting Implementation` — no slice implemented yet.
 - `In Progress — {k}/{N} slices implemented` — some, not all.
@@ -31,7 +31,7 @@ The Status column mirrors `index.md`'s front-matter `status` verbatim — one of
 
 ## Updated column
 
-The **Updated** column mirrors `index.md`'s front-matter `modified` date — set both to today's date (`YYYY-MM-DD`) on every lifecycle event:
+The **Updated** column mirrors `_index.md`'s front-matter `modified` date — set both to today's date (`YYYY-MM-DD`) on every lifecycle event:
 
 - **Creating**: new row, status `Waiting Implementation`, Updated = today. Added by `/spec-monkey:create-spec`.
 - **Updating**: `/spec-monkey:execute-spec` refreshes the rollup Status and Updated each time a slice finalizes. Adding or editing a slice in `/spec-monkey:create-spec` also bumps Updated. Update the description too if the feature scope changed.

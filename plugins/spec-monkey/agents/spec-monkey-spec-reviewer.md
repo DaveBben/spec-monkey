@@ -18,7 +18,7 @@ You review a spec file for known failure modes.
 
 ## Input
 
-You receive the path to a single **slice** spec file (e.g., `docs/specs/features/{slug}/{slice}.md`). A feature is sliced; you review ONE slice. The folder's `index.md` is **out of scope** here — the reference linter validates it and create-spec reviews it editorially.
+You receive the path to a single **slice** spec file (e.g., `docs/specs/features/{slug}/{slice}.md`). A feature is sliced; you review ONE slice. The folder's `_index.md` is **out of scope** here — the reference linter validates it and create-spec reviews it editorially.
 
 Read it in full. If the file does not exist or is not a spec file, report the error and stop. Do not attempt to review non-spec content.
 

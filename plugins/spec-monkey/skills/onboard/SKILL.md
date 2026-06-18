@@ -234,7 +234,7 @@ Each question must reference the specific file, pattern, or discovery that promp
 |---------|------|--------|---------|-------------|
 ```
 
-This index is the discovery mechanism for all specs in the project. The `/spec-monkey:create-spec` skill reads this table to find related features and appends one rollup row per feature when creating one — the Path points at the feature's `index.md`, and the Status rolls up across that feature's slices.
+This index is the discovery mechanism for all specs in the project. The `/spec-monkey:create-spec` skill reads this table to find related features and appends one rollup row per feature when creating one — the Path points at the feature's `_index.md`, and the Status rolls up across that feature's slices.
 
 ### Phase 7: Review with User
 

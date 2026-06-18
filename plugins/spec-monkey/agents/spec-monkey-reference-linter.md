@@ -22,24 +22,25 @@ You are an accelerator, not a gate: a full reviewer runs after you and re-checks
 
 You receive the path to a file inside a feature folder (`docs/specs/features/{slug}/`). Read it in full. If it doesn't exist, report that and stop. **Switch checks by filename:**
 
-- **`index.md`** — the feature overview. Run the **index-file checks** (section I below), not the slice checks.
+- **`_index.md`** — the feature overview. Run the **index-file checks** (section I below), not the slice checks.
 - **Any other `{slice}.md`** — a slice spec. Run the **slice checks** (sections 0–4 below).
 
-A feature is sliced: the folder holds an `index.md` plus one complete `{slice}.md` per slice. A slice spec is a normal spec file; `index.md` is the ordering map.
+A feature is sliced: the folder holds an `_index.md` plus one complete `{slice}.md` per slice. A slice spec is a normal spec file; `_index.md` is the ordering map.
 
 ## Slice checks
 
 Run these on a `{slice}.md` file. Go through the slice and extract every concrete reference, then verify each against the real repo. Use Read/Glob/Grep and `test -f`; read the lockfile/manifest directly.
 
 0. **Front-matter schema** — the slice MUST open with a YAML front-matter block (`---` on line 1, a closing `---`, then the body). Check it mechanically:
-   - The block exists and is well-formed: line 1 is `---`, a matching `---` closes it, and every line between is `key: value` (or a list).
-   - Required keys are present: `name`, `summary`, `status`, `created`, `modified`, `drafter`. MISSING if any is absent or has an empty value.
+   - The block exists and is well-formed: line 1 is `---`, a matching `---` closes it, and every line between is `key: value`, a list, or the optional nested `execution:` mapping — a bare `key:` that introduces indented children, including a `usage_by_models:` list whose entries are per-model mappings. Don't flag the nested block's indented lines as malformed.
+   - Required keys are present: `schema`, `name`, `summary`, `status`, `created`, `modified`, `drafter`. MISSING if any is absent or has an empty value.
+   - `schema` is exactly `v2`. A different or absent value is MISSING (these specs are schema `v2`).
    - `name` matches the slice's filename without `.md` (e.g. `name: data-model` in `data-model.md`). A mismatch is MISLOCATED — report both the front-matter value and the filename.
    - `summary` is a non-empty single line. A multi-line value is MISLOCATED.
    - `status` is one of: `Waiting Implementation`, `Implemented`, `Superseded`, `Deprecated`, `Needs Revision`. Any other value is MISSING (invalid enum).
    - `created` and `modified` match `YYYY-MM-DD`. A malformed date is MISLOCATED.
-   - `depends_on`, if present, is a list of **sibling slice slugs** in the same feature folder (bare slugs, not paths). For each, `test -f {this-slice's-folder}/{slug}.md` — it PASSES if the sibling file exists. A slug with no matching sibling is a REVIEW row (may be planned), not a hard miss. Also cross-check: each `depends_on` slug SHOULD appear in this slice's row in the folder's `index.md` Slices table — a mismatch is a REVIEW row (`index.md` is authoritative).
-   - `model`, `tokens`, `cost`, `reasoning_effort` are optional — blank is fine (they're filled at execute time). Don't flag them empty.
+   - `depends_on`, if present, is a list of **sibling slice slugs** in the same feature folder (bare slugs, not paths). For each, `test -f {this-slice's-folder}/{slug}.md` — it PASSES if the sibling file exists. A slug with no matching sibling is a REVIEW row (may be planned), not a hard miss. Also cross-check: each `depends_on` slug SHOULD appear in this slice's row in the folder's `_index.md` Slices table — a mismatch is a REVIEW row (`_index.md` is authoritative).
+   - The `execution` block is optional — a blank block, or blank `total_cost` / `total_duration` / `usage_by_models` children, is fine (it's recorded at execute time). Don't flag it empty.
 
 1. **Files that matter** — under the spec's `## Files that matter` heading, for each entry first read its tag, then check accordingly:
    - **`[modify]` or `[context]`** names code that must already exist — verify it as below.
@@ -62,9 +63,9 @@ Run these on a `{slice}.md` file. Go through the slice and extract every concret
 
 ## Index-file checks
 
-Run these instead when the input is `index.md`. The index is an ordering map, not a code spec — so check its shape and that its slice table matches the files on disk, not symbols or dependencies.
+Run these instead when the input is `_index.md`. The index is an ordering map, not a code spec — so check its shape and that its slice table matches the files on disk, not symbols or dependencies.
 
-I. **Front-matter schema** — `index.md` MUST open with a well-formed YAML block. Required keys: `name`, `status`, `created`, `modified`, `drafter`, `slices`. MISSING if any is absent or empty. `name` matches the feature folder name (a mismatch is MISLOCATED). `created`/`modified` match `YYYY-MM-DD` (malformed → MISLOCATED). `slices` is an integer. `depends_on`, if present, is a list of **other feature slugs** — for each, `test -d docs/specs/features/{slug}` (the sibling feature folder); a slug with no matching folder is a REVIEW row (may be planned), not a hard miss.
+I. **Front-matter schema** — `_index.md` MUST open with a well-formed YAML block. Required keys: `schema`, `name`, `status`, `created`, `modified`, `drafter`, `slices`. MISSING if any is absent or empty. `schema` is exactly `v2` (a different or absent value is MISSING; these specs are schema `v2`). `name` matches the feature folder name (a mismatch is MISLOCATED). `created`/`modified` match `YYYY-MM-DD` (malformed → MISLOCATED). `slices` is an integer. `spec_creation`, if present, is an optional nested block (`total_cost`, `total_duration`, `usage_by_models` — the last a list of per-model mappings); a blank block or blank children is fine, don't flag it empty, and treat the nested mapping and its list as well-formed. `depends_on`, if present, is a list of **other feature slugs** — for each, `test -d docs/specs/features/{slug}` (the sibling feature folder); a slug with no matching folder is a REVIEW row (may be planned), not a hard miss.
 
 II. **Slices table resolves to real files** — for every row in the Slices table, the `File` slug must resolve to a sibling `{slug}.md` (`test -f` in the folder). A table slug with no file is MISSING.
 
@@ -72,7 +73,7 @@ III. **`Depends on` slugs resolve** — every slug in any row's `Depends on` cel
 
 IV. **Slice count matches** — `slices: N` in the front-matter equals the number of table rows. A mismatch is MISLOCATED.
 
-V. **Reserved / colliding names** — REVIEW-flag any slice slug equal to the feature slug, and any slice named `index` (it shadows this file).
+V. **Reserved / colliding names** — REVIEW-flag any slice slug equal to the feature slug, and any slice named `_index` (it shadows this file).
 
 ## Discipline
 
@@ -93,10 +94,11 @@ V. **Reserved / colliding names** — REVIEW-flag any slice slug equal to the fe
 
 | Reference (spec claim) | Kind | Status | Detail |
 |---|---|---|---|
-| front-matter: required keys | front-matter | VERIFIED | `name`, `summary`, `status`, `created`, `modified`, `drafter` all present |
+| front-matter: required keys | front-matter | VERIFIED | `schema`, `name`, `summary`, `status`, `created`, `modified`, `drafter` all present |
+| front-matter: `schema` value | front-matter | VERIFIED | `schema: v2` |
 | front-matter: `name` matches file | front-matter | MISLOCATED | `name: data_model` but file is `data-model.md` |
 | front-matter: `status` enum | front-matter | MISSING | value `In Progress` not a valid status |
-| `depends_on: data-model` | front-matter | VERIFIED | sibling `data-model.md` exists in folder; listed in `index.md` |
+| `depends_on: data-model` | front-matter | VERIFIED | sibling `data-model.md` exists in folder; listed in `_index.md` |
 | `depends_on: auth-rework` | front-matter | REVIEW | no sibling `auth-rework.md` in folder — may be planned |
 | `[modify] output.py:54` → `append_record` | file/symbol | VERIFIED | found at :54 |
 | `[modify] __main__.py:219` → `_persist` | file/symbol | MISLOCATED | symbol is at :231, not :219 |

@@ -23,20 +23,20 @@ Read the spec. Do the work.
 
 ## Input
 
-A feature is a folder of **slices** (`docs/specs/features/{slug}/` with an `index.md` plus one `{slice}.md` per slice). You run **one slice per call** — the chosen slice file is your contract, not `index.md` and not its siblings. Resolve `$ARGUMENTS` to a single slice file:
+A feature is a folder of **slices** (`docs/specs/features/{slug}/` with an `_index.md` plus one `{slice}.md` per slice). You run **one slice per call** — the chosen slice file is your contract, not `_index.md` and not its siblings. Resolve `$ARGUMENTS` to a single slice file:
 
 1. **Full path to a slice** (`docs/specs/features/{slug}/{slice}.md`): use directly.
-2. **A feature folder or its `index.md`**: read `index.md`, then pick the **next unblocked slice** — the first row whose `Status` is `Waiting Implementation` and whose `Depends on` slices are all `Implemented`. If several are eligible, present them as a menu and ask.
-3. **A bare feature slug**: resolve `docs/specs/features/{slug}/index.md`, then pick the next unblocked slice as in (2).
-4. **No input**: build the menu with a single shell pass — don't read every slice into your context just to filter it. Grep for the waiting status across both spec roots, **excluding `index.md`**:
+2. **A feature folder or its `_index.md`**: read `_index.md`, then pick the **next unblocked slice** — the first row whose `Status` is `Waiting Implementation` and whose `Depends on` slices are all `Implemented`. If several are eligible, present them as a menu and ask.
+3. **A bare feature slug**: resolve `docs/specs/features/{slug}/_index.md`, then pick the next unblocked slice as in (2).
+4. **No input**: build the menu with a single shell pass — don't read every slice into your context just to filter it. Grep for the waiting status across both spec roots, **excluding `_index.md`**:
 
    ```bash
    grep -liE '(\*\*)?status(\*\*)?:[[:space:]]*Waiting Implementation' \
      docs/specs/features/*/*.md docs/specs/bugs/*/*.md 2>/dev/null \
-     | grep -v '/index.md'
+     | grep -v '/_index.md'
    ```
 
-   (The `-i` makes it case-insensitive, so it matches the YAML front-matter `status:` key and still catches any older bold `**Status**:` body line. The `grep -v` drops the per-feature `index.md`, whose rollup status is not a runnable slice.) For each match, read its front-matter **`summary`** field for the one-line description. Group the matches by feature and show only the eligible (unblocked) slices, with slug and summary, then ask the user to choose. If none match, tell the user.
+   (The `-i` makes it case-insensitive, so it matches the YAML front-matter `status:` key and still catches any older bold `**Status**:` body line. The `grep -v` drops the per-feature `_index.md`, whose rollup status is not a runnable slice.) For each match, read its front-matter **`summary`** field for the one-line description. Group the matches by feature and show only the eligible (unblocked) slices, with slug and summary, then ask the user to choose. If none match, tell the user.
 
 Read the chosen slice in full. This is your contract.
 
@@ -54,7 +54,7 @@ It returns a compact digest and only runs and reports. **You** judge which failu
 
 ## Pre-flight
 
-1. **Check prerequisites**: read the feature's `index.md`. Find the chosen slice's row and collect its `Depends on` slugs. (Cross-check the slice's front-matter `depends_on`; if the two disagree, `index.md` wins — warn the user about the mismatch.) Read each prerequisite slice's `Status` from the index table. If any prerequisite is **not `Implemented`**, warn which slices come first and their statuses, then ask whether to proceed anyway — don't auto-abort or auto-proceed:
+1. **Check prerequisites**: read the feature's `_index.md`. Find the chosen slice's row and collect its `Depends on` slugs. (Cross-check the slice's front-matter `depends_on`; if the two disagree, `_index.md` wins — warn the user about the mismatch.) Read each prerequisite slice's `Status` from the index table. If any prerequisite is **not `Implemented`**, warn which slices come first and their statuses, then ask whether to proceed anyway — don't auto-abort or auto-proceed:
 
    > "Slice `api-endpoint` depends on `data-model`, still `Waiting Implementation`. Shipping now may not work end-to-end. Proceed anyway, or run `data-model` first?"
 
@@ -70,7 +70,7 @@ It returns a compact digest and only runs and reports. **You** judge which failu
 
 ## Implementation
 
-In this section and the ones below, "the spec" means the chosen slice file — the contract you read in full above, not `index.md` and not its sibling slices.
+In this section and the ones below, "the spec" means the chosen slice file — the contract you read in full above, not `_index.md` and not its sibling slices.
 
 Read the slice's Approach, Constraints, and Edge cases sections. These are your boundaries.
 
@@ -153,19 +153,19 @@ After verification passes:
 
 1. Run the full test suite (from CLAUDE.md's operational commands) via the test-runner to check for regressions beyond the spec's verification scope. Fix any regressions before finalizing.
 
-2. Update the slice's front-matter `modified` date to today if implementation revealed new constraints or edge cases worth recording (or if the compliance review prompted amendments). Also fill in the front-matter `model` field with the model that did this execution. Optionally record `tokens`, `cost`, and `reasoning_effort` if you have them; otherwise leave them blank.
+2. Update the slice's front-matter `modified` date to today if implementation revealed new constraints or edge cases worth recording (or if the compliance review prompted amendments). Leave the front-matter `execution` block for the cost step (step 5) below; you can't self-measure the run, so it's filled from `/cost` after the summary.
 
-3. **Flip status in three places** — slice, then `index.md`, then the Spec Index. **If the slice was amended during execution, do not flip to `Implemented` without explicit user confirmation** — present the amendments first (step 4) and wait. Otherwise:
+3. **Flip status in three places** — slice, then `_index.md`, then the Spec Index. **If the slice was amended during execution, do not flip to `Implemented` without explicit user confirmation** — present the amendments first (step 4) and wait. Otherwise:
 
    a. **Slice front-matter**: `status` → `Implemented`.
 
-   b. **`index.md`** (`docs/specs/features/{slug}/index.md`): flip this slice's `Status` cell in the Slices table to `Implemented`. Then **recompute the front-matter rollup `status`** from the table — `In Progress — {k}/{N} slices implemented` if some remain, `Implemented` if all are now done (see `index-template.md`). Bump `index.md`'s `modified` to today.
+   b. **`_index.md`** (`docs/specs/features/{slug}/_index.md`): flip this slice's `Status` cell in the Slices table to `Implemented`. Then **recompute the front-matter rollup `status`** from the table — `In Progress — {k}/{N} slices implemented` if some remain, `Implemented` if all are now done (see `index-template.md`). Bump `_index.md`'s `modified` to today.
 
-   c. **Spec Index** (`docs/specs/spec.md`): copy `index.md`'s new rollup string into the feature row's Status column, and set its `Updated` column to today. If the feature lives under `docs/specs/bugs/`, update the Bugs table; otherwise the Features table.
+   c. **Spec Index** (`docs/specs/spec.md`): copy `_index.md`'s new rollup string into the feature row's Status column, and set its `Updated` column to today. If the feature lives under `docs/specs/bugs/`, update the Bugs table; otherwise the Features table.
 
 4. Present a summary:
    - **Branch**: name (`feature/{slug}/{slice}`) and commit count
-   - **Next slice**: the next unblocked slice from `index.md` to run, or "all slices implemented — feature complete"
+   - **Next slice**: the next unblocked slice from `_index.md` to run, or "all slices implemented — feature complete"
    - **What was done**: 2-3 sentences
    - **Verification**: pass/fail status, and the pre-existing-failure set excluded at baseline
    - **Final review findings**: issues caught and fixed by the staff, code-quality, and QA reviews
@@ -173,5 +173,7 @@ After verification passes:
    - **Compliance review**: COMPLIANT, or list of resolved deviations
    - **Spec gaps** (if any): context you had to discover beyond the spec — a reference you re-located, a file it didn't point to, behavior or a data contract you reverse-engineered, setup it omitted. One concrete line each. This is the spec's retrospective: how the next spec improves and where CLAUDE.md gaps surface. List every gap you actually hit during execution. Write "none" if the spec was sufficient; report a gap only when you hit one, not to look thorough.
    - **Needs attention** (if any): every spec amendment proposed or made during execution, plus anything unexpected or that the user should review
+
+5. Offer to record the run's cost. Tell the user: "If you want this run's cost recorded in the slice's `execution` block, run `/cost` and paste the output here; I'll fill it in." If the user pastes `/cost` output, fill the slice's front-matter `execution` block from it: `total_cost` from "Total cost", `total_duration` from the wall duration, and one `usage_by_models` entry per model (`model`, `input`, `output`, `cache_read`, `cache_write`, `cost`). Bump the slice's `modified` to today.
 
 **Do NOT push or create a PR.** The user handles this.

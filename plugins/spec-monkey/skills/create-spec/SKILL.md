@@ -47,10 +47,10 @@ Precision stays (names, numbers) — unpack across sentences, don't drop detail.
 
 Read `$ARGUMENTS`, plus `CLAUDE.md`, `AGENTS.md`, and `spec.md` if they exist.
 
-**Check for existing features.** If `docs/specs/spec.md` exists, read its Features table — each row is a feature pointing at its `index.md`. If the change **closely matches an existing feature**, ask the user whether to **modify** it or **create new** — don't decide for them. Modifying a feature takes one of two shapes:
+**Check for existing features.** If `docs/specs/spec.md` exists, read its Features table — each row is a feature pointing at its `_index.md`. If the change **closely matches an existing feature**, ask the user whether to **modify** it or **create new** — don't decide for them. Modifying a feature takes one of two shapes:
 
-- **Add a new slice** — write a new `{slice}.md` in the feature folder, add its row to `index.md`'s Slices table, bump `index.md`'s `modified` to today.
-- **Edit an existing slice** — start from that slice's content, focus on what's changing, preserve unchanged sections, bump the slice's `modified` and `index.md`'s `modified` to today.
+- **Add a new slice** — write a new `{slice}.md` in the feature folder, add its row to `_index.md`'s Slices table, bump `_index.md`'s `modified` to today.
+- **Edit an existing slice** — start from that slice's content, focus on what's changing, preserve unchanged sections, bump the slice's `modified` and `_index.md`'s `modified` to today.
 
 In both cases also refresh the feature's row in the Spec Index (Updated date, and the rollup status if it changed).
 
@@ -116,7 +116,7 @@ Record each answer as a resolved `## Assumptions` entry or a measurement step. D
 
 Only enter this gate once Gate 1's concerns are resolved. This is a **separate turn** from the concern discussion.
 
-Every feature ships as **ordered slices**, not one big spec. Slicing is the default, always — even a one-slice feature uses the folder + `index.md` format. There is no bare-`spec.md` path.
+Every feature ships as **ordered slices**, not one big spec. Slicing is the default, always — even a one-slice feature uses the folder + `_index.md` format. There is no bare-`spec.md` path.
 
 A **slice** is one PR. Size each slice so it:
 
@@ -125,7 +125,7 @@ A **slice** is one PR. Size each slice so it:
 
 **Slice on vertical, shippable seams.** Prefer a thin vertical slice (a small end-to-end increment) over a horizontal layer when a layer can't ship safely alone. A lower layer that lands first but is user-invisible is fine — note that in the slice's own spec and in the index ordering.
 
-**Name and order the slices.** Plain-slug filenames (`data-model`, `api-endpoint`); each unique in the folder; never equal to the feature slug; never `index`. Work out the ordering and each slice's prerequisites now — this becomes the `index.md` Slices table and each slice's front-matter `depends_on`.
+**Name and order the slices.** Plain-slug filenames (`data-model`, `api-endpoint`); each unique in the folder; never equal to the feature slug; never `_index`. Work out the ordering and each slice's prerequisites now — this becomes the `_index.md` Slices table and each slice's front-matter `depends_on`.
 
 **Present the slice plan for approval BEFORE writing anything.** Show a table — slug, one-liner, depends-on, rough size — plus the ordering, and ask the user to approve, merge, split, or reorder. A single-slice outcome is valid; say so rather than manufacturing splits.
 
@@ -143,11 +143,11 @@ The approach, constraints, and alternatives you write must respect these princip
 - **Least code that works.** No speculative abstractions, no indirection for single callers, stdlib over hand-rolling; delete dead code outright
 - **Test real behavior.** Realistic inputs through real libraries, deterministic sync (no sleeps), fixtures with real-world mess. Never modify a test to make it pass — flag it instead.
 
-### Write `index.md` first
+### Write `_index.md` first
 
-**Branch first.** Before writing any file to disk — `index.md` or a slice — check the branch. If on `main`/`master`, create and switch to `spec/{slug}`. If on another branch, confirm with the user. Author the whole feature (`index.md` + every slice) on this one branch; per-slice branching is an execute-time concern.
+**Branch first.** Before writing any file to disk — `_index.md` or a slice — check the branch. If on `main`/`master`, create and switch to `spec/{slug}`. If on another branch, confirm with the user. Author the whole feature (`_index.md` + every slice) on this one branch; per-slice branching is an execute-time concern.
 
-Then, before any slice spec, write the feature's `index.md` to `docs/specs/features/{slug}/index.md`, following `reference/index-template.md`. Populate the front-matter: `name: {slug}` matching the folder; `status: Waiting Implementation`; `created` and `modified` both today; `drafter` from `git config user.name`; `slices: {N}`; `depends_on: []` (or the slugs of other features this one depends on). Fill the Slices table from the approved slice plan — one row per slice (slug, file, depends-on, `Status: Waiting Implementation`, one-liner). This is the ordering record the slice specs and `/spec-monkey:execute-spec` both read.
+Then, before any slice spec, write the feature's `_index.md` to `docs/specs/features/{slug}/_index.md`, following `reference/index-template.md`. Populate the front-matter: `schema: v2`; `name: {slug}` matching the folder; `status: Waiting Implementation`; `created` and `modified` both today; `drafter` from `git config user.name`; `slices: {N}`; `depends_on: []` (or the slugs of other features this one depends on); leave the `spec_creation` block blank (you can't self-measure the run; it's recorded from the drafting session's API summary afterward). Fill the Slices table from the approved slice plan — one row per slice (slug, file, depends-on, `Status: Waiting Implementation`, one-liner). This is the ordering record the slice specs and `/spec-monkey:execute-spec` both read.
 
 ### Draft each slice's sections
 
@@ -162,7 +162,7 @@ Dispatch steps 2–4 to `spec-monkey-spec-investigator` (`subagent_type: "spec-m
 5. **Verification command**: the exact setup-and-run sequence — any dependency install with the extras the tests need, service start, or env step, then the command — then a checklist: Given/When/Then for user-facing behavior, plain bullets otherwise. Include at least one error-path bullet for I/O or untrusted input. A verification *seam* is a criterion that depends on a test mechanism whose limits the criterion alone hides. At each seam, name the mechanism, not just the property. The template names the three seam types and gives an example of each — see its "Seams to make concrete" list.
 6. **Optional domain sections**: add structured artifacts (schema definitions, state tables, migration plans) between "Current behavior" and "Alternatives rejected" if they aid review.
 
-Write each slice to `docs/specs/features/{slug}/{slice}.md` following `reference/spec-template.md` and `reference/writing-style.md` (read both if you haven't this session). Populate the YAML front-matter: `name: {slice}` matching the filename; `summary` — a one-line summary of the slice's change (this drives the execute-spec menu); `status: Waiting Implementation`; `created` and `modified` both today; `drafter` from `git config user.name`; `depends_on: [sibling slugs]` matching this slice's row in `index.md`. Leave `model`, `tokens`, `cost`, and `reasoning_effort` blank — `/spec-monkey:execute-spec` fills those at finalize.
+Write each slice to `docs/specs/features/{slug}/{slice}.md` following `reference/spec-template.md` and `reference/writing-style.md` (read both if you haven't this session). Populate the YAML front-matter: `schema: v2`; `name: {slice}` matching the filename; `summary` — a one-line summary of the slice's change (this drives the execute-spec menu); `status: Waiting Implementation`; `created` and `modified` both today; `drafter` from `git config user.name`; `depends_on: [sibling slugs]` matching this slice's row in `_index.md`. Leave the `execution` block blank — it's recorded from the `/spec-monkey:execute-spec` run's API summary at execute time.
 
 ### Review each slice
 
@@ -172,7 +172,7 @@ Run `spec-monkey-reference-linter` (`subagent_type: "spec-monkey-reference-linte
 
 Run `spec-monkey-spec-reviewer` (`subagent_type: "spec-monkey-spec-reviewer"`) with the slice path only. Fix any failing checks; don't hand them to the user. Re-run on the fixed slice. Loop up to 3 rounds; if still failing, present the remaining findings with what you tried.
 
-**A scope-creep FAIL means re-slice, not split into a new feature.** The reviewer now judges the slice boundary. If a slice is too big, break it into more, smaller slices in this same folder — update `index.md` (and the slices count) and each affected `depends_on` to match.
+**A scope-creep FAIL means re-slice, not split into a new feature.** The reviewer now judges the slice boundary. If a slice is too big, break it into more, smaller slices in this same folder — update `_index.md` (and the slices count) and each affected `depends_on` to match.
 
 Record each slice's **2–3 load-bearing assumptions** in its `## Assumptions` section.
 
@@ -180,7 +180,7 @@ Record each slice's **2–3 load-bearing assumptions** in its `## Assumptions` s
 
 Once every slice passes its linter and reviewer, present the whole feature at once:
 
-> "Here's the feature at `docs/specs/features/{slug}/` ({N} slices) — overview and ordering in `index.md`, every slice passed all quality checks.
+> "Here's the feature at `docs/specs/features/{slug}/` ({N} slices) — overview and ordering in `_index.md`, every slice passed all quality checks.
 >
 > Slices, in order:
 > 1. `{slice}` — {one-liner} (depends on: {…})
@@ -195,15 +195,17 @@ When the user resolves an assumption, update that slice's section. When they acc
 
 For changes: minor edits (wording, typos, one bullet) — apply and re-present. Substantial edits (scope shift, new constraints, approach change, re-slicing) — re-run the reviewer on whichever slice changed, fix findings, re-present. Loop until the user explicitly approves.
 
-Update the Spec Index in `docs/specs/spec.md` with one rollup row for the feature, status `Waiting Implementation`, path → `index.md`. Follow `reference/spec-index.md` for row format. The Index "Updated" column mirrors `index.md`'s front-matter `modified` date.
+Update the Spec Index in `docs/specs/spec.md` with one rollup row for the feature, status `Waiting Implementation`, path → `_index.md`. Follow `reference/spec-index.md` for row format. The Index "Updated" column mirrors `_index.md`'s front-matter `modified` date.
 
 Tell the user:
 
-> "Feature saved to `docs/specs/features/{slug}/` ({N} slices). Overview and ordering in `index.md`. Spec Index updated in `docs/specs/spec.md`.
+> "Feature saved to `docs/specs/features/{slug}/` ({N} slices). Overview and ordering in `_index.md`. Spec Index updated in `docs/specs/spec.md`.
 >
-> Clear your context and run the first slice:
+> If you want this drafting session's cost recorded in `_index.md`, run `/cost` and paste the output here; I'll fill the `spec_creation` block. Otherwise, clear your context and run the first slice:
 > `/spec-monkey:execute-spec docs/specs/features/{slug}/{first-slice}.md`
 > (or `/spec-monkey:execute-spec` with no args to pick the next unblocked slice.)"
+
+If the user pastes `/cost` output, fill `_index.md`'s front-matter `spec_creation` block from it: `total_cost` from "Total cost", `total_duration` from the wall duration, and one `usage_by_models` entry per model (`model`, `input`, `output`, `cache_read`, `cache_write`, `cost`). Bump `_index.md`'s `modified` to today, then repeat the run-the-first-slice pointer.
 
 ---
 
@@ -211,5 +213,5 @@ Tell the user:
 
 Two templates back this skill:
 
-- `reference/index-template.md` — the feature's `index.md`: front-matter, the Slices table (the authoritative ordering record), and the rollup-status rules.
+- `reference/index-template.md` — the feature's `_index.md`: front-matter, the Slices table (the authoritative ordering record), and the rollup-status rules.
 - `reference/spec-template.md` — one slice spec. Below its "Implementation contract" divider, Constraints, Files that matter, and Verification are deliberately redundant: a constraint repeated across them survives context compaction during a long implementation. Keep that redundancy; defend it if a reviewer flags it as bloat.

@@ -1,29 +1,36 @@
 # Index Template
 
-Read this when producing a feature's `index.md` in Phase 2, before writing any slice spec. A feature is **sliced**: it lands as a folder at `docs/specs/features/{slug}/` holding one complete `{slice}.md` per slice plus this `index.md` at the root. The `index.md` is the feature's overview and ordering map — thin by design. Each slice file carries the full spec contract (`spec-template.md`); `index.md` carries none of it.
+Read this when producing a feature's `_index.md` in Phase 2, before writing any slice spec. A feature is **sliced**: it lands as a folder at `docs/specs/features/{slug}/` holding one complete `{slice}.md` per slice plus this `_index.md` at the root. The `_index.md` is the feature's overview and ordering map — thin by design. Each slice file carries the full spec contract (`spec-template.md`); `_index.md` carries none of it.
 
 ## Front-matter
 
-Every `index.md` opens with a YAML front-matter block (`---` fences) so the linter can validate it:
+Every `_index.md` opens with a YAML front-matter block (`---` fences) so the linter can validate it:
 
 ```
 ---
+schema: v2
 name: {slug}
 status: {rollup — computed, see below}
 created: {YYYY-MM-DD}
 modified: {YYYY-MM-DD}
 drafter: {name}
 slices: {N}
+spec_creation:
+  total_cost:
+  total_duration:
+  usage_by_models:
 depends_on: []
 ---
 ```
 
+- `schema` — the front-matter schema version. Always `v2`. The linter and tooling read it to know which front-matter shape to expect.
 - `name` — the feature slug; matches the folder name.
 - `status` — the **rollup** status, computed from the Slices-table `Status` cells (below). Never stored independently of the table, so it can't drift.
 - `created` — `YYYY-MM-DD`, set once; never changes.
 - `modified` — `YYYY-MM-DD`, refreshed whenever a slice's status changes or the slice set changes. Equals `created` at creation. The Spec Index "Updated" column mirrors this date.
 - `drafter` — who authored the feature; default to `git config user.name`.
 - `slices` — the count of slice rows in the table.
+- `spec_creation` — optional run metadata for the `/spec-monkey:create-spec` session that drafted this feature. Feature-level (one drafting session covers all slices), which is why it lives here and not in each slice. Leave the whole block blank while drafting. A running agent can't self-measure its own totals, so these are recorded afterward from the drafting session's end-of-session API summary (by you or by tooling). When filled it carries `total_cost`, `total_duration`, and `usage_by_models` (a list, one entry per model: `model`, `input`, `output`, `cache_read`, `cache_write`, `cost`).
 - `depends_on` — optional list of **other feature slugs** this whole feature depends on (e.g. `['auth-rework']`). Bare slugs naming sibling feature folders under `docs/specs/features/`. Empty list when none. This is feature-to-feature ordering; slice-to-slice ordering lives in the Slices table and each slice's own `depends_on`.
 
 ### Computing the rollup `status`
@@ -76,5 +83,5 @@ This table is the **authoritative ordering and dependency record** for the featu
 ### Authoring rules
 
 - Every `File` slug and every `Depends on` slug must resolve to a real sibling `{slug}.md`. The reference linter enforces this.
-- A slice slug must **not** equal the feature slug, and none may be `index` (reserved for this file).
-- **Single-slice feature** still uses this format — folder + `index.md` + one slice file, one table row with `Depends on` = `—`. Don't shortcut to a bare `spec.md`; there is no bare-spec path.
+- A slice slug must **not** equal the feature slug, and none may be `_index` (reserved for this file).
+- **Single-slice feature** still uses this format — folder + `_index.md` + one slice file, one table row with `Depends on` = `—`. Don't shortcut to a bare `spec.md`; there is no bare-spec path.

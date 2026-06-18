@@ -1,0 +1,68 @@
+ I noticed Opus spent $10 in costs. Can you tell me where most of that cost went with evidence?
+
+Honest answer first: I don't have token-level attribution per turn, so I can't give a precise per-action breakdown. What I can do is point to the shape of the bill and the work patterns that drove it.
+
+The shape of the Opus bill:
+- 9.3M cache reads — by far the dominant line
+- 594k cache writes — second
+- 72.4k output, 2.7k input — small relative to the cache numbers
+
+Cache reads compound with turn count: every Opus turn replays the whole conversation through the cache. So total cost is roughly (turns × average-context-size) × cache-read rate, plus whatever new content each turn appends.
+
+The drivers, with evidence from the transcript:
+
+1. Reviewer outputs were the largest single content chunks I pulled into context. The four parallel reviewers returned ~12k tokens combined (staff ~1.8k, code-quality ~2.5k, QA ~4.7k, compliance ~2.7k). Then two re-reviews added another ~6k. Each of those got cached and replayed on every subsequent turn — git log --oneline main..HEAD shows 4 implementation commits, but reviewer context lived through ~10 more Opus turns after they returned, so that ~18k tokens × ~10 replays alone is on the order of 180k cache-read tokens. Repeated across all the big chunks I appended, this is where 9.3M comes from.
+2. test/unit/test_websocket_handler.py reads were heavy. The file is ~1700 lines. I read it in 5 chunks (lines 1-80, 880-1000, 1042-1117, 1163-1283, 1560-1649, 938-1180 — visible in the Read calls above). Each chunk got cached and replayed for the remainder of the session.
+3. Many small Edits, each rebroadcasts file state in the response. I count ~20+ Edit calls on the test file alone (one per existing-test wrap, plus the new-test inserts, plus the review fixes). Each Edit's success message echoes nothing — but the next turn still carries the same growing transcript. Wrapping 22 existing tests one-by-one cost more cache replays than wrapping them in fewer larger Edits would have.
+
+Things I should have done differently to spend less Opus:
+- The reviewer-output replays are unavoidable for the work as scoped, but I could have asked each reviewer to return verdict + findings only (cap at ~500 tokens) instead of multi-section reports.
+- I made ~20 small Edits to wrap tests; a single multi-line Edit per test class (or even a sed-style script) would have collapsed those into 2-3 calls.
+- The two parallel re-review runs (~6k more tokens of reviewer prose) were partially redundant — I could have asked the original reviewers via SendMessage with just a diff of the fixes instead of fresh Agent calls with full context.
+
+What I can't tell you without log access is whether the reviewer replays or the file-read replays dominated. Both are big, both compound, and both were within my control.
+---
+
+Honest accounting from this session:
+
+Cost math
+
+Opus 4.7 pricing (per million tokens):
+- Input: ~$15
+- Output: ~$75
+- Cache read: ~$1.50
+- Cache write: ~$18.75
+
+Applied to the usage line:
+
+┌──────────────────┬────────┬──────────┬──────────┐
+│      Bucket      │ Tokens │   Rate   │ Subtotal │
+├──────────────────┼────────┼──────────┼──────────┤
+│ Cache read       │ 23.6M  │ $1.50/M  │ ~$35.4   │
+├──────────────────┼────────┼──────────┼──────────┤
+│ Cache write      │ 867.9k │ $18.75/M │ ~$16.3   │
+├──────────────────┼────────┼──────────┼──────────┤
+│ Output           │ 68.1k  │ $75/M    │ ~$5.1    │
+├──────────────────┼────────┼──────────┼──────────┤
+│ Input (uncached) │ 810    │ $15/M    │ <$0.01   │
+└──────────────────┴────────┴──────────┴──────────┘
+
+That sums to ~$56, not $18.96 — so the rates I have don't exactly match what was billed. But the relative ranking is what matters: cache reads dominate, cache writes are second, fresh output third. Even if the real cache-read rate is ~$0.50/M (some discount tier), the order is unchanged.
+
+Where the tokens came from
+
+The dominant cost was re-reading the conversation history. Every Opus turn re-sends the full conversation through the cache. Specific drivers in this session:
+
+1. Long-running session with many turns. I made ~25+ Opus turns (initial read → implement → tests → review → fix → finalize). Each turn re-reads the entire prior context (system prompt, tools schema, prior messages, file contents). At ~150–200k tokens per turn × 25 turns ≈ 4–5M tokens cache-read on the orchestrator alone.
+2. Four parallel review subagents. I launched staff, code-quality, QA, and compliance reviewers in one message. Each subagent is its own Opus context that reads the spec (~5k tokens), full diff (~12k tokens), and several source files. Each used ~50–100k tokens; combined they account for substantial cache-read volume.
+3. Test-runner subagents. I dispatched 4–5 test-runner calls (baseline, intermediate, final, plus retries when the environment broke). Each one runs poe test and its output is large enough that the runner reads several MB of test logs into its own context — even though it returns a compact digest to me.
+4. Repeated file reads in the orchestrator. I read src/backend/ai/prefill.py (~500 lines), src/backend/routes/websocket.py (~600 lines), the spec (484 lines), the subsystem spec (127 lines), and the test files (1700+ lines combined) — some of them multiple times across the session. Each read costs cache write on first encounter and cache read on every subsequent turn.
+5. Environment debugging detour. The litellm/openai venv breakage forced ~6 extra Opus turns to diagnose (running uv sync, reinstalling, retrying tests). That alone is plausibly 2–3M cache-read tokens.
+
+The biggest single avoidable cost
+
+The 4 parallel Opus reviewers is the largest discretionary spend. Each reviewer is a fresh Opus context reading the same diff. The skill mandates this, and they did catch real issues (the hot-path repr, the PHI defense-in-depth, the missing assertion). But if cost matters more than coverage on the next run, dropping to Sonnet for the reviewers (they're judgment tasks, not generation) would likely have cut $5–8 off the bill.
+
+What I can't show as direct evidence
+
+I don't have access to per-turn billing or per-subagent token counts — /cost reports session totals only. The breakdown above is reconstructed from what I did, not measured. The transcript files in /private/tmp/.../tasks/*.output would have the actual per-subagent transcripts but I haven't read them (the harness explicitly warned against tailing the subagent JSONL outputs to avoid context blowup).

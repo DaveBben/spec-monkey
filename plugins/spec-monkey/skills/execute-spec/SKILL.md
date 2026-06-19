@@ -1,7 +1,7 @@
 ---
 name: execute-spec
 disable-model-invocation: true
-model: opus
+model: sonnet
 effort: high
 argument-hint: "[path to spec file]"
 allowed-tools:

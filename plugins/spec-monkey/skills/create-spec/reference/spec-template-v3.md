@@ -22,9 +22,12 @@ omit a section — a section with nothing to say carries `N/A — {reason}`.
   cases, Files, Tasks, Verification.** The binding contract a linter checks and the
   implementer executes.
 
-The contract is **deliberately redundant** with itself — a constraint echoed in Constraints,
-Files, and Verification survives context compaction during a long implementation. Keep that
-redundancy; defend it if a reviewer flags it as bloat.
+The contract is **deliberately redundant** with itself — but only for *normative* facts. A
+**constraint** echoed in Constraints, Files, and Verification survives context compaction
+during a long implementation; keep that redundancy and defend it. **Rationale is NOT
+redundant** — state each *why* (a rejected option, a probed finding, a design reason) in
+exactly ONE home and cross-reference it from elsewhere ("see Assumptions", "→ Alternatives").
+The same explanation repeated across six sections is noise, not resilience.
 
 **Writing style.** The Layer 1 prose and the Edge-case / Approach descriptions follow
 `writing-style.md`: one idea per sentence, actor-first, conclusion first, caveats in their
@@ -161,7 +164,10 @@ response → 768-float vector → list[float]  |  anything else → None   # fai
 
 ## Alternatives rejected
 {Prose bullets, alternative bolded for scan-readability. Each names a real path considered and
-why it lost. Prevents the implementer relitigating settled decisions. Example:}
+why it lost. Prevents the implementer relitigating settled decisions. Record notable
+**non-actions** too — a standard practice you considered and chose to skip (e.g. "no jitter —
+single client, no herd to spread") — so a reader doesn't read the omission as an oversight.
+Example:}
 - **Reuse the summarizer's chat client** — embeddings hit a different endpoint and model, with their own base URL and timeout. Coupling entangles two independently-failing services.
 - **Generate embeddings in a separate downstream process** — the pipeline owns embedding so the warehouse row is complete on write; a second process would leave rows half-populated.
 
@@ -184,7 +190,9 @@ Example:}
 asked before any code, and how each resolved. This makes alignment visible instead of
 laundered: an open item links to an OPEN assumption / [NEEDS CLARIFICATION]; a resolved one
 points at the section that absorbed it. Don't dress an unresolved question as a settled
-decision. Example:}
+decision. A genuinely trivial slice that surfaced no material question may carry
+`N/A — no open questions surfaced` instead of a table; never use N/A to bury a question that
+was actually asked. Example:}
 
 | # | question surfaced before coding | resolution | status |
 |---|----------------------------------|------------|--------|
@@ -223,12 +231,18 @@ would hit. Cut any sentence the model would satisfy on its own. Push precision t
 - **Gotchas:** the SDK parser raises `ValueError("No embedding data received")` on an empty `data` list *before* you can inspect `response.data` — so `ValueError` must be caught alongside `OpenAIError`.
 
 ## Edge cases
-{Bulleted "condition: expected behavior". Probe the categories happy-path specs leak:
+{TABLE: `scenario | behaviour | covered by`. Probe the categories happy-path specs leak:
 dependency failure (timeout, partial/malformed response), malformed/oversized input,
-empty/boundary values. Each binds both the code and a test. Example:}
-- Network / HTTP / timeout error: `None` + one `embed_request_failed` warning. Never raise except `CancelledError`.
-- Empty or missing embedding (`data` empty → SDK `ValueError`): `None` + one `embed_request_failed` warning.
-- Vector length ≠ 768: `None` + one `embed_wrong_dimension` warning. A wrong-dim vector would fail the `vector(768)` insert and abort the run — fail open instead.
+empty/boundary values. Each row binds a condition to its expected behavior AND cites the
+Verification assertion (V-id) that proves it — so the table doubles as an Edge→Verification
+traceability map. A row with observable behavior and no `covered by` V-id is a coverage gap,
+not a finished row. Example:}
+
+| scenario | behaviour | covered by |
+|----------|-----------|------------|
+| Network / HTTP / timeout error | `None` + one `embed_request_failed` warning; never raise except `CancelledError` | V4, V5 |
+| Empty / missing embedding (`data` empty → SDK `ValueError`) | `None` + one `embed_request_failed` warning (`kind="empty_data"`) | V4 |
+| Vector length ≠ 768 | `None` + one `embed_wrong_dimension` warning; a wrong-dim vector would fail the `vector(768)` insert and abort the run — fail open instead | V3 |
 
 ## Files
 {TABLE: `id | path | mode | symbol | why`. The manifest — symbol-first (the durable anchor;
@@ -247,7 +261,9 @@ rows. Example:}
 ## Tasks
 {TABLE: `id | task | files | [P] | done`. An ordered checklist the implementer flips
 (`done` → `x`), resumable across runs. Order: types → tests/contracts → impl → wire → cleanup.
-Mark `[P]` where a task can run in parallel with its siblings. Example:}
+Mark `[P]` where a task can run in parallel with its siblings — but a `[P]` task MUST NOT
+share a file with another `[P]` task: two agents editing one file collide. Same-file tasks
+drop `[P]`, or carry a note that they author in parallel but commit serially. Example:}
 
 | id | task | files | [P] | done |
 |----|------|-------|-----|------|
@@ -258,15 +274,28 @@ Mark `[P]` where a task can run in parallel with its siblings. Example:}
 
 ## Verification
 {Open with the exact setup-and-run command sequence (the full install with needed extras, then
-the command). Then EARS assertions with stable IDs: `WHEN {trigger} THE SYSTEM SHALL
-{response}`. Rules a linter enforces:
+the command). Then **EARS** assertions with stable IDs. Pick the keyword that matches the
+behavior — the keyword is load-bearing, not decoration:
+- **WHEN {trigger} THE SYSTEM SHALL {response}** — wanted, event-driven behavior.
+- **IF {unwanted condition} THEN THE SYSTEM SHALL {response}** — unwanted / error-path behavior.
+- **WHILE {state} THE SYSTEM SHALL {response}** — behavior that holds throughout a state.
+- **WHERE {feature present} THE SYSTEM SHALL {response}** — behavior gated on an optional feature.
+
+Rules a linter enforces:
 - Atomic — one assertion per row; never bundle multiple ANDs (split them).
-- Error paths tagged [error — required]; cover every fail-open branch.
+- Keyword match — an unwanted/failure-path assertion uses **IF/THEN**, never `WHEN`; a
+  state-held behavior uses **WHILE**. A failure path written as `WHEN` is a keyword bug.
+- Error paths tagged `[error — required]` and written as IF/THEN; cover every fail-open branch.
 - Testable — no "optionally SHALL" and no shall without a threshold or observable.
 - One WORKED case — a single assertion shown with real, concrete expected values.
 - A Seams list — where a test could cheat (the anti-tautology rule: a worked example MUST NOT
   source its mock dimensions/length from the constant under test).
-- A Self-check — re-walk every assertion, every Constraint, and the Files manifest.
+- Traceability — every V-id a Task cites is defined here, and every assertion is cited by at
+  least one Task. No orphans (a Task citing `V9` when only `V1–V8` exist), no uncited
+  assertions.
+- A Self-check that enumerates the V-set FROM the Tasks table (never a hardcoded `V1–V8`
+  range — that silently skips a later-added V9), then re-walks every Constraint and the Files
+  manifest.
 Example:}
 
 ```bash
@@ -275,21 +304,24 @@ uv run ruff check src tests && uv run mypy src && \
   uv run pytest tests/test_embedder.py tests/test_config.py
 ```
 
-EARS assertions (respx mocks `/v1/embeddings`; a real `Settings` drives the fields):
+EARS assertions (respx mocks `/v1/embeddings`; a real `Settings` drives the fields). Wanted
+behavior uses **WHEN**; unwanted behavior uses **IF/THEN**:
 
 - **V1** — WHEN `embed(title, summary)` is called THE SYSTEM SHALL POST to `{embed_base_url}/embeddings` with `input == "title: {title} | text: {summary}"` and `model == embed_model`.
 - **V2** *(worked example)* — WHEN the endpoint returns a 768-float vector THE SYSTEM SHALL return that exact list of 768 floats, in order.
   > Worked: `embed("Edge AI ships", "- **TL;DR:** ...")`; mock returns `mk = [i/1000 for i in range(768)]` → `embed` returns a list equal to `mk`, `len == 768`.
-- **V3** `[error — required]` — WHEN the endpoint returns a vector of length ≠ 768 (e.g. 512) THE SYSTEM SHALL return `None` and log exactly one `embed_wrong_dimension` warning carrying `expected=768` and `got=512`.
-- **V4** `[error — required]` — WHEN the response `data` list is empty THE SYSTEM SHALL return `None` and log exactly one `embed_request_failed` warning with `kind="empty_data"`.
-- **V5** — WHEN an `asyncio.CancelledError` is raised during the call THE SYSTEM SHALL propagate it (never swallow).
+- **V3** `[error — required]` — IF the endpoint returns a vector of length ≠ 768 (e.g. 512) THEN THE SYSTEM SHALL return `None` and log exactly one `embed_wrong_dimension` warning carrying `expected=768` and `got=512`.
+- **V4** `[error — required]` — IF the response `data` list is empty THEN THE SYSTEM SHALL return `None` and log exactly one `embed_request_failed` warning with `kind="empty_data"`.
+- **V5** `[error — required]` — IF an `asyncio.CancelledError` is raised during the call THEN THE SYSTEM SHALL propagate it unwrapped (never swallow).
 
 **Seams**
 - S1 — Build the mock vector independently (e.g. `[i/1000 for i in range(512)]`); do **not** derive its length from `EMBEDDING_DIM`, or the test passes tautologically.
 - S2 — respx intercepts the SDK because it is httpx-based; assert on the wire payload, not an internal call.
 
 **Self-check (before marking done)**
-- Re-walk V1–Vn; each MUST map to exactly one passing test.
+- Walk the Tasks table: enumerate every V-id the Tasks cite, confirm each has a matching
+  assertion here, and confirm every assertion is cited by ≥1 Task. Enumerate from Tasks — do
+  NOT hardcode the V-range (a hardcoded `V1–V8` is how a later-added `V9` gets skipped).
 - Confirm every Constraint is satisfied in the diff.
 - Confirm the Files manifest (mode `new`/`modify`) equals the changed files — no stray edits, nothing listed-but-untouched.
 

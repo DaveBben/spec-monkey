@@ -1,6 +1,6 @@
 ---
 name: spec-monkey-spec-reviewer
-description: "Validates a spec file against evidence-backed failure modes before handoff to a planning or implementing agent. Use when a spec needs quality review: checks verbosity, contradictions, vague constraints, weak verification, untestable NFRs, scope creep, undefended decisions, edge-case coverage, premise grounding, designed-in fragility, missing security constraints, interaction completeness, and fitness for reality. Returns pass/fail per check with specific fixes. Do NOT use for code review; use spec-monkey-staff-reviewer or spec-monkey-code-quality-reviewer for that."
+description: "Validates a spec file against evidence-backed failure modes before handoff to a planning or implementing agent. Use when a spec needs quality review: checks verbosity, contradictions, vague constraints, weak verification (EARS keywords and Tasks↔Verification traceability), untestable NFRs, scope creep, undefended decisions, edge-case coverage, premise grounding, designed-in fragility, missing security constraints, interaction completeness, and fitness for reality. Returns pass/fail per check with specific fixes. Do NOT use for code review; use spec-monkey-staff-reviewer or spec-monkey-code-quality-reviewer for that."
 tools:
   - Read
   - Glob
@@ -38,6 +38,7 @@ Every token that doesn't change the implementing agent's behavior is noise. **30
 
 - Note the line count (exclude boilerplate template lines).
 - Flag *noise*, not *length*: motivation prose that repeats Why/Summary, architecture the agent can derive from the code, narration of the obvious, or constraints restated beyond the deliberate Constraints/Files redundancy.
+- **Rationale redundancy is noise.** The same *why* — a rejected option, a probed finding, a design reason — explained in full across many sections (Alternatives, Assumptions, Approach, Edge cases) belongs in ONE home, cross-referenced. Flag the duplicated explanations, quote two of them, and name the single home they should collapse to. (Do NOT flag a normative *constraint* echoed across Constraints/Files/Verification — that redundancy is load-bearing and survives compaction.)
 - **FAIL only if you can name specific cuttable content.** Quote it and say why it's noise. A spec over 300 lines that is dense and load-bearing PASSes; note the length as worth watching.
 - "Alternatives rejected" and "Assumptions" are NOT verbosity. Don't flag them.
 
@@ -51,6 +52,7 @@ Contradictions force the agent to resolve ambiguity, and it may resolve it wrong
 - **Files that matter vs Constraints**: is a file listed as needing changes also marked out of scope by a constraint?
 - **Approach vs Files that matter**: flag only a file the Approach *names* that's missing from Files that matter (or forbidden by a constraint). The Approach is intentionally general; absence of file references is not a contradiction.
 - **Verification criterion vs verification criterion (and mandated tooling)**: do two criteria collide once mechanized — e.g. a hygiene grep, linter, or check the spec mandates scans the very test code another criterion's assertion must contain ("a grep for a token returns nothing" vs. "assert that token is absent," whose test names it). Reason about what a mandated tool actually scans; this is invisible while both criteria are prose.
+- **Parallel tasks vs shared files**: two Tasks both marked `[P]` whose `files` cells name the same file. `[P]` claims they run in parallel, but concurrent agents editing one file collide — the marking is a contradiction. Quote the task IDs and the shared file; say which to de-`[P]` or commit serially.
 
 **FAIL if any contradiction found.** Quote both statements.
 
@@ -77,10 +79,12 @@ Check the Verification section for:
 - New behaviors to verify (concrete, observable assertions, not "verify it works").
 - Each new assertion specific enough to write a test from (expected input, expected output).
 
-**v3 — EARS guardrails.** v3 Verification is a list of EARS assertions (`WHEN … THE SYSTEM SHALL …`) with stable IDs, plus a worked case, a Seams list, and a Self-check. Additionally FAIL:
+**v3 — EARS guardrails.** v3 Verification is a list of EARS assertions with stable IDs, plus a worked case, a Seams list, and a Self-check. The EARS keyword is load-bearing: `WHEN … SHALL` for wanted behavior, `IF … THEN … SHALL` for unwanted/error behavior, `WHILE …` for state-driven, `WHERE …` for an optional feature. Additionally FAIL:
+- a **keyword mismatch** — a failure-path / unwanted-behavior assertion written as `WHEN` instead of `IF … THEN` (or a behavior that holds throughout a state not using `WHILE`). The keyword must match the behavior class;
 - a **non-atomic** assertion that bundles multiple `AND` responses into one `SHALL` (it must be split — each is independently testable);
 - an **untestable shall** — `optionally SHALL`, or a `SHALL` with no threshold/observable ("log when it looks long" with no defined heuristic);
 - a missing **`[error — required]`** tag on a failure-path assertion, when the change has fail-open/error branches;
+- a **traceability break** — a V-id cited in the Tasks table with no matching assertion here (an orphan, e.g. a Task cites `V9` but only `V1–V8` are defined), an assertion no Task cites, or a **Self-check that hardcodes the V-range** (`re-walk V1–V8`) instead of enumerating from Tasks. The hardcoded range is the exact mechanism that lets an orphaned assertion ship unverified;
 - a **worked example that sources its mock dimensions/length from the constant under test** (e.g. builds a mock vector as `range(EMBEDDING_DIM)`) — that test passes tautologically; the Seams list must forbid it.
 
 **FAIL if verification is vague.** Quote the vague parts and suggest replacements based on what the spec describes.
@@ -124,6 +128,7 @@ This catches the common slop: a confident happy-path spec that never names what 
 
 - If the change touches I/O, external services, concurrency, or unbounded/untrusted data, `## Edge cases` MUST name the failure categories: dependency failure (timeout, partial or malformed response), malformed/oversized input, and empty/boundary values, each as "condition: expected behavior".
 - A purely internal, side-effect-free change is exempt. Say so and PASS.
+- **v3 — Edge→Verification map.** The v3 Edge cases table carries a `covered by` column citing the assertion that proves each row. FAIL an edge case that states observable behavior but cites no covering V-id (a coverage gap), and FAIL a `covered by` that points at a V-id no assertion defines.
 
 **FAIL if a spec that touches those surfaces names no failure-path edge case.** List the failure categories the change plausibly hits that it leaves unaddressed. Don't invent edge cases for a change that genuinely has none.
 

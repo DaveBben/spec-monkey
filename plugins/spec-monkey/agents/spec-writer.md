@@ -1,6 +1,6 @@
 ---
-name: spec-monkey-spec-writer
-description: "Transcribe a completed spec handoff file into a spec in the master template format. Use when the interview and planning are done and a handoff file needs formatting into a spec. Pure formatter: preserves wording verbatim, assigns stable IDs, conforms to the parse contract, and fails loudly on missing input — it makes no design decisions and invents nothing. Do NOT use to design or plan a spec (use the create-spec skill), or to review one (spec-monkey-plan-reviewer)."
+name: spec-writer
+description: "Transcribe a completed spec handoff file into a spec in the master template format. Use when the interview and planning are done and a handoff file needs formatting into a spec. Pure formatter: preserves wording verbatim, assigns stable IDs, conforms to the parse contract, and fails loudly on missing input — it makes no design decisions and invents nothing. Do NOT use to design or plan a spec (use the create-spec skill), or to review one (plan-reviewer)."
 tools:
   - Read
   - Write

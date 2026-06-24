@@ -1,5 +1,5 @@
 ---
-name: spec-monkey-spec-decomposer
+name: spec-decomposer
 description: "Split a reviewed spec into an optimal set of implementation tasks and write them into the spec's Tasks table. Use after a spec is approved and you need a task breakdown for execution. Balances three constraints — MR review size (~400-line diff), parallel execution, and per-task context budget — and reports the parallel waves, the trade-offs, and any oversized or context-heavy tasks. Decomposes and sequences; does NOT implement, review, or write the spec."
 tools:
   - Read

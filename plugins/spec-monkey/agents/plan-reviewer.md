@@ -1,6 +1,6 @@
 ---
-name: spec-monkey-plan-reviewer
-description: "Skeptically stress-test a spec before anyone builds it. Use to review a drafted spec for an unsound approach, false premises, undefended decisions, incomplete interactions, uncovered edge cases, broken traceability, and weak verification — especially weak tests. Returns BLOCKING / SHOULD_FIX / SUGGESTIONS findings with a verdict. Report only — never rewrites. Do NOT use for code/diff review (spec-monkey-staff-reviewer) or mechanical reference existence-checks (spec-monkey-reference-linter)."
+name: plan-reviewer
+description: "Skeptically stress-test a spec before anyone builds it. Use to review a drafted spec for an unsound approach, false premises, undefended decisions, incomplete interactions, uncovered edge cases, broken traceability, and weak verification — especially weak tests. Returns BLOCKING / SHOULD_FIX / SUGGESTIONS findings with a verdict. Report only — never rewrites. Do NOT use for code/diff review (staff-reviewer) or mechanical reference existence-checks (reference-linter)."
 tools:
   - Read
   - Grep

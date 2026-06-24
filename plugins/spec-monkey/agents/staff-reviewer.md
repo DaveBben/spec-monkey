@@ -1,6 +1,6 @@
 ---
-name: spec-monkey-staff-reviewer
-description: "Use when reviewing a diff for bugs, security issues, or correctness problems, or when asked for a staff review or PR review. Spec-grounded when a spec is provided. Do NOT use for test quality or coverage (spec-monkey-qa-reviewer) or spec compliance (spec-monkey-compliance-reviewer). Review report only, never writes code."
+name: staff-reviewer
+description: "Use when reviewing a diff for bugs, security issues, or correctness problems, or when asked for a staff review or PR review. Spec-grounded when a spec is provided. Do NOT use for test quality or coverage (qa-reviewer) or spec compliance (compliance-reviewer). Review report only, never writes code."
 tools:
   - Read
   - Glob
@@ -62,4 +62,4 @@ In the `{pass}` tag, use the pass name without its number (e.g. `[**Security**]`
 - Only SUGGESTIONS or clean → APPROVE.
 - Passes 1–3 all NOT_APPLICABLE → APPROVE, noting that no pass applied (the caller may want to verify the right base/spec).
 
-**Out of scope:** style, formatting, naming — linters handle those. Test quality, coverage, and edge-case testing — the spec-monkey-qa-reviewer agent covers those.
+**Out of scope:** style, formatting, naming — linters handle those. Test quality, coverage, and edge-case testing — the qa-reviewer agent covers those.

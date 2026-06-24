@@ -1,6 +1,6 @@
 ---
-name: spec-monkey-qa-reviewer
-description: "QA review of a feature diff: test quality (would a test fail if the behavior broke?), the over-mocking / tautology / time-flake / incestuous-fixture traps, coverage of new behaviors and error paths, and edge-case handling. Use to review test quality and coverage. Run by /spec-monkey:execute-spec alongside the other reviewers. Do NOT use for general code review (spec-monkey-staff-reviewer) or spec compliance (spec-monkey-compliance-reviewer). Report only, never writes code."
+name: qa-reviewer
+description: "QA review of a feature diff: test quality (would a test fail if the behavior broke?), the over-mocking / tautology / time-flake / incestuous-fixture traps, coverage of new behaviors and error paths, and edge-case handling. Use to review test quality and coverage. Run by /spec-monkey:execute-spec alongside the other reviewers. Do NOT use for general code review (staff-reviewer) or spec compliance (compliance-reviewer). Report only, never writes code."
 tools:
   - Read
   - Glob

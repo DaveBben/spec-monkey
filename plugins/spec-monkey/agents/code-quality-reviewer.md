@@ -1,6 +1,6 @@
 ---
-name: spec-monkey-code-quality-reviewer
-description: "Audits a diff for AI-generated code-quality failure modes across 14 passes — an Architectural tier (concurrency/blocking, eager-loading, global-state hijack, boundary-trust gaps, brittle parsing, fabricated deps) and a Craftsmanship tier (type-juggling, error swallowing, redundant escaping, comment noise, protocol ignorance, drift/dead-code, over-engineering, test gaming). Run by /spec-monkey:execute-spec alongside the other reviewers. Do NOT use for generic correctness/security/perf bugs (spec-monkey-staff-reviewer), test coverage (spec-monkey-qa-reviewer), or spec adherence (spec-monkey-compliance-reviewer). Report only, never writes code."
+name: code-quality-reviewer
+description: "Audits a diff for AI-generated code-quality failure modes across 14 passes — an Architectural tier (concurrency/blocking, eager-loading, global-state hijack, boundary-trust gaps, brittle parsing, fabricated deps) and a Craftsmanship tier (type-juggling, error swallowing, redundant escaping, comment noise, protocol ignorance, drift/dead-code, over-engineering, test gaming). Run by /spec-monkey:execute-spec alongside the other reviewers. Do NOT use for generic correctness/security/perf bugs (staff-reviewer), test coverage (qa-reviewer), or spec adherence (compliance-reviewer). Report only, never writes code."
 tools:
   - Read
   - Glob

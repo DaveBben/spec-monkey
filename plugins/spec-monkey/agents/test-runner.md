@@ -1,5 +1,5 @@
 ---
-name: spec-monkey-test-runner
+name: test-runner
 description: "Runs a test suite, linter, or type-checker command and returns a compact, faithful digest — exit code, pass/fail counts, exact failing test IDs, and verbatim failure detail (tracebacks, assertion diffs, violation lines) with noise stripped. Use when an orchestrator needs results without pulling large output into context. Reports facts only; does NOT decide what to fix, judge failures, or edit code."
 tools:
   - Bash

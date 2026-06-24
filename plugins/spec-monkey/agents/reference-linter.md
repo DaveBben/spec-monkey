@@ -1,6 +1,6 @@
 ---
-name: spec-monkey-reference-linter
-description: "Fast, mechanical existence-check of every reference in a spec — the files and symbols in its Change Manifest, named tests, and third-party packages — against the actual repo. Returns a pass/fail row per reference. Use as a cheap pre-pass before spec-monkey-plan-reviewer, or before implementing. Judges nothing — only whether named things exist. Report only, never edits."
+name: reference-linter
+description: "Fast, mechanical existence-check of every reference in a spec — the files and symbols in its Change Manifest, named tests, and third-party packages — against the actual repo. Returns a pass/fail row per reference. Use as a cheap pre-pass before plan-reviewer, or before implementing. Judges nothing — only whether named things exist. Report only, never edits."
 tools:
   - Read
   - Glob

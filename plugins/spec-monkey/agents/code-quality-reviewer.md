@@ -52,7 +52,7 @@ If invoked with `fix_diff` and `prior_findings`: mark each prior finding RESOLVE
    version lacks; a floating pin where the project pins exact. Hallucinated imports enable
    slopsquatting → BLOCKING. Check the lockfile and the real API, never what "sounds right".
 
-## Craftsmanship tier — corrosive (debt, masked bugs); rarely an outage
+## Craftsmanship tier — corrosive (debt, masked bugs)
 
 7. **Manual type-juggling** where the project already has a schema/validation lib (finding only
    when a standard exists and is bypassed).

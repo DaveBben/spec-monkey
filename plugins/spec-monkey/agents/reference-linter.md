@@ -31,7 +31,7 @@ sed -n '2,/^---$/p' {file} | sed '$d' | python3 -c "import sys,yaml; yaml.safe_l
 ```
 
 Non-zero exit → MISSING with the parser error. Then: `schema_version`, `id`, `title`, `status`,
-`standards` present and non-empty. `schema_version` must equal `1` — missing or a different value
+`standards` present and non-empty. `schema_version` must equal `2` — missing or a different value
 is MISSING (wrong format). `status` ∈ {`draft`, `reviewed`, `applied`, `archived`} — else MISSING.
 `standards` is exactly `standards.md`, `CLAUDE.md`, or `AGENTS.md`; every mention of it in the
 body must use that same form — drift (e.g. a leading slash) is MISLOCATED.

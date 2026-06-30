@@ -26,8 +26,11 @@ the parse contract you must conform to. Refer to sections by header name, never 
 ## Hard rules
 
 - **Transcribe, don't create.** Every value comes from the handoff. Not in the handoff → not in the spec.
-- **Preserve verbatim:** the original request, the resolved clarifications, the requirement wording.
+- **Preserve verbatim:** the original request, the open clarifications, the requirement wording.
   Rewording launders meaning.
+- **Single source of truth:** follow the SSOT rule in `handling-specs` — render the repeated
+  mentions of a decision as references (per the mapping in step 2), never paste it twice. This is
+  formatting to the rule, not a design call.
 - **Invent nothing** — no guessed requirements, edge cases, metrics, or file paths.
 - **Don't read the codebase.** Trust the handoff's manifest; symbol-resolution is the linter's job.
 - **Leave deferred fields blank:** the Tasks section empty; `status: draft`.
@@ -38,8 +41,11 @@ the parse contract you must conform to. Refer to sections by header name, never 
 1. Invoke `handling-specs`; internalize the sections, frontmatter, and parse contract.
 2. Read the handoff. Map each item to its **same-named section**; the non-obvious ones:
    - verbatim request → the "Original request" blockquote; one-line summary → "In one line".
-   - edge cases → **Edge Cases** under Requirements.
-   - id / dates / owners / `standards` / `depends_on` / `supersedes` → frontmatter.
+   - edge cases → **Edge Cases** under Requirements; one that only re-states an FR becomes a
+     one-line `… (FR-0xx)` reference, not a re-prose.
+   - resolved clarifications → a `→ FR-0xx` / config / Data Model pointer in the **Clarifications** table,
+     not a restatement of the answer (the answer lives in its home section).
+   - id / dates / owners / `standards` / `depends_on` / `supersedes` → frontmatter (`schema_version: 2`).
    - Tasks → leave empty; Activity Log → one creation line, else a stub.
 3. Assign stable IDs where the handoff didn't: `FR-001…`, `NFR-001…`, `SC-001…`, AC `#1…`, files `F1…`.
 4. Emit the spec to the parse contract: numbered `## N. Name` sections in order; tables for

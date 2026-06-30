@@ -89,6 +89,9 @@ Work through each. Cite evidence for every finding.
 - Are there internal contradictions — a value stated two ways, an assumption that fights a
   requirement?
 - Are low/med-confidence assumptions surfaced as assumptions, or laundered as decisions?
+- **Single source of truth (see `handling-specs`):** is any decision stated in full in more than
+  one section instead of referenced by ID? Each duplicate is a SHOULD_FIX — name the canonical home
+  and the copy to cut. (Two sections that agree today drift apart on the next edit.)
 
 **7. Weak verification — scrutinize hardest**
 

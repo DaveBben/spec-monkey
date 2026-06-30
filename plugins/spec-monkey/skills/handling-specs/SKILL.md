@@ -19,8 +19,21 @@ The full template — frontmatter plus the fourteen sections — is in
 [`reference/spec-template.md`](reference/spec-template.md). Read it before you write or
 review.
 
+The format is **`schema_version: 2`**.
+
 A spec is **structured Markdown**: a human-first document with machine-readable islands. The
 `.md` is the source of truth; a CLI parses it *to* JSON — no one hand-authors JSON.
+
+## Single source of truth
+
+Each decision lives in EXACTLY ONE section; every other place that needs it references it by ID
+(FR-001, NFR-001, SC-001, F3, a config name) instead of re-stating it. Restating a decision in a second
+section is the top cause of spec bloat and drift. Concretely: Edge Cases and Verification cite the
+FR they exercise rather than re-prosing it; the Glossary never redefines a type that the Data Model
+& Contracts section gives a
+signature; a `resolved` Clarifications row points to its FR/config home, it doesn't repeat the
+answer; a rationale is stated once (Assumptions) and referenced. If two sections say the same
+thing, one is a copy — cut it to a reference.
 
 ## Parse contract (what a CLI / linter relies on)
 

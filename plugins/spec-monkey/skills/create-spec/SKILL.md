@@ -130,6 +130,9 @@ unresolved discovery.
   verbatim request, goal, requirements (SHALL + EARS criteria), resolved clarifications,
   edge cases, constraints, success metrics, files manifest, approach, data/type contracts,
   and verification plan.
+- **Single source of truth:** hand the writer a DEDUPLICATED handoff — each decision recorded once
+  in its home, referenced by ID elsewhere (the SSOT rule lives in `handling-specs`). Dedup is a
+  judgment call, so it's yours to make here, not the writer's.
 - Spawn the **spec-monkey:spec-writer** subagent. Point it at the handoff file and tell it
   to write the spec to `docs/specs/{slug}/spec.md`. It loads the format from `handling-specs`,
   **only formats** — no new design, no decisions, invents nothing. Anything missing is its

@@ -1,5 +1,5 @@
 ---
-schema_version: 1                # spec format version
+schema_version: 2                # spec format version
 id: SPEC-NNN                      # a stable id, e.g. SPEC-014
 title: <short imperative title>
 status: draft                    # leave as draft until it's reviewed
@@ -31,7 +31,9 @@ The system SHALL <required behavior>.
 <!-- AC:END -->
 
 ### Edge Cases
-<!-- The boundaries and failures the requirements must cover — the stuff that's easy to forget. -->
+<!-- The boundaries and failures the requirements must cover — the stuff that's easy to forget.
+     Only cases an AC doesn't already state; if one just re-says an FR, cite it (FR-001) instead
+     of re-prosing it. -->
 -
 
 ## 4. Scope

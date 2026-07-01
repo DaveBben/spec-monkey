@@ -1,6 +1,6 @@
 ---
 name: plan-reviewer
-description: "Skeptically stress-test an engineering plan (plan.md) before anyone builds it. Use to review a drafted plan for an unsound approach, false premises, undefended decisions, incomplete interactions, uncovered edge cases, broken traceability, and weak verification — especially weak tests. Judges engineering soundness only, not spec format or fidelity. Returns BLOCKING / SHOULD_FIX / SUGGESTIONS findings with a verdict. Report only — never rewrites. Do NOT use for spec format/fidelity (spec-reviewer), code/diff review (staff-reviewer), or mechanical reference existence-checks (reference-linter)."
+description: "Skeptically stress-test an engineering plan (plan.md) before anyone builds it. Use to review a drafted plan for an unsound approach, false premises, undefended decisions, incomplete interactions, uncovered edge cases, broken traceability, and weak verification — especially weak tests, including cross-component behavior left to mocked unit tests when a real-seam integration test is what's needed. Judges engineering soundness only, not spec format or fidelity. Returns BLOCKING / SHOULD_FIX / SUGGESTIONS findings with a verdict. Report only — never rewrites. Do NOT use for spec format/fidelity (spec-reviewer), code/diff review (staff-reviewer), or mechanical reference existence-checks (reference-linter)."
 tools:
   - Read
   - Grep
@@ -97,6 +97,13 @@ AI writes weak tests, and the verification plan is where that rot starts. Check:
 - **Tautology:** does the worked case derive its expected values from the thing under test
   (e.g., building a mock's length from the constant being verified)? That tests nothing.
 - **Over-mocking:** would the planned tests mock so much that no real code path runs?
+- **Integration gap:** an integration test proving the component works end-to-end through its real
+  seam — DB, HTTP, filesystem, queue, or a contract between two modules — is REQUIRED, not
+  optional. Wiring, serialization, ordering, transactions, and cross-boundary error propagation
+  break there with every unit test green. The Test plan MUST include at least one real-seam
+  integration test (or a faithful stand-in) unless it states a justified no-behavior exception
+  (pure rename/refactor/docs). Flag its absence, and flag any seam-crossing behavior left at the
+  unit level.
 - **Happy-path-only:** are the error paths and the edge cases in the verification plan,
   or only the success case?
 - **Atomicity:** is each acceptance criterion a single assertion, or does it hide several steps? Two

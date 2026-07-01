@@ -177,11 +177,23 @@ class <Name>(BaseModel):
 
 ## 13. Verification
 <!-- HOW you prove the spec is met — the runnable procedure, NOT a restatement of
-     the Requirements criteria. Give the exact commands, ONE worked case with real
+     the Requirements criteria. Give the test plan, the exact commands, ONE worked case with real
      expected values, and a self-check that re-walks every acceptance criterion.
      The Worked case shows the WORKING an AC asserts but doesn't derive — the arithmetic, the
      real expected values, the integration sequence. It must not re-type an AC. If your worked
      case reads identically to an AC line, it's a copy: delete it and keep the derivation. -->
+
+**Test plan** *(an integration test proving the component works end-to-end is REQUIRED)*
+<!-- The seam is where the code meets something it doesn't control in-process: a real DB, HTTP
+     client, filesystem, message queue, or a contract between two modules. A unit test that mocks
+     the seam proves the units work in isolation — it does NOT prove the component works. So every
+     spec that delivers runtime behavior MUST ship at least one integration test that drives the
+     component through its real seam (or a faithful stand-in — in-memory DB, testcontainers,
+     recorded response). This is a hard gate, not a nice-to-have. Cite AC IDs; don't re-prose. -->
+- **Integration seams:** <the real boundaries this change crosses>
+- **Integration test (required):** <the test(s) that drive the component through its real seam end-to-end, and the AC IDs each proves — #N, #M. This proves the component actually works, not just its units.>
+- **Unit-covered:** <AC IDs adequately tested in isolation — #K>
+- **No-behavior exception:** <ONLY if this spec introduces no runtime behavior — pure rename/refactor with existing tests green, docs, config-only. State why no seam exists. Otherwise delete this line.>
 
 **Commands** *(exact invocations a reviewer/agent runs)*
 ```
@@ -196,6 +208,7 @@ class <Name>(BaseModel):
 
 **Self-check** *(complete before flipping to reviewed / done)*
 - [ ] Every acceptance criterion in Requirements (#1…#N) re-walked and satisfied
+- [ ] An integration test drives the component through its real seam and passes — or the No-behavior exception above is stated and justified
 - [ ] Every NFR's Measurement met (or flagged as needing a benchmark)
 - [ ] Every Constraint met
 - [ ] `git diff` touches only the new/modify/delete rows in Files / Change Manifest — no stray edits

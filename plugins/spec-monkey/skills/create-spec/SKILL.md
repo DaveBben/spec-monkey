@@ -120,7 +120,11 @@ the real solution.
   Files manifest, the Approach, and the data contracts.
 - Decide the design: exact **files + symbols** to touch (new / modify / delete / context),
   the pattern to **Mirror**, **ordering** constraints, the **gotchas**, the **data/type
-  contracts**, and how you'll **verify** (commands + one worked case with real values).
+  contracts**, and how you'll **verify** (commands + one worked case with real values, plus a
+  **test plan** that includes at least one **required integration test** proving the component
+  works through its real seam end-to-end — DB, HTTP, filesystem, queue, or cross-module boundary —
+  not just its units in isolation. Only a spec with no runtime behavior (pure rename/refactor/docs)
+  may omit it, with a stated reason).
 - **If a discovery breaks an earlier assumption or requirement → STOP and loop back** to
   Interrogate or Worry with the user. Do not silently absorb it.
 
@@ -147,7 +151,9 @@ unresolved discovery.
   It judges engineering soundness only: is the approach sound, over- or under-engineered?
   Hidden maintenance traps? Are the Phase 3 worries covered? Does every requirement trace to
   a verification, and every file it lists earn its place?
-- It scrutinizes tests hardest — vacuous assertions, tautology, over-mocking, happy-path-only.
+- It scrutinizes tests hardest — vacuous assertions, tautology, over-mocking, happy-path-only, and
+  cross-component behavior left to mocked unit tests when a real-seam integration test is the one
+  that would catch a break.
 - If review finds real problems, fix them in `plan.md`. If a fix changes intent or scope, return
   to the user (Interrogate / Worry). Re-review until the verdict is APPROVE.
 

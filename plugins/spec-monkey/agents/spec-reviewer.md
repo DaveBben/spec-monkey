@@ -82,7 +82,9 @@ Work through each. Cite evidence for every finding.
 - **Typed islands:** does every table carry its header row? Are the `<!-- AC:BEGIN -->` /
   `<!-- AC:END -->` markers balanced, with each criterion a `#N` line?
 - **IDs:** is every join key unique within the spec — `FR-NNN`, `NFR-NNN`, `SC-NNN`, `F#`, AC `#N`?
-- **Deferred fields:** is the Tasks section empty (the decomposer fills it later)?
+- **Deferred fields:** is `tasks.md` still the empty template table (the decomposer fills it
+  later), and does `spec.md`'s Tasks section point to it rather than hold the table? Is the
+  Activity Log section the git-history pointer, with no hand-written log?
 
 ## Output — a structured report
 

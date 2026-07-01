@@ -16,9 +16,9 @@ checks that spec, and **spec-monkey:spec-decomposer** splits the approved spec i
 
 The session produces a prose **plan** — plain engineering decisions, no special format — which
 you save at `docs/specs/{slug}/plan.md`. Only after the human approves the plan does
-`spec-writer` format it into the spec at `docs/specs/{slug}/spec.md`; the plan file is then
-deleted, so the spec is the one surviving artifact. You never need the spec format yourself —
-`spec-writer` and `spec-reviewer` own it.
+`spec-writer` format it into the spec at `docs/specs/{slug}/spec.md` (plus a sibling
+`tasks.md`); the plan file is then deleted, so the spec is the surviving artifact. You never
+need the spec format yourself — `spec-writer` and `spec-reviewer` own it.
 
 You move through ten phases. Each has an exit bar; do not advance until it's met.
 Later phases may invalidate earlier ones — when that happens, go back.
@@ -172,9 +172,9 @@ if SC-001 fails in the field") — never a silent loose end.
 **Goal:** format the approved plan into the spec.
 
 - Spawn the **spec-monkey:spec-writer** subagent. Point it at `docs/specs/{slug}/plan.md` and tell
-  it to write the spec to `docs/specs/{slug}/spec.md`. It loads the format from `handling-specs`,
-  **only formats** — no new design, no decisions, invents nothing. Anything missing is its cue to
-  fail loudly, not to fill in.
+  it to write the spec to `docs/specs/{slug}/spec.md`. It also seeds an empty `tasks.md` beside
+  it. It loads the format from `handling-specs`, **only formats** — no new design, no decisions,
+  invents nothing. Anything missing is its cue to fail loudly, not to fill in.
 
 ## Phase 9 — Review the spec
 **Goal:** confirm the spec faithfully and correctly renders the approved plan.
@@ -188,14 +188,14 @@ if SC-001 fails in the field") — never a silent loose end.
 - Iterate until both come back clean. This is mechanical — the engineering was already approved
   in Phase 7, so findings here are formatting or fidelity fixes, not design changes.
 - On pass: **delete `docs/specs/{slug}/plan.md`** (the spec is now the source of truth) and set
-  `status: reviewed`. Leave the Tasks section empty — the decomposer fills it next.
+  `status: reviewed`. Leave `tasks.md` empty — the decomposer fills it next.
 
 ## Phase 10 — Decompose
 **Goal:** turn the approved spec into an ordered, parallelizable task list.
 
 - Spawn the **spec-monkey:spec-decomposer** subagent, pointed at the approved spec.
 - It splits the work into tasks — balancing MR review size, parallel execution, and
-  per-task context — and writes the Tasks table into the spec.
+  per-task context — and writes the Tasks table into `tasks.md`.
 - Relay its report to the user: the parallel waves, the trade-offs it made, and any
   flagged tasks (oversized or context-heavy).
 - Stop here. Implementation is a separate step.

@@ -23,6 +23,10 @@ the parse contract you must conform to. Refer to sections by header name, never 
 - **The plan (`plan.md`)** — the approved material; your content source (create-spec passes `docs/specs/{slug}/plan.md`).
 - **Output path** — where to write the `spec.md` (create-spec passes `docs/specs/{slug}/spec.md`).
 
+You write two files in that folder: **`spec.md`** (the core spec) and an **empty `tasks.md`**
+(the Tasks table, which the spec-decomposer fills later). There is no activity-log file — the
+spec's audit trail is git.
+
 ## Hard rules
 
 - **Transcribe, don't create.** Every value comes from the plan. Not in the plan → not in the spec.
@@ -33,7 +37,7 @@ the parse contract you must conform to. Refer to sections by header name, never 
   formatting to the rule, not a design call.
 - **Invent nothing** — no guessed requirements, edge cases, metrics, or file paths.
 - **Don't read the codebase.** Trust the plan's manifest; symbol-resolution is the linter's job.
-- **Leave deferred fields blank:** the Tasks section empty; `status: draft`.
+- **Leave deferred fields blank:** `tasks.md` holds only the empty template table; `status: draft`.
 - **Fail loudly on gaps** (see below).
 
 ## Procedure
@@ -49,20 +53,24 @@ the parse contract you must conform to. Refer to sections by header name, never 
    - resolved clarifications → a `→ FR-0xx` / config / Data Model pointer in the **Clarifications** table,
      not a restatement of the answer (the answer lives in its home section).
    - id / dates / owners / `standards` / `depends_on` / `supersedes` → frontmatter (`schema_version: 2`).
-   - Tasks → leave empty; Activity Log → one creation line, else a stub.
+   - Tasks → in `spec.md` the section is a one-line pointer to `tasks.md`; write `tasks.md` itself as
+     the empty template table (header row only). Activity Log → in `spec.md` the section points to
+     git history; write no log file.
 3. Assign stable IDs where the plan didn't: `FR-001…`, `NFR-001…`, `SC-001…`, AC `#1…`, files `F1…`.
 4. Emit the spec to the parse contract: numbered `## N. Name` sections in order; tables for
-   Clarifications / Assumptions / Files / Tasks (header row, escaped `|`); fenced blocks for Data
+   Clarifications / Assumptions / Files (header row, escaped `|`); fenced blocks for Data
    Model and Verification commands; AC inside `<!-- AC:BEGIN/END -->` as `#N …`; prose as
-   `- **Key:** value` or a `**Group**` label.
-5. Self-check, then write to the output path.
+   `- **Key:** value` or a `**Group**` label. The Tasks table goes in `tasks.md`, following
+   `reference/tasks-template.md`.
+5. Self-check, then write `spec.md` to the output path and the empty `tasks.md` beside it.
 
 ## Self-check before writing
 
 - Every required section present and in order; an absent one is `N/A — reason` (only if the plan
   says so) or a failure — never a silent omission.
 - Every table has its header row; AC markers balanced, each criterion `#N`; every ID unique.
-- `status: draft`; the Tasks section is empty.
+- `status: draft`; `spec.md`'s Tasks section is the pointer stub and `tasks.md` holds only the
+  empty template table; no activity-log file was written.
 
 ## Failure — fail loudly, never paper over
 
@@ -72,5 +80,6 @@ list of exactly what's missing (keyed by section) so create-spec can fill it and
 
 ## Report
 
-The path you wrote (or, on failure, the missing-content list); any `N/A — reason` sections with the
-reason; and confirmation the output passed the parse-contract self-check.
+The paths you wrote — `spec.md` and the empty `tasks.md` (or, on failure, the missing-content
+list); any `N/A — reason` sections with the reason; and confirmation the output passed the
+parse-contract self-check.

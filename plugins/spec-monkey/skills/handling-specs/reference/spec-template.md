@@ -163,17 +163,11 @@ class <Name>(BaseModel):
 - **Don't touch:** <code that looks related but must NOT change>
 - **Gotchas:** <the non-obvious trap / failure mode that will bite>
 
-## 12. Tasks *(deferred — the spec-decomposer fills this once the spec is approved)*
-<!-- Tasks are the HOW; they stay empty through `draft` and `reviewed` so the spec is
-     approved on intent. The spec-decomposer writes the table. `depends_on` is the source
-     of truth for ordering; `wave` is derived from it (the parallel batch). `est_diff` is
-     an estimated diff-line count (keep the `~`). `id*` marks optional work (e.g. extra
-     tests). Each task cites the acceptance criteria (`#N`) it satisfies and the
-     Files / Change Manifest rows it touches; the executor flips `done`. -->
-| id | task | files | AC | depends_on | wave | est_diff | done |
-|----|------|-------|----|------------|------|----------|------|
-| T1 | <single-concern summary> | F1, F2 | #1, #2 | — | 1 | ~120 | [ ] |
-| T2 | <…> | F3 | #3 | T1 | 2 | ~300 | [ ] |
+## 12. Tasks
+<!-- Pointer only — the Tasks table lives in the sibling file `tasks.md` to keep spec.md lean
+     (progressive disclosure). Empty until the spec is approved; the spec-decomposer then fills
+     tasks.md. Template + column guidance: reference/tasks-template.md. -->
+→ See [`tasks.md`](tasks.md).
 
 ## 13. Verification
 <!-- HOW you prove the spec is met — the runnable procedure, NOT a restatement of
@@ -213,15 +207,11 @@ class <Name>(BaseModel):
 - [ ] Every Constraint met
 - [ ] `git diff` touches only the new/modify/delete rows in Files / Change Manifest — no stray edits
 
-## 14. Activity Log *(append-only; spans the spec's whole life — draft, review, build)*
-<!-- Lightweight audit trail. Written by whoever (human or agent) touches the spec.
-     Never rewrite history here — append. This is the qualitative log of what happened.
-     A "spec gap / proposed amendment" noted here MUST also be recorded as an `open` row in
-     Clarifications — that's where open decisions surface for the next reader; don't leave one
-     buried in a log paragraph. -->
-- **Decisions & notes:** <date — what was decided, what changed, blockers hit>
-- **Files changed:** <paths>
-- **Final summary:** <what shipped, what was deferred, links to PR/commit>
+## 14. Activity Log
+<!-- Pointer only — the spec's audit trail is git, not a file. Don't hand-maintain a change
+     log here; git already records who changed what, when. A "spec gap / proposed amendment"
+     still belongs in the commit message AND as an `open` row in Clarifications. -->
+→ See git history: `git log -- docs/specs/{slug}/` (or `git log .` from the spec folder).
 
 ---
 
@@ -238,12 +228,14 @@ it *to* JSON — you never hand-author JSON.
    *are* the schema; treat them as frozen. (Sub-structure splits on `^### `.)
 3. **Typed islands inside a section:**
    - **Tables** (`| … |` with a header row) → array of row-objects keyed by column name. Used
-     by Clarifications, Assumptions, Files / Change Manifest, and Tasks. Escape any literal
-     `|` inside a cell.
+     by Clarifications, Assumptions, Files / Change Manifest, and the Tasks table. Escape any
+     literal `|` inside a cell. The `Tasks` section in `spec.md` is a pointer; its table lives
+     in the sibling file `tasks.md`, read as an extension of the spec.
    - **Fenced blocks** (` ```lang `) → captured verbatim with the language tag. Used by Data
      Model & Contracts and Verification commands.
    - **Marker regions** `<!-- AC:BEGIN -->` … `<!-- AC:END -->` → the lines between, each
      `#(\d+) <text>`.
+   - The `Activity Log` section is a pointer to **git history**, not an island — nothing to parse.
 4. **Two prose conventions, nothing else:**
    - `- **Key:** value` → a key/value field. One regex catches all: `^- \*\*(.+?):\*\*\s*(.*)$`.
    - `**Group**` on its own line → introduces the list / table / block that follows.

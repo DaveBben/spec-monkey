@@ -52,7 +52,8 @@ write the spec content for the user.** Coaching, not ghost-writing.
 Once the spec-monkey:plan-reviewer verdict is APPROVE and the user approves the spec:
 
 - Set the spec's `status` → `reviewed`.
-- Hand it to `spec-monkey:spec-decomposer` to break it into tasks. It writes the Tasks table;
-  relay its report — the parallel waves, the trade-offs, and any flagged tasks.
+- Hand it to `spec-monkey:spec-decomposer` to break it into tasks. It writes the Tasks table
+  into a sibling `tasks.md` (creating it — the blank scaffold has no Tasks section); relay its
+  report — the parallel waves, the trade-offs, and any flagged tasks.
 - Then **offer** to run the `execute-spec` skill to implement. If the user accepts, hand off to it;
   otherwise stop here with a reviewed, decomposed spec.

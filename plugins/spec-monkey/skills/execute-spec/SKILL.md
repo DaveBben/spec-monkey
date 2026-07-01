@@ -23,7 +23,8 @@ switch approaches or edit the spec to match the code.
 
 ## Phase 1 — Find the spec
 
-A spec is one file at `docs/specs/{slug}/spec.md`. Resolve `$ARGUMENTS`:
+A spec lives in `docs/specs/{slug}/`: the core `spec.md` plus a sibling `tasks.md` (the Tasks
+table). The spec's history is git — `git log -- docs/specs/{slug}/`. Resolve `$ARGUMENTS`:
 
 1. **Full path to a `spec.md`** → use it.
 2. **A bare slug** → `docs/specs/{slug}/spec.md`.
@@ -42,7 +43,7 @@ boundaries.
 
 ## Phase 2 — Pick the task(s)
 
-Read the spec's **Tasks** table (`id | task | files | AC | depends_on | wave | est_diff | done`).
+Read the Tasks table from `tasks.md` (`id | task | files | AC | depends_on | wave | est_diff | done`).
 
 - Show the user the un-done tasks: id, summary, `est_diff`, `wave`, and whether each task's
   `depends_on` are already `done`.
@@ -119,12 +120,14 @@ the spec to match the code and call it compliant. Re-review in scoped re-verific
 ## Phase 6 — Finalize
 
 - Run the **full** test suite (via the spec-monkey:test-runner) for regressions beyond the task's scope.
-- Mark the task(s) `done` in the spec's Tasks table.
-- If **every** task is now `done`, flip the spec's `status` → `applied`; otherwise leave it
-  `reviewed`. If you amended the spec during execution, get explicit user confirmation before
-  flipping.
-- Append to the **Activity Log**: what shipped, every test file touched (with its
-  justification), spec gaps you hit, and any proposed amendments.
+- Mark the task(s) `done` in `tasks.md`.
+- If **every** task is now `done`, flip the spec's `status` → `applied` in `spec.md`; otherwise
+  leave it `reviewed`. If you amended the spec during execution, get explicit user confirmation
+  before flipping.
+- **Record the narrative in the commit message — git is the spec's audit trail, not a log file.**
+  In the commit(s) for this task capture: what shipped, every test file touched (with its
+  justification), spec gaps you hit, and any proposed amendments. A proposed amendment also gets
+  an `open` row in the spec's Clarifications.
 - Present a summary: branch + commit count; what was done (2–3 sentences); verification
   result (with the pre-existing-failure set); review findings fixed; tests touched; compliance;
   spec gaps ("none" if the spec was sufficient); needs-attention (amendments, anything to review).

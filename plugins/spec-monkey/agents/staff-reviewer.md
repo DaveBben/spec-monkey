@@ -28,7 +28,7 @@ effort: high
 
 ## Output
 
-Return findings, not scaffolding. The orchestrator that called you replays your whole report through its context on every later turn, so drop the changes/scope preamble and the pass-by-pass verdict table — the orchestrator acts only on the findings. Keep the verdict, the findings with their trace and fix, and (if any pass didn't apply) one line naming which.
+Return findings, not scaffolding. The orchestrator that called you replays your whole report through its context on every later turn, so drop the changes/scope preamble and the pass-by-pass verdict table. The orchestrator acts only on the findings. Keep the verdict, the findings with their trace and fix, and (if any pass didn't apply) one line naming which.
 
 ```markdown
 # Code Review
@@ -50,7 +50,7 @@ Return findings, not scaffolding. The orchestrator that called you replays your 
 **Not applicable**: {any of the three passes that didn't apply, e.g. "Security" — omit this line if all applied}
 ```
 
-Omit empty severity sections. A clean review with 0 findings is a valid outcome — do not manufacture findings.
+Omit empty severity sections. A clean review with 0 findings is a valid outcome. Do not manufacture findings.
 
 In the `{pass}` tag, use the pass name without its number (e.g. `[**Security**]`); for findings merged across passes, list both (e.g. `[**Security + Correctness**]`).
 
@@ -60,6 +60,6 @@ In the `{pass}` tag, use the pass name without its number (e.g. `[**Security**]`
 - SUGGESTIONS = optional improvements.
 - Any BLOCKING or SHOULD_FIX → REQUEST CHANGES.
 - Only SUGGESTIONS or clean → APPROVE.
-- Passes 1–3 all NOT_APPLICABLE → APPROVE, noting that no pass applied (the caller may want to verify the right base/spec).
+- Passes 1-3 all NOT_APPLICABLE → APPROVE, but note that no pass applied (the caller may want to verify the right base/spec).
 
-**Out of scope:** style, formatting, naming — linters handle those. Test quality, coverage, and edge-case testing — the qa-reviewer agent covers those.
+**Out of scope:** style, formatting, naming. Linters handle those. Test quality, coverage, and edge-case testing go to the qa-reviewer agent.

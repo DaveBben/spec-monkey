@@ -1,5 +1,5 @@
 ---
-schema_version: 2                # spec format version
+schema_version: 3                # spec format version
 id: SPEC-NNN                      # a stable id, e.g. SPEC-014
 title: <short imperative title>
 status: draft                    # leave as draft until it's reviewed
@@ -9,66 +9,68 @@ standards: standards.md          # the repo constitution: standards.md | CLAUDE.
 
 # Spec: <title>
 
-> **In one line:** <what you're building or changing, in a single sentence>
+<!-- This spec is DESIGN, not implementation. The file manifest, exact symbols, and run commands
+     do NOT go here. The spec-decomposer writes them into a sibling tasks.md after approval.
+     If a line names which file to edit, it's in the wrong file. Data contracts DO stay (types
+     are contracts a reviewer signs). Full guidance: the handling-specs skill. -->
 
-## 1. Goal
-<!-- ONE measurable sentence. State the delta — "X moves from A to B", not "improve X". -->
+**Goal (verifiable):** <one sentence stating a delta you can check true/false — "X moves from A to
+B", tied to an observable outcome. Not "improve X".>
 
-## 2. Context & Background
-<!-- What exists today, and why this is needed now. Ground the reader before the requirements. -->
-- **Today:**
-- **Why now:**
+## 1. The request
+> <what you're building or changing, summarized in a sentence or two>
 
-## 3. Requirements
-<!-- What the system must do. One FR per behavior, each with testable acceptance criteria. -->
+## 2. Why it matters
+<!-- The problem, conclusion-first: what's broken or missing, and the cost of leaving it. -->
 
-### FR-001: <name>
-The system SHALL <required behavior>.
+## 3. What I'm building
+**Behavior** — <the runtime flow in a few steps>
 
-**Acceptance criteria**
-<!-- AC:BEGIN -->
-- [ ] #1 WHEN <event> THE SYSTEM SHALL <observable response>
-<!-- AC:END -->
-
-### Edge Cases
-<!-- The boundaries and failures the requirements must cover — the stuff that's easy to forget.
-     Only cases an AC doesn't already state; if one just re-says an FR, cite it (FR-001) instead
-     of re-prosing it. -->
--
-
-## 4. Scope
-**In scope**
--
+**Requirements**
+- **FR-001** — The system SHALL <required behavior>.
 
 **Out of scope**
 - <item> — <why it's excluded>
 
-## 5. Approach
-<!-- The non-obvious path only — what an experienced engineer wouldn't already know. -->
-- **Mirror:** <existing pattern / file to copy>
-- **Ordering:** <what must happen before what>
-- **Gotchas:** <the trap that will bite>
+## 4. How it fits
+**Existing-code facts (verified)** — <facts checked against the real code, with file refs>
+**Constraints** — <hard limits: platform, volume, must-reuse, compliance>
+**Non-functional** — <performance / security / reliability / accessibility, each a bound with its threshold; "none" if none apply>
+**Depends on** — <external services / APIs / other specs>
 
-## 6. Files / Change Manifest
-<!-- Every file you'll touch. mode: new | modify | delete | context (read-only). -->
-| id | path | mode | symbol | why |
-|----|------|------|--------|-----|
-| F1 |  |  |  |  |
+## 5. Data contracts *(omit as "N/A — reason" if no data or type surface)*
+```python
+# typed contract block — source of truth when the change is type-bearing
+```
 
-## 7. Verification
-<!-- How you'll prove it works: the exact commands, and one concrete worked example. -->
-**Commands**
-```
-<e.g. pytest tests/test_x.py -q>
-```
+## 6. What could go wrong (edge cases)
+<!-- Non-obvious failures/boundaries, each with a decision: HANDLE / ACCEPT / OUT-OF-SCOPE.
+     Cite the FR it relates to; skip cases an FR already pins. -->
+- <failure / boundary> → <decision>. (FR-0xx)
+
+## 7. Who's affected (blast radius)
+**External** — <users, downstream consumers, operators / runbooks>
+**Internal (code)** — <callers, APIs, shared state; what breaks at build time>
+**Unchanged** — <the thing a reader will worry about that this does NOT change>
+
+## 8. How I know it works
+**Success criteria**
+- **SC-001** — <measurable, technology-agnostic outcome>
+
+**Verification** — <the test plan; at least one required integration test through the real seam.
+Cite the SC/FR each proves. Exact commands live per-task in tasks.md.>
 
 **Worked case**
-- **Given:** <real input / starting state>
-- **When:** <action>
-- **Then:** <exact expected output, with literal values>
+- **Given:** <real starting state> · **When:** <action> · **Then:** <exact expected values>
 
-<!--
-Need more? This is the lean core. If your change has a data model, non-functional
-requirements (performance/security), or measurable success metrics, pull those sections
-from the `handling-specs` skill and add them here.
--->
+**Honest gap** — <what the tests do NOT prove, and what covers it instead>
+
+## 9. How it ships (rollout & rollback)
+**Rollout** — <sequencing; pre-flight checks; the risky moment; what to watch>
+**Rollback** — <how to undo; what persists; the cost>
+
+## 10. Tasks
+→ See [`tasks.md`](tasks.md).  <!-- the spec-decomposer writes it after approval -->
+
+## 11. Activity Log
+→ See git history: `git log -- docs/specs/{slug}/`.

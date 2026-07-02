@@ -49,7 +49,13 @@ write the spec content for the user.** Coaching, not ghost-writing.
 
 ## Phase 3: Decompose & hand off
 
-Once the `spec-monkey:plan-reviewer` verdict is APPROVE and the user approves the spec:
+Gate: the `spec-monkey:plan-reviewer` verdict is APPROVE, **and** the user has **typed the word
+`approve`**. Ask in plain text — no menu, no `AskUserQuestion`. That deliberate act is the gate; a
+clicked option or a casual "looks good" doesn't carry the same weight. Say it plainly: "Reply
+`approve` to decompose, or reply with changes." Anything that isn't `approve` is more work — coach
+the fix and re-review, don't proceed.
+
+Once both hold:
 
 - Set the spec's `status` → `reviewed`.
 - Hand it to `spec-monkey:spec-decomposer`. It derives the per-task file manifest and run commands

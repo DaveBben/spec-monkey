@@ -44,6 +44,9 @@ prose strains working memory. Close each loop fast.
 - One idea per sentence; conclusion first. Caveats get their own sentence.
 - Prefer lists over running text.
 - Never hit the user with a huge wall of text at once. Prefer multiple turns.
+- **Ask in plain text; avoid `AskUserQuestion` menus.** A menu invites the user to click the first
+  option without weighing it; a typed answer is a considered one. Reserve menus for a genuinely
+  discrete, low-stakes choice where options speed things without diluting thought.
 
 ---
 
@@ -163,12 +166,16 @@ unresolved discovery.
 **Goal:** get the human's sign-off on the spec. This is the one human gate.
 
 - Show the user the spec, plus the key decisions and residual risks.
-- Get explicit approval before decomposing.
+- **Ask for approval in plain text — no menu, no `AskUserQuestion`.** The user must **type the word
+  `approve`** to proceed. That deliberate act is the gate; a clicked option or a casual "looks good"
+  doesn't carry the same weight. Say it plainly: "Reply `approve` to decompose, or reply with
+  changes." Treat anything that isn't `approve` — an edit, a question, a "yes, but…" — as more work:
+  fold it in and re-present. Do not proceed on a maybe.
 
-**Exit bar:** no `open-blocking` clarifications remain, and every med/low-confidence assumption
-carries either an open follow-up or a verify step. Any item still open at ship time gets an
-explicit resolution or a `deferred — revisit if SC-NNN fails` note. Don't leave it as a silent
-loose end. On approval, set `status: reviewed`.
+**Exit bar:** the user has typed `approve`; no `open-blocking` clarifications remain; and every
+med/low-confidence assumption carries either an open follow-up or a verify step. Any item still open
+at ship time gets an explicit resolution or a `deferred — revisit if SC-NNN fails` note. Don't leave
+it as a silent loose end. Once approved, set `status: reviewed`.
 
 ## Phase 8: Decompose
 **Goal:** turn the approved spec into an ordered, parallelizable task list.

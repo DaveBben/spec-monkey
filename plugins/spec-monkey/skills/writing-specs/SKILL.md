@@ -8,7 +8,7 @@ compatibility: any-agent
 
 # Writing Specs
 
-You compose the formal spec from shaped thinking. The reasoning already exists in `detail/evidence.md` and the brief's *Decisions to sign off*; your job is to turn it into the binding contract a reviewer approves, an implementer builds against, and an auditor checks.
+You compose the formal spec from shaped thinking, into the binding contract a reviewer approves, an implementer builds against, and an auditor checks.
 
 There is **one artifact**: the spec folder at `docs/specs/{slug}/`, three documents, one per reader: `spec.md` (the decision brief the reviewer approves from), `detail/contract.md` (the build contract the implementer and auditor consume), and `detail/evidence.md` (the review-time reasoning, opened on doubt).
 
@@ -55,7 +55,6 @@ You may be invoked on a slug with no `evidence.md`.
 
 ## What you do NOT do
 
-- No re-interviewing what shaping already settled, and no rewriting its reasoning sections.
 - No implementation. A finished spec is not permission to build it; the human's `approved` is. "It's obvious what to code" and "this saves a round-trip" are the tells that you're stepping over the gate. The spec exists precisely so a reviewer catches what already feels obvious to you. Leave `status: draft`. You never set `approved` on your own say-so; that sign-off is the human's.
 
 ## Next step

@@ -8,13 +8,13 @@ compatibility: any-agent
 
 # Writing Specs
 
-You compose the formal spec from shaped thinking. `shaping-specs` did the divergent work: it weighed the approaches, worked the risk lenses, and wrote the reasoning. Your job is to turn that into the binding contract a reviewer approves, an implementer builds against, and an auditor checks.
+You compose the formal spec from shaped thinking. The reasoning already exists in `detail/evidence.md` and the brief's *Decisions to sign off*; your job is to turn it into the binding contract a reviewer approves, an implementer builds against, and an auditor checks.
 
 There is **one artifact**: the spec folder at `docs/specs/{slug}/`, three documents, one per reader: `spec.md` (the decision brief the reviewer approves from), `detail/contract.md` (the build contract the implementer and auditor consume), and `detail/evidence.md` (the review-time reasoning, opened on doubt).
 
 ## What you write, and what you inherit
 
-`shaping-specs` already wrote the reasoning:
+The reasoning already exists:
 
 - `detail/evidence.md`: *What's true today*, *Failure modes*, *Who & what this touches*, *Open questions & assumptions*.
 - In `spec.md`: *Drivers*, *Decisions to sign off*, and a drafted *Goal* and *The request*.
@@ -26,8 +26,8 @@ Read those; do **not** re-interview or rewrite them. You compose the rest:
 
 ## Stance
 
-- **Ground on the project spec.** Set `parent` to the project spec's id and cite its `INV-NNN` and named contracts rather than restating them. If shaping surfaced a need for a shared fact the project spec lacks (a new invariant, entity, or contract change), it should already be routed to `grounding-specs`; if you find one still open, **stop** and route it there before you write. Never invent a shared fact locally.
-- **One spec, one thin slice.** A spec covers exactly one independent decision whose build a reviewer can read in one sitting. Shaping should have split a multi-decision request already; if you still see distinct sign-off owners, reviewers, lifecycles, or disjoint success-criteria groups, stop and split.
+- **Ground on the project spec.** Set `parent` to the project spec's id and cite its `INV-NNN` and named contracts rather than restating them. If a shared fact the project spec lacks is still open (a new invariant, entity, or contract change), **stop** and route it to `grounding-specs` before you write. Never invent a shared fact locally.
+- **One spec, one thin slice.** A spec covers exactly one independent decision whose build a reviewer can read in one sitting. If you see distinct sign-off owners, reviewers, lifecycles, or disjoint success-criteria groups, stop and split.
 - **WHAT and WHEN, never HOW.** Pin down what to build and when it happens; leave the file manifest and the exact symbols to the implementer. The one exception is the commands under *Verification approach & commands*, which are concrete.
 - Conclusion-first, plain language. Never paper over a gap the reasoning left; mark it, don't guess.
 
@@ -48,7 +48,7 @@ Do the work; don't announce it.
 
 ## When there is no shaped reasoning
 
-`shaping-specs` is a strong default, not a hard gate, so you may be invoked on a slug with no `evidence.md`.
+You may be invoked on a slug with no `evidence.md`.
 
 - **Real uncertainty in the work?** Say so, and offer `shaping-specs` first: the approach comparison and the risk lenses are the thinking a bare contract skips. Weighing the alternatives before you write the FRs is cheaper than reworking an approved spec.
 - **A trivial slice** with one obvious approach and no live failure modes? Proceed, and do a light version of the reasoning yourself: capture the current-state facts and any risk you do see, then write the contract.

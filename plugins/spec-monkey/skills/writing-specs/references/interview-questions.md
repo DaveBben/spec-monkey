@@ -1,6 +1,6 @@
 # Contract questions
 
-This is the discovery instrument for the **binding** part of a spec: the requirements, the contracts, the timing, and the proof. The thinking is already done: `shaping-specs` weighed the approaches, worked the risk lenses, and wrote the reasoning in `detail/evidence.md` and the brief's *Decisions to sign off*. Read that first. These questions close only the contract detail the reasoning did not pin down.
+This is the discovery instrument for the **binding** part of a spec: the requirements, the contracts, the timing, and the proof. The thinking is already done and recorded in `detail/evidence.md` and the brief's *Decisions to sign off*. Read that first. These questions close only the contract detail the reasoning did not pin down.
 
 Discover here; compose the answers into `spec-template.md` afterward. This is **not** the spec's layout: it follows the order you interrogate in, working backwards from the binding fields the template needs filled.
 
@@ -53,4 +53,4 @@ Each area below notes the template field(s) it fills.
 
 ## Note on constraints and fit
 
-The hard limits (platform, volume, must-reuse, compliance) and the current-state facts the design rests on were surfaced during shaping and live in `evidence.md` under *What's true today*. Bind them into *Constraints & non-functional bounds* from there; interview again only if a binding threshold is genuinely missing.
+The hard limits (platform, volume, must-reuse, compliance) and the current-state facts the design rests on live in `evidence.md` under *What's true today*. Bind them into *Constraints & non-functional bounds* from there; interview again only if a binding threshold is genuinely missing.

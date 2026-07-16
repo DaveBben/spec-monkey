@@ -14,6 +14,7 @@ The output of this instrument is `detail/design.md`: *The request*, *Goal*, *Dri
 - **Separate decisions from assumptions.** Record "the user decided X" apart from "I'm assuming X". Every unverified belief is an assumption, not a fact, until confirmed.
 - **Don't gold-plate or narrow.** If scope, approach, or intent is unclear, ask. Don't guess.
 - **Write for one read.** One idea per sentence; caveats get their own sentence. Lists over running prose; never a wall of text, prefer multiple turns.
+- **Avoid Options Menu** Options menu encourages users to click the first thing they see. Only use if necessary for trivial decisions.
 
 The areas below run in a natural discovery order. Each notes the artifact field(s) it feeds.
 

@@ -1,6 +1,6 @@
 # Interview questions
 
-The discovery instrument for the **project spec**. Not its layout: it follows the order you interrogate in, working backwards from every field [`project-template.md`](project-template.md) needs filled. Discover here; compose the answers afterward.
+The discovery instrument for the **project spec**. Not its layout — it follows the order you interrogate in, working back from every field [`project-template.md`](project-template.md) needs filled. Discover here; compose afterward.
 
 ## How to use it
 

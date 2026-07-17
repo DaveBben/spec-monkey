@@ -14,7 +14,7 @@ The sections below explain the loop those prompts run in. Read them once; then w
 
 ## Why files, not pasted text
 
-Everything you paste into a dispatch prompt, and everything a subagent prints back, stays resident in the controller's context and is re-read on every later turn. Hand artifacts over as files so bulk content never enters the controller's context. spec-monkey has an advantage here: `detail/contract.md` is already the durable brief, and its *Requirements & success criteria* is already grouped by subsystem/seam. No task-extraction step is needed; the brief is the contract path plus the group name.
+Everything you paste into a dispatch prompt, and everything a subagent prints back, stays resident in the controller's context and is re-read on every later turn. Hand artifacts over as files so bulk content never enters it. spec-monkey has an advantage here: `detail/contract.md` is already the durable brief, and its *Requirements & success criteria* is already grouped by subsystem/seam. No task-extraction step is needed; the brief is the contract path plus the group name.
 
 ## The unit of work: one FR-group
 

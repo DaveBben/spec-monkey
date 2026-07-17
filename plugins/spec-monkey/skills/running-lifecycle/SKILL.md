@@ -45,7 +45,7 @@ You drive the whole spec-monkey flow so the user doesn't have to remember each h
 
 ## Running a phase in fresh context
 
-The two reviews and the audit are worth more when a clean context runs them — one that hasn't watched the design get shaped, the spec get written, or the code get built, so it catches what the author's context glosses over. Concretely: if you are able to dispatch subagents, dispatch one given only the spec folder path and the skill to run. Otherwise, tell the human to open a new session with an empty context, pointed at the spec path, and hand back. Naming the mechanism is the point; "review it fresh" without one just runs in the same polluted context.
+The two reviews and the audit are worth more when a clean context runs them — one that hasn't watched the design get shaped, the spec get written, or the code get built, so it catches what the author's context glosses over. Concretely: dispatch a subagent given only the spec folder path and the skill to run, or tell the human to open a new empty-context session pointed at the spec path and hand back. Naming the mechanism is the point; "review it fresh" without one just runs in the same polluted context.
 
 ## What you do NOT do
 
@@ -55,4 +55,4 @@ The two reviews and the audit are worth more when a clean context runs them — 
 
 ## Auto-starting this
 
-Being invoked is what forces the flow. Making it *auto-start* from the first "let's build X" message needs a session-start hook, which is harness-specific and does not belong in a portable skill. That glue lives outside `skills/`, in the spec-monkey repository's per-harness adapter layer (the `hooks/` directory and its README, plus `docs/porting-to-a-new-harness.md`). It is opt-in and off by default, so the plugin stays portable and hook-free. Without it, start the flow by invoking this skill by name through your harness's skill mechanism.
+Being invoked is what forces the flow. Making it *auto-start* from the first "let's build X" message needs a session-start hook, which is harness-specific and doesn't belong in a portable skill. That glue lives outside `skills/`, in the repo's per-harness adapter layer (the `hooks/` directory and its README, plus `docs/porting-to-a-new-harness.md`). It's opt-in and off by default, so the plugin stays portable and hook-free. Without it, start the flow by invoking this skill by name through your harness's skill mechanism.

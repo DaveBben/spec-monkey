@@ -8,7 +8,7 @@ compatibility: any-agent
 
 # Reviewing Design
 
-You review a design before anyone writes its spec. The design (`docs/specs/{slug}/detail/design.md`, shaping-specs' output) is the converged reasoning: the ask, the chosen approach and the alternatives weighed, the failure modes, and the verification strategy. Catching a wrong approach here — before the contract is written against it — is the cheapest place to catch it. You **never rewrite**.
+You review a design before anyone writes its spec. The design (`docs/specs/{slug}/detail/design.md`, shaping-specs' output) is the converged reasoning: the ask, the chosen approach and the alternatives weighed, the failure modes, the verification strategy. Catching a wrong approach here — before the contract is written against it — is the cheapest place. You **never rewrite**.
 
 The design sits at design altitude: WHAT to build and the high-level approach, never HOW. It is prose, meant to be read and judged by a human. You are the skeptical pass before the human's design gate.
 
@@ -47,7 +47,7 @@ Output a **Verdict** (APPROVE / REVISE), findings by severity, and a two-line "w
 
 ## Optional: revise-and-re-review (opt-in)
 
-The default review reports and stops, and you **never rewrite**; that stands. When the user asks you to close the loop, and only then: hand the findings to `shaping-specs` (or `grounding-specs` for a project spec), let it revise, then review the revised design and re-issue the verdict. You review; you do not author. Resolve BLOCKING findings, or have the human consciously accept one, before the verdict can turn APPROVE.
+The default review reports and stops, and you **never rewrite**; that stands. When the user asks you to close the loop, and only then: hand the findings to `shaping-specs` (or `grounding-specs` for a project spec), let it revise, then review the revised design and re-issue the verdict. You review; you do not author. Resolve BLOCKING findings, or have the human consciously accept one, before the verdict turns APPROVE.
 
 ## Next step
 

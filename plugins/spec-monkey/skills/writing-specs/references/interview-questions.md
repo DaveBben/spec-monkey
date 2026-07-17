@@ -1,8 +1,8 @@
 # Contract questions
 
-This is the discovery instrument for the **binding** part of a spec: the requirements, the contracts, the timing, and the proof. The thinking is already done and recorded in `detail/design.md` and the brief's *Decisions to sign off*. Read that first. These questions close only the contract detail the reasoning did not pin down.
+The discovery instrument for the **binding** part of a spec: the requirements, the contracts, the timing, the proof. The thinking is already done, recorded in `detail/design.md` and the brief's *Decisions to sign off*. Read that first. These questions close only the contract detail the reasoning didn't pin down.
 
-Discover here; compose the answers into `spec-template.md` afterward. This is **not** the spec's layout: it follows the order you interrogate in, working backwards from the binding fields the template needs filled.
+Discover here; compose into `spec-template.md` afterward. This is **not** the spec's layout — it follows the order you interrogate in, working back from the binding fields the template needs filled.
 
 ## How to use it
 

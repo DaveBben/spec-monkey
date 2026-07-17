@@ -2,10 +2,9 @@
 THE DESIGN FILE — shaping-specs' output format, self-contained.
 
 design.md is the whole product of shaping-specs: the converged reasoning a change rests on, worked out from a
-fuzzy ask by exploring the landscape and weighing approaches, then drafted so writing-specs can compose the
-spec from it without re-interviewing. It lives at docs/specs/{slug}/detail/design.md. shaping-specs writes
-this file and only this file; writing-specs reads it (with the project spec) and composes spec.md and
-detail/contract.md from it.
+fuzzy ask by weighing approaches, then drafted so writing-specs can compose the spec without re-interviewing.
+It lives at docs/specs/{slug}/detail/design.md. shaping-specs writes this file and only this file;
+writing-specs reads it (with the project spec) and composes spec.md and detail/contract.md from it.
 
 It is a reviewable, gated artifact: reviewing-design critiques it, and a human approves it (status: approved)
 before writing-specs turns it into a contract. That is why it carries its own light frontmatter and gate
@@ -58,20 +57,20 @@ assumption; an assumption with residual risk also appears under Open questions &
 - <fact the design rests on> — <verified fact | assumption>
 
 ## Approach
-<!-- The chosen shape of the solution, in prose and high-level: what will be built and how the pieces fit,
-enough that an implementer knows the intended shape without being handed a file or a symbol. This is the
-section that carries design intent into implementing-specs, so make it real — but keep it above the code.
+<!-- The chosen shape of the solution, in high-level prose: what will be built and how the pieces fit,
+enough that an implementer knows the intended shape without being handed a file or symbol. This section
+carries design intent into implementing-specs, so make it real — but keep it above the code.
 
 - Describe the shape: the moving parts and how they connect, the sequence, where the change sits in what
-  already exists. Prose, not a task list.
+  exists. Prose, not a task list.
 - Call out the non-obvious things: the parts a reader wouldn't guess, the sharp edges, the deliberate
   choices and what they rule out. This is where the value is; a bland restatement of the goal is not an
   approach.
 - Survey the landscape, then converge. Name the genuinely different design philosophies open here — 2-3 real
-  ones, not one plan and two strawmen — and for each, its tradeoff and its cost (runtime, complexity,
-  operational burden, dollars, what it forecloses later). Then say why the chosen one wins. This is the heart
-  of shaping: an ask that arrived fuzzy ("extract prefills with an LLM") leaves as a defended choice among
-  the real alternatives. If only one sane approach exists, say so plainly rather than manufacturing options.
+  ones, not one plan and two strawmen — and for each its tradeoff and cost (runtime, complexity, operational
+  burden, dollars, what it forecloses later). Then say why the chosen one wins. This is the heart of shaping:
+  an ask that arrived fuzzy ("extract prefills with an LLM") leaves as a defended choice among the real
+  alternatives. If only one sane approach exists, say so rather than manufacturing options.
 
 Stay above the code: no file/seam manifest, no typed struct, no exact symbols — that is the implementer's
 call against the real code. "A background worker drains a durable queue and retries with backoff" is the

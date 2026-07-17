@@ -1,14 +1,14 @@
 # Shaping questions
 
-This is the thinking instrument for a spec. You use it to work out what to build, why, and which approach wins, before anyone writes a binding requirement. It is **not** the spec's layout. Discover here; `writing-specs` composes the contract afterward.
+The thinking instrument for a spec. Use it to work out what to build, why, and which approach wins, before anyone writes a binding requirement. It is **not** the spec's layout. Discover here; `writing-specs` composes the contract afterward.
 
-The output of this instrument is `detail/design.md`: *The request*, *Goal*, *Drivers*, *What's true today*, *Approach*, *Failure modes*, *Verification strategy*, *Who & what this touches*, and *Open questions & assumptions*. Its format is in `references/design-template.md`. `writing-specs` composes `spec.md` from it afterward.
+The output is `detail/design.md`: *The request*, *Goal*, *Drivers*, *What's true today*, *Approach*, *Failure modes*, *Verification strategy*, *Who & what this touches*, and *Open questions & assumptions*. Its format is in `references/design-template.md`.
 
 ## How to use it
 
-- **This is a conversation, not a questionnaire.** These are prompts, not a script to read out in order. Skip what isn't relevant to this change, reword a question to fit the user's context, and let each answer reshape what you ask next. The goal is shared understanding, not a filled-in form.
-- **Ask relentlessly, one question at a time.** Plain language, in the user's own words. Never offer a menu of options to pick from unless the choice is genuinely discrete and low-stakes; a considered answer beats a grabbed one.
-- **Ask for their answer before you give yours.** These prompts pull the engineer's own reasoning out first; they are not for you to answer aloud and have them agree. When you know the answer, resist supplying it — a question they work is worth more than a statement they accept. Fill a gap only after they've tried the leap and missed, and then show your reasoning, not just your conclusion.
+- **A conversation, not a questionnaire.** These are prompts, not a script. Skip what isn't relevant, reword to fit the user's context, and let each answer reshape what you ask next. The goal is shared understanding, not a filled-in form.
+- **Ask relentlessly, one question at a time.** Plain language, in the user's own words. Never offer a menu of options unless the choice is genuinely discrete and low-stakes; a considered answer beats a grabbed one.
+- **Ask for their answer before you give yours.** These prompts pull the engineer's own reasoning out first; they're not for you to answer aloud and have them agree. When you know the answer, resist supplying it — a question they work beats a statement they accept. Fill a gap only after they've tried and missed, then show your reasoning, not just your conclusion.
 - **Reflect every answer back.** "I think you mean X, which implies Y, right?" Surface the implication, not just the words.
 - **Recurse.** When an answer opens new questions or a sub-decision, chase those before moving on. A branch of the design tree is not done until its leaves are.
 - **Separate decisions from assumptions.** Record "the user decided X" apart from "I'm assuming X". Every unverified belief is an assumption, not a fact, until confirmed.
@@ -73,7 +73,7 @@ This is the core of shaping. Do not hand them the menu; make them reach for it.
 - **Stress-test the tradeoff they underweighted,** and tie it to the failure modes above: which lens does their approach expose? Push on the cost they waved past.
 - **Ratify a sound choice and move on.** State your own recommendation only after theirs is on the table; if theirs holds, say why and stop — the goal is a choice they can defend, not one they recognize. Lay out the approaches yourself only when they're genuinely stuck, each with the reasoning that separates them.
 
-The weighed approaches and the chosen shape become the *Approach* section: the shape in prose, the non-obvious things about it, each alternative's tradeoff, and why this one wins. (`writing-specs` turns the calls that need sign-off into the brief's *Decisions to sign off*.) A choice that turns out to need a **new shared fact** (a system-wide invariant, a shared entity, a contract change) is not yours to make locally: that is a project-spec amendment. Route it up to `grounding-specs`, get it approved, then resume. Never invent a shared fact here.
+The weighed approaches and chosen shape become the *Approach* section: the shape in prose, its non-obvious points, each alternative's tradeoff, and why this one wins. (`writing-specs` turns the calls needing sign-off into the brief's *Decisions to sign off*.) A choice that needs a **new shared fact** (a system-wide invariant, a shared entity, a contract change) is not yours to make locally: that's a project-spec amendment. Route it up to `grounding-specs`, get it approved, then resume. Never invent a shared fact here.
 
 ## F. Residue & assumptions
 *(feeds: Open questions & assumptions · the blocking ones writing-specs promotes to the brief · Contingencies)*

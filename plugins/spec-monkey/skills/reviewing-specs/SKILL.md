@@ -52,7 +52,7 @@ Output a **Verdict** (APPROVE / REVISE), findings by severity, a one-line succes
 
 ## Optional: revise-and-re-review (opt-in)
 
-The default review reports and stops, and you **never rewrite**; that stands. When the user asks you to close the loop, and only then: hand the findings to the author (the human, or `writing-specs`, or `shaping-specs` when a finding is really about the approach), let them revise, then review the revised contract and re-issue the verdict. You review; you do not author. Resolve BLOCKING findings, or have the human consciously accept one, before the verdict can turn APPROVE. A reviewer who both writes and grades the spec is no longer an independent check.
+The default review reports and stops, and you **never rewrite**; that stands. When the user asks you to close the loop, and only then: hand the findings to the author (the human, or `writing-specs`, or `shaping-specs` when a finding is really about the approach), let them revise, then review the revised contract and re-issue the verdict. You review; you do not author. Resolve BLOCKING findings, or have the human consciously accept one, before the verdict turns APPROVE. A reviewer who both writes and grades the spec is no longer an independent check.
 
 ## Next step
 

@@ -4,7 +4,7 @@ Ready-to-use brief for one FR-group. Fill the `[BRACKETED]` slots and dispatch. 
 
 Never paste FR/SC text into this prompt — point at `contract.md` by path and group name. Bulk content pasted here stays resident in the controller's context on every later turn; a path does not.
 
-"Dispatch a subagent" is an action, not a tool name: use whatever your harness provides for spawning a fresh agent and reading its result back, with a general coding-agent type. The per-harness tool mapping lives outside the skills, in the spec-monkey repository's `docs/harness-tools/`.
+"Dispatch a subagent" is an action, not a tool name: use whatever your harness provides for spawning a fresh agent and reading its result back, with a general coding-agent type. The per-harness tool mapping lives outside the skills, in `docs/harness-tools/`.
 
 ```
 Dispatch a subagent:

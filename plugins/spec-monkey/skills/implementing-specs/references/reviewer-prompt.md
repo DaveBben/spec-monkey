@@ -4,7 +4,7 @@ Ready-to-use brief for the per-group review gate. Fill the `[BRACKETED]` slots a
 
 This gate applies checks 1, 3, and 9 of [`../../auditing-specs/references/audit-rubric.md`](../../auditing-specs/references/audit-rubric.md) to one group's diff; it never inlines the full nine-check rubric and never emits a COMPLIANT verdict. `auditing-specs` stays the independent gate, run afterward by a fresh agent.
 
-"Dispatch a subagent" is an action, not a tool name: use whatever your harness provides for spawning a fresh agent and reading its result back, with a general coding-agent type. The per-harness tool mapping lives outside the skills, in the spec-monkey repository's `docs/harness-tools/`.
+"Dispatch a subagent" is an action, not a tool name: use whatever your harness provides for spawning a fresh agent and reading its result back, with a general coding-agent type. The per-harness tool mapping lives outside the skills, in `docs/harness-tools/`.
 
 ```
 Dispatch a subagent:

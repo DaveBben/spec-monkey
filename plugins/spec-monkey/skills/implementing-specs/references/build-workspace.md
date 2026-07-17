@@ -11,7 +11,7 @@ Before the first slice, isolate the work:
 - **A worktree is the upgrade where your setup supports it.** An isolated git worktree keeps the mainline checkout usable while the build runs, and a discarded build becomes a removed directory rather than a `reset`. The plain branch is the portable default; the worktree is strictly better where available. superpowers' `using-git-worktrees` is the deep version if you run it (see `docs/interop.md`).
 - **One work item per branch.** `running-lifecycle` builds one item at a time; never stack a second item's commits on the first item's branch.
 
-The spec's *Approach* (in `detail/design.md`) carries the high-level design intent across a session death; the slice ledger (`.spec-monkey/progress.md`) records which slice is done. Between them a resume recovers where it was and what shape it was building, without a separate build-plan file to maintain. Work the detailed HOW out from the *Approach*, the contract, and the real code each session.
+The spec's *Approach* (in `detail/design.md`) carries the design intent across a session death; the slice ledger (`.spec-monkey/progress.md`) records which slice is done. Between them a resume recovers where it was and what it was building, without a separate build-plan file. Work the detailed HOW out from the *Approach*, the contract, and the real code each session.
 
 ## Finishing the build
 

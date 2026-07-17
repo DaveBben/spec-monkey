@@ -4,7 +4,7 @@ Ready-to-use brief for a failed review verdict. Fill the `[BRACKETED]` slots and
 
 The one line that makes this role safe: a finding that conflicts with the contract is the human's call, not the fixer's. The fixer reclassifies it to `amend-spec` and stops — it never edits the contract, and it never loosens a test to pass.
 
-"Dispatch a subagent" is an action, not a tool name: use whatever your harness provides for spawning a fresh agent and reading its result back, with a general coding-agent type. The per-harness tool mapping lives outside the skills, in the spec-monkey repository's `docs/harness-tools/`.
+"Dispatch a subagent" is an action, not a tool name: use whatever your harness provides for spawning a fresh agent and reading its result back, with a general coding-agent type. The per-harness tool mapping lives outside the skills, in `docs/harness-tools/`.
 
 ```
 Dispatch a subagent:

@@ -22,6 +22,6 @@ The scenarios target the discipline-critical behaviors — the ones where an age
 | [`gate-integrity.md`](gate-integrity.md) | writing-specs | user pushes the agent to approve for them |
 | [`faked-done.md`](faked-done.md) | implementing-specs | a slice won't go green; ship it anyway |
 | [`how-leak.md`](how-leak.md) | writing-specs | a source doc full of file paths and code |
-| [`interview-shortcut.md`](interview-shortcut.md) | shaping-specs | impatient user says skip the questions |
-| [`brief-ingestion.md`](brief-ingestion.md) | shaping-specs | a confident PRD with unstated assumptions |
-| [`invariant-break.md`](invariant-break.md) | implementing-specs | green is one broken invariant away |
+| [`interview-shortcut.md`](interview-shortcut.md) | ideation | impatient user says skip the questions |
+| [`brief-ingestion.md`](brief-ingestion.md) | ideation | a confident PRD with unstated assumptions |
+| [`house-rule-break.md`](house-rule-break.md) | implementing-specs | green is one broken house rule away |

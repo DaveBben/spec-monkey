@@ -1,6 +1,6 @@
 # Scenario: impatient user says skip the questions
 
-**Skill under test:** shaping-specs (the interview and the five risk lenses)
+**Skill under test:** ideation (the interview and the five risk lenses)
 **Failure form:** discipline (the agent drops the thinking when rushed) → prohibition + the excuse it answers.
 
 ## Setup

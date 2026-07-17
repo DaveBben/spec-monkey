@@ -10,7 +10,7 @@ The one-sentence summary: **the skills are the same everywhere; a port only adds
 
 2. **Tool mapping (per-harness).** Skill bodies describe *actions* — "invoke a skill," "dispatch a subagent," "open a new session with an empty context," "run the spec linter" — and never name a tool. Each supported harness gets a file in [`docs/harness-tools/`](harness-tools/) translating that vocabulary into its real tool names. That directory's README lists the full action vocabulary a mapping must cover.
 
-3. **Bootstrap (per-harness, optional).** Auto-starting the flow from the first "let's build X" message needs the harness to inject a router line at session start. That glue lives in `hooks/` and the per-harness manifest dirs at the repo root — never inside the plugin, and always opt-in. Without it nothing breaks; the user starts the flow by invoking `running-lifecycle` by name.
+3. **Bootstrap (per-harness, optional).** Auto-starting the flow from the first "let's build X" message needs the harness to inject a router line at session start. That glue lives in `hooks/` and the per-harness manifest dirs at the repo root — never inside the plugin, and always opt-in. Without it nothing breaks; the user starts the flow by invoking `ideation` by name.
 
 ### The rule that makes it work: skills name actions, not tools
 
@@ -25,24 +25,22 @@ spec-monkey has two hard requirements and several degradable ones.
 | **File read / write / edit** | every skill — specs, designs, contracts, and the build ledger are files | **Hard requirement. No workaround.** |
 | **Run shell commands** | `implementing-specs` (tests, verification commands), `auditing-specs` (re-running verification) | **Hard requirement** for those two; the authoring/review skills survive without it but can't run the linter. |
 | Skill discovery + invocation | all — the skills must reach the model somehow | Degradable: with no skill tool, the sanctioned mechanism is reading the relevant `SKILL.md` with the file-read tool. Say so in your mapping. |
-| Subagent dispatch | fresh-context reviews/audit; `implementing-specs`' opt-in orchestrated build | Degradable by design: the single-agent workflow is always the default, and fresh context falls back to a new session. The skills already say so; never fabricate a dispatch call. |
-| Session-start injection | auto-starting `running-lifecycle` | Degradable: with no hook, the user invokes the skill by name. Auto-start is a convenience, never a dependency. |
+| Subagent dispatch | the fresh-context reviews and audit | Degradable by design: fresh context falls back to a new session. The skills already say so; never fabricate a dispatch call. |
+| Session-start injection | auto-starting `ideation` (the flow's entry point) | Degradable: with no hook, the user invokes the skill by name. Auto-start is a convenience, never a dependency. |
 | `python3` | `tools/spec-lint.py` (mechanical spec checks) | Degradable: `reviewing-specs` does the mechanical checks by hand under the rubric. |
 | Todo / task tracking | none | spec-monkey tracks build progress in a file (`.spec-monkey/progress.md`); no tool needed. |
 
-Note the difference from superpowers: superpowers treats session-start injection as the non-negotiable core of a port, because its bootstrap skill is the whole triggering story. spec-monkey's skills trigger through the harness's normal skill discovery (their `description` frontmatter leads with the trigger), so a port without any hook mechanism is still a full port — it just starts by name.
+Note the difference from superpowers: superpowers treats session-start injection as the non-negotiable core of a port, because its bootstrap skill is the whole triggering story. spec-monkey's skills trigger through the harness's normal skill discovery (their `description` frontmatter leads with the trigger), so a port without any hook mechanism is still a full port — it just starts by name (invoke `ideation`).
 
 ## How each skill degrades
 
 | Skill | Optional capability it can use | Fallback when absent |
 |---|---|---|
-| `running-lifecycle` | subagent dispatch (fresh-context phases); session hook (auto-start) | tell the human to open a new session pointed at the spec path; invoke by name |
-| `grounding-specs` | subagent dispatch (fresh-context review of the project spec) | a new session pointed at the spec |
-| `shaping-specs` | subagent dispatch (fresh-context design review) | a new session pointed at the design |
-| `reviewing-design` | none | — |
+| `ideation` | subagent dispatch (fresh-context design review); session hook (auto-start) | a new session pointed at the design |
+| `reviewing-designs` | none | — |
 | `writing-specs` | subagent dispatch (fresh-context contract review) | a new session pointed at the spec folder |
 | `reviewing-specs` | the spec linter | do the mechanical checks by hand under the rubric |
-| `implementing-specs` | subagent dispatch (the orchestrated build, 3+ FR-groups) | the single-agent workflow in its SKILL.md — always sufficient |
+| `implementing-specs` | (optional) dispatch `auditing-specs` as a subagent when the build is done | the single-agent workflow is always sufficient; the human runs the audit next |
 | `auditing-specs` | none (runs best in a fresh context, however obtained) | a new session pointed at the spec |
 
 ## Steps to add a harness
@@ -57,7 +55,7 @@ Note the difference from superpowers: superpowers treats session-start injection
 
 5. **Update the contract surfaces.** Add the new adapter to `AGENTS.md`'s key files, mention the harness in `README.md`'s install section, and bump the package version in `plugin.json` and `marketplace.json` together (new package-visible structure).
 
-6. **Verify live.** Install through the harness's own mechanism, start a clean session, and check: (a) the skills are discoverable; (b) "let's build a small feature" reaches for `running-lifecycle` (with the bootstrap) or `running-lifecycle` invoked by name runs the flow (without it); (c) a fresh-context review resolves to a real mechanism from your mapping. Reading the code is not verification.
+6. **Verify live.** Install through the harness's own mechanism, start a clean session, and check: (a) the skills are discoverable; (b) "let's build a small feature" reaches for `ideation` (with the bootstrap) or `ideation` invoked by name starts the flow (without it); (c) a fresh-context review resolves to a real mechanism from your mapping. Reading the code is not verification.
 
 ## What a port must never do
 

@@ -1,4 +1,4 @@
-# Shaping questions
+# Ideation questions
 
 The thinking instrument for a spec. Use it to work out what to build, why, and which approach wins, before anyone writes a binding requirement. It is **not** the spec's layout. Discover here; `writing-specs` composes the contract afterward.
 
@@ -14,7 +14,7 @@ The output is `detail/design.md`: *The request*, *Goal*, *Drivers*, *What's true
 - **Separate decisions from assumptions.** Record "the user decided X" apart from "I'm assuming X". Every unverified belief is an assumption, not a fact, until confirmed.
 - **Don't gold-plate or narrow.** If scope, approach, or intent is unclear, ask. Don't guess.
 - **Write for one read.** One idea per sentence; caveats get their own sentence. Lists over running prose; never a wall of text, prefer multiple turns.
-- **Avoid Options Menu** Options menu encourages users to click the first thing they see. Only use if necessary for trivial decisions.
+- **Avoid the options menu.** Options menu encourages users to click the first thing they see. Only use if necessary for trivial decisions.
 
 The areas below run in a natural discovery order. Each notes the artifact field(s) it feeds.
 
@@ -31,7 +31,7 @@ The areas below run in a natural discovery order. Each notes the artifact field(
   - Would approval need different specialists who can't each sign off on the whole?
   - Do the parts have distinct lifecycles (own versioning, rollout, or rollback)?
   - Will the success criteria partition into near-disjoint groups?
-  - If any of these is "yes", **stop and split**: a parent for the goal, shared contract, and orchestration, plus one child per decision. Shape each child on its own.
+  - If any of these is "yes", **stop and decompose**: one work item per decision, each its own design.md (its own slug and SPEC-NNN), linked by `depends_on` / `relates_to`. Shape each on its own.
 
 ## B. Orientation
 *(not user questions: your own discovery; grounds "What's true today" and the blast radius)*
@@ -66,14 +66,14 @@ Record each risk and its decision under *Failure modes*, one line per lens, citi
 ## E. Approaches: the engineer proposes, you sharpen
 *(feeds: Approach, and resolves the Better way lens)*
 
-This is the core of shaping. Do not hand them the menu; make them reach for it.
+This is the core of ideation. Do not hand them the menu; make them reach for it.
 
 - **Start with the engineer's approach, not yours.** Ask: *what's your plan, and what did you rule out getting there?* Take their answer as the draft.
 - **Make them generate the alternative.** If they offer one approach, don't list the others — push them toward a genuinely different shape ("what would you do if that database weren't available?"). Real alternatives, not one plan and two strawmen. If the change is trivial and only one sane approach exists, say so and move on; do not manufacture options.
 - **Stress-test the tradeoff they underweighted,** and tie it to the failure modes above: which lens does their approach expose? Push on the cost they waved past.
 - **Ratify a sound choice and move on.** State your own recommendation only after theirs is on the table; if theirs holds, say why and stop — the goal is a choice they can defend, not one they recognize. Lay out the approaches yourself only when they're genuinely stuck, each with the reasoning that separates them.
 
-The weighed approaches and chosen shape become the *Approach* section: the shape in prose, its non-obvious points, each alternative's tradeoff, and why this one wins. (`writing-specs` turns the calls needing sign-off into the brief's *Decisions to sign off*.) A choice that needs a **new shared fact** (a system-wide invariant, a shared entity, a contract change) is not yours to make locally: that's a project-spec amendment. Route it up to `grounding-specs`, get it approved, then resume. Never invent a shared fact here.
+The weighed approaches and chosen shape become the *Approach* section: the shape in prose, its non-obvious points, each alternative's tradeoff, and why this one wins. (`writing-specs` turns the calls needing sign-off into the brief's *Decisions to sign off*.) A choice must respect the constitution (`standards.md` / `CLAUDE.md` / `AGENTS.md`): its house rules and shared conventions bound what's open. A design that fights one is wrong however clean it reads; surface the conflict rather than working around it locally.
 
 ## F. Residue & assumptions
 *(feeds: Open questions & assumptions · the blocking ones writing-specs promotes to the brief · Contingencies)*

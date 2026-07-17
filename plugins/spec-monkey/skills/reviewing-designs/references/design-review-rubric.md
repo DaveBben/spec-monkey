@@ -7,7 +7,6 @@ Work through each dimension. Cite evidence for every finding: a section header n
 - [The altitude contract (what a design is)](#the-altitude-contract-what-a-design-is)
 - [The decomposition gate (check first)](#the-decomposition-gate-check-first)
 - [Design review dimensions](#design-review-dimensions)
-- [Reviewing a project spec](#reviewing-a-project-spec)
 - [Output: a structured report](#output-a-structured-report)
 
 ## The altitude contract (what a design is)
@@ -30,7 +29,7 @@ Before judging the approach, decide whether this is **one** decision or several 
 - **Partitioned outcomes**: does the goal split into near-disjoint outcomes that could each ship alone?
 - **Growth by accretion**: has the design roughly doubled by absorbing an adjacent concern, rather than deepening one decision?
 
-If it should split: raise it as a **BLOCKING** finding, name the seams (the child work items and the order between them), and stop there. Shared ground the children stand on (the goal, data contracts, invariants) belongs in the project spec (`kind: project`), not restated in each child.
+If it should split: raise it as a **BLOCKING** finding, name the seams (the child work items and the order between them), and stop there. `ideation` decomposes the ask into one design per work item, linked by `depends_on` / `relates_to`; a cross-cutting rule the children share belongs in the constitution (`standards.md` / `CLAUDE.md` / `AGENTS.md`), not restated in each child.
 
 ## Design review dimensions
 
@@ -70,17 +69,6 @@ Climb this ladder and flag the lowest rung the approach skips:
 - **Reuse before build.** Does the approach specify building something the codebase already has? Grep to confirm, then name what it should reuse.
 - **Root cause, not symptom.** For a fix, does the design patch one path when the fix belongs once in the shared place every caller routes through?
 - Is the change bigger than the problem? Name the simplification, but only one that stays correct on the edge cases. A "minimal" design that drops input validation, error handling, security, or accessibility is broken, not lazy. Do not push those cuts.
-
-## Reviewing a project spec
-
-For a `kind: project` spec, skip the dimensions above (they judge a work item's approach). A project spec holds no `FR`/`SC`; it is the shared ground, and you judge that. Cite evidence as always.
-
-- **Invariants are checkable, not wishes.** Each `INV-NNN` states a property an auditor could confirm on the built system ("all inbound requests are signature-verified"), not an aspiration ("the system is secure"). Flag any that can't be checked.
-- **Contracts are genuinely shared.** Each entity under *Shared data contracts* names who reads and who writes it, and more than one work item touches it. An entity only one work item uses does not belong here.
-- **No requirement leaked down.** A work-item obligation (an `FR`/`SC`, a single feature's behavior) sitting in the project spec is a leak; it belongs in a work-item spec. Name it.
-- **Constraints are defended architecture.** Each is an expensive-to-reverse call with a reason (and the rejected alternative, for load-bearing ones). Coding conventions are not constraints; they belong in the constitution (`standards.md` / `CLAUDE.md` / `AGENTS.md`).
-- **Sequencing is sound.** *Work items & sequencing* lists the planned children; the `depends_on` order is acyclic and each item reads as one decision.
-- **Thin and honest.** Only genuinely shared facts the author is confident about now. A guessed-ahead decision that should wait for the work to teach it is a finding; it belongs in a later amendment.
 
 ## Output: a structured report
 

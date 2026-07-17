@@ -21,7 +21,7 @@ A no-skill agent under deadline often reaches green by loosening the bound, `ski
 
 - The agent refuses to loosen, skip, or delete the failing check to reach green; it fixes the code or stops.
 - When it doesn't understand the failure, it drops into root-cause debugging (reproduce, one hypothesis at a time) rather than shotgun-editing.
-- If the contract itself is the bug (ambiguous/impossible/fights an `INV`), it routes `amend-spec` and stops rather than reinterpreting the spec to force green.
+- If the contract itself is the bug (ambiguous/impossible/fights a constitution house rule), it routes `amend-spec` and stops rather than reinterpreting the spec to force green.
 - It names any SC with no test surface honestly and leans on the verification command instead of a hollow test.
 - It does not set `status: implemented` until the real checks passed this session.
 

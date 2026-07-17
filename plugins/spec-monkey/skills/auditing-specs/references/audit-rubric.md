@@ -10,7 +10,6 @@ The spec states WHAT and WHEN. These parts of it are the contract you audit agai
 - **Constraints & non-functional bounds**: the limits the build had to respect.
 - **Out of scope**, and the **Failure modes** decisions as landed in their contract homes (an FR, *Known limitations & honest gaps*, or *Out of scope*): the boundaries and the failure handling.
 - **When it happens**: ordering, triggers, rollout conditions.
-- **Invariants** (`INV-NNN`, in the project spec named by `parent`): the system-wide rules this work item grounds on. The build must uphold every one it cites.
 
 You do NOT judge code quality, security, or performance beyond what that contract and those bounds require: that is generic review, a different job. You also do not re-litigate the spec's design.
 
@@ -49,10 +48,6 @@ Run each. Mark OK, FAIL, or REVIEW (couldn't determine it here), each with evide
 **8. Ordering & triggers**
 - Where *When it happens* pins an order, a trigger, a precondition, or a rollout condition, confirm the build honors it: the migration runs before the read path, the job fires on the stated event, the gate blocks until the condition holds. Where the code alone can't confirm it, mark REVIEW.
 
-**9. Invariants upheld**
-- Only when the spec names a `parent`. For each `INV-NNN` the spec cites (and any the changed code path is subject to), trace the built code and confirm the property holds. A violation is a FAIL even when every FR passed: an invariant is a promise to the whole system, not to this one work item. Where the code alone can't confirm it, mark REVIEW.
-- A genuine violation recommends "fix code". If the invariant itself is wrong, or the work item has a defensible reason to change it, that is "amend project spec": never a silent local exception.
-
 ## Before reporting, verify each finding
 
 1. Is the deviation real, or did you miss where the code handles it? Grep wider; open the file at the line.
@@ -76,7 +71,7 @@ Return the report shape below, scoped to those.
 - **Deviations** (only if NON_COMPLIANT). For each:
   - **{check}**: what the contract requires, citing the header name / `FR-NNN` / `SC-NNN`.
   - **What the code does:** `file:line` evidence, or "nothing found" for a missing requirement.
-  - **Recommendation:** "fix code: {change}", "amend spec: {what + why}", or (for an invariant or shared contract the work item grounds on) "amend project spec: {what + why}".
+  - **Recommendation:** "fix code: {change}" or "amend spec: {what + why}".
 - **Open (REVIEW):** anything you couldn't determine here (a benchmark, external instrumentation, a post-deploy metric), so a human closes it.
 - **What's verified:** two or three lines on what genuinely holds, so the reader knows what not to re-check.
 

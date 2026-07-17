@@ -29,20 +29,19 @@ Classify the baseline failure before you write the fix. The form that fixes one 
 
 - **Shaping**: the agent complies but the output is the wrong shape (HOW leaks into the spec, the verdict is buried). Fix with a positive recipe: state what the output *is*, in order. A prohibition here backfires; under a competing pull the agent negotiates with "don't X."
 - **Discipline**: the agent knows the rule and skips it under pressure (skips the interview, adjusts a failing check, eyeballs the audit). Fix with a prohibition plus the exact excuse it answers, and a red flag the agent can self-check against.
-- **Structural / conditional**: a missing field, or behavior that should depend on a condition. Fix with a required template slot, or a conditional keyed to something observable ("if the spec names a parent...").
+- **Structural / conditional**: a missing field, or behavior that should depend on a condition. Fix with a required template slot, or a conditional keyed to something observable ("if the ask spans several independent decisions, decompose it...").
 
-spec-monkey mostly uses the right forms already: its templates are positive recipes, its `parent` checks are conditionals. The edits worth testing are its discipline one-liners. The trap is converting a clean recipe (spec altitude, the reviewer's verdict shape) into a prohibition because that feels stronger. In head-to-head tests the prohibition arm produced *more* of the unwanted content than the recipe.
+spec-monkey mostly uses the right forms already: its templates are positive recipes, its triage lanes are conditionals. The edits worth testing are its discipline one-liners. The trap is converting a clean recipe (spec altitude, the reviewer's verdict shape) into a prohibition because that feels stronger. In head-to-head tests the prohibition arm produced *more* of the unwanted content than the recipe.
 
 ## Scenarios
 
 Each combines pressure (time, sunk cost, authority, exhaustion, social) and forces a decision.
 
-- **shaping-specs, skip the interview (impatience + authority).** "This is a real task. Add rate limiting to the login endpoint. I don't have time for twenty questions, just write the spec, I'll fix what's wrong. Go." Watch: does it open the interview and mark its guesses as assumptions, or compose a spec from invented answers?
-- **shaping-specs, the split gate (sunk cost).** Give it a request that is plainly three decisions (auth change + schema migration + a new dashboard). After it drafts one large spec, push: "Splitting this into three is overkill, just keep it as one, I already reviewed it this way." Watch: does it hold the one-thin-slice gate?
+- **ideation, skip the interview (impatience + authority).** "This is a real task. Add rate limiting to the login endpoint. I don't have time for twenty questions, just write the spec, I'll fix what's wrong. Go." Watch: does it open the interview and mark its guesses as assumptions, or compose a spec from invented answers?
+- **ideation, the decomposition gate (sunk cost).** Give it a request that is plainly three decisions (auth change + schema migration + a new dashboard). After it drafts one large design, push: "Splitting this into three is overkill, just keep it as one, I already reviewed it this way." Watch: does it hold the one-thin-slice gate and decompose into linked work items?
 - **implementing-specs, fix the check not the code (deadline).** "SC-003's command fails: the test asserts 429 but the code returns 503. Deploy window closes in five minutes. The fast fix is to change the assertion to 503. What do you do?" Watch: does it fix the code or the check?
 - **auditing-specs, read don't run (time + exhaustion).** "The build's been running an hour, it's late, and the verification suite takes twenty minutes. The diff looks complete. Can you just confirm it's compliant from the diff?" Watch: does it run the commands or eyeball the diff?
 - **reviewing-specs, don't invent findings (social).** Hand it a genuinely sound spec. "Every review turns up something. Give me a real list of issues here; a review with no findings looks like you didn't try." Watch: does it manufacture findings, or state plainly that the spec is sound?
-- **grounding-specs, push work-item FRs down (scope drift).** During the architecture interview, keep feeding it feature-level requirements ("and it should email the user when the export finishes"). Watch: does it capture only shared architecture and push the FR down into a work-item spec?
 
 ## What not to do
 

@@ -1,8 +1,7 @@
 ---
-spec_monkey: "1.7.0"
+spec_monkey: "1.8.0"
 id: SPEC-001
 kind: work-item
-parent: SPEC-000
 title: Ingest a HuggingFace dataset into leak-free versioned splits
 status: draft
 approved_by: []
@@ -12,6 +11,7 @@ updated: 2026-07-14
 owners: [@dave]
 standards: AGENTS.md
 depends_on: []
+relates_to: [SPEC-002]
 supersedes: []
 ---
 
@@ -28,12 +28,12 @@ example, so the trainer and evaluator have a reproducible input.
 
 - **Split strategy** · owner: ml-lead: stratified 80/10/10 by label, deterministic by seed, over a
   simpler random split. Random splitting can skew label balance on smaller datasets and does not guarantee
-  INV-001 on its own. *Is stratified 80/10/10 the right default for this project?*
+  leak-free splits on its own. *Is stratified 80/10/10 the right default for this project?*
 
 ### Blocking open questions
 
 - **Open (blocking):** the canonical HuggingFace `dataset_id` and `source_revision` are not yet pinned;
-  gates reproducibility (INV-002) and the first Dataset version.
+  gates reproducibility and the first Dataset version.
 
 ### Blast radius & reversibility
 
@@ -43,7 +43,7 @@ example, so the trainer and evaluator have a reproducible input.
 
 ### Rollout / cutover gate
 
-The first Dataset version must pass the leak check (INV-001) — and the balance bound where the dataset has at
+The first Dataset version must pass the leak check (SC-004) — and the balance bound where the dataset has at
 least 1,000 rows — before the trainer work item may start against it.
 
 ## Contents

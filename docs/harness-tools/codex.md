@@ -23,4 +23,4 @@ Without it, the dispatch tools don't exist: run `implementing-specs`' single-age
 
 ## Auto-start
 
-Codex runs no session-start hook, and the `.codex-plugin/plugin.json` manifest declares an empty `hooks` object to keep it that way. Auto-start therefore has no Codex glue: begin the flow by invoking `running-lifecycle` by name.
+Codex runs no session-start hook, and the `.codex-plugin/plugin.json` manifest declares an empty `hooks` object to keep it that way. Auto-start therefore has no Codex glue: begin the flow by invoking `ideation` by name.

@@ -1,8 +1,7 @@
 ---
-spec_monkey: "1.7.0"
+spec_monkey: "1.8.0"
 id: SPEC-002
 kind: work-item
-parent: SPEC-000
 profile: light              # trivial lane: one file, the droppable sections dropped (not "N/A"). See spec-template.md "The light profile".
 title: Log a run summary line when the loader finishes
 status: approved
@@ -13,6 +12,7 @@ updated: 2026-07-15
 owners: [@dave]
 standards: AGENTS.md
 depends_on: [SPEC-001]
+relates_to: []
 supersedes: []
 ---
 
@@ -20,9 +20,11 @@ supersedes: []
 
 <!--
 This is a LIGHT-PROFILE (trivial-lane) spec: a single spec.md, no detail/ split. One obvious
-approach, no live failure modes, no new shared fact — a reviewer reads it in a glance. It still
-grounds on the project spec and still gets signed. The full design/contract split (detail/*.md)
-is dropped here, not stubbed with "N/A". Contrast with the full-ceremony dataset-loader spec.
+approach, no live failure modes — a reviewer reads it in a glance. It still gets signed. This is
+the second half of one feature: the dataset-loader (SPEC-001) decomposed into a full-ceremony
+loader and this trivial summary line, so it declares depends_on: [SPEC-001]. The full
+design/contract split (detail/*.md) is dropped here, not stubbed with "N/A". Contrast with the
+full-ceremony dataset-loader spec.
 -->
 
 ## Goal
@@ -51,18 +53,18 @@ rows it dropped and how many examples landed in each of train, val, and test.
 
 ## Constraints & non-functional bounds
 
-**Constraints**: the summary line upholds the project spec's **INV-004** — no raw example `text` in
-logs. Counts and split names only; never a row's contents. No new data contract: the numbers come
-from the SplitManifest the loader (SPEC-001) already writes.
+**Constraints**: the summary line upholds the repo's no-raw-example-`text`-in-logs house rule (the
+constitution, `AGENTS.md`). Counts and split names only; never a row's contents. No new data
+contract: the numbers come from the SplitManifest the loader (SPEC-001) already writes.
 
 ## Verification approach & commands
 
 **Artifacts to author.** Must exist in the diff; proves every SC below.
 - [ ] Author one test: run the loader over the worked fixture, assert the summary line's exact text, and
-      assert no fixture `text` value appears in the captured log. Proves SC-001 and the INV-004 bound. Runs here.
+      assert no fixture `text` value appears in the captured log. Proves SC-001 and the no-raw-text-in-logs bound. Runs here.
 
 **Gates to pass.**
-- Runs here: `uv run pytest tests/test_loader.py -k summary_line` — covers SC-001 and the INV-004 bound.
+- Runs here: `uv run pytest tests/test_loader.py -k summary_line` — covers SC-001 and the no-raw-text-in-logs bound.
 
 **Worked case**
 

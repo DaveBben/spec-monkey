@@ -1,6 +1,6 @@
 # Review rubric (the contract)
 
-Work through the sweep and each dimension. Cite evidence for every finding: a section header name, an ID (`FR-NNN` / `SC-NNN`), or a quoted line. If you can't cite it, it isn't a finding. The design and the approach were judged already by `reviewing-design`; here you judge the **binding contract** — `spec.md` plus `detail/contract.md`.
+Work through the sweep and each dimension. Cite evidence for every finding: a section header name, an ID (`FR-NNN` / `SC-NNN`), or a quoted line. If you can't cite it, it isn't a finding. The design and the approach were judged already by `reviewing-designs`; here you judge the **binding contract** — `spec.md` plus `detail/contract.md`.
 
 ## Contents
 
@@ -27,10 +27,10 @@ The recurring within-spec defect is **inconsistent application of the spec's own
 - **S2: Non-atomic requirement.** An FR you can't settle with a single pass/fail test: "and"-joined or carrying a list. Split it into one obligation per FR.
 - **S3: Unverified requirement.** Every FR connects to an `SC-NNN` (or the worked case), and each SC states a measurable outcome. An FR with no SC and no declared gap, or a "must preserve" behavior with no dedicated SC, is a blocking gap.
 - **S4: Contingency in the normative list.** A requirement that applies "only if X fails" belongs in *Contingencies* (in `detail/design.md`), not the requirements list.
-- **S5: Restated fact.** The same fact near-verbatim in 3+ places instead of stated once and referenced by ID. Name the canonical home and the copies. A shared fact copied from the project spec (an `INV-NNN`, a shared entity) instead of cited by ID is the same defect across documents: cite it, don't restate it.
+- **S5: Restated fact.** The same fact near-verbatim in 3+ places instead of stated once and referenced by ID. Name the canonical home and the copies. A constitution house rule copied into the contract instead of cited is the same defect across documents: cite it, don't restate it.
 - **S6: Internal contradiction.** A value stated two ways, or an assumption that fights a requirement. Name both sides of the conflict.
 
-If the contract has grown a **second independent decision** the design didn't carry — distinct sign-off clusters, distinct reviewers, or success criteria that partition into disjoint groups — that is a BLOCKING finding to split it, routed back through `reviewing-design`. (Decomposition is design review's gate; you only catch what leaked past it.)
+If the contract has grown a **second independent decision** the design didn't carry — distinct sign-off clusters, distinct reviewers, or success criteria that partition into disjoint groups — that is a BLOCKING finding to split it, routed back through `reviewing-designs`. (Decomposition is design review's gate; you only catch what leaked past it.)
 
 ## Contract review dimensions
 
@@ -51,7 +51,7 @@ Verification is the one place the spec gets concrete, carrying the actual run co
 - **No HOW leaked.** No file or symbol pinned as content (a pin is allowed only as cited evidence for a doubtable *What's true today* fact); no language-typed struct or class block; no task manifest or waves; no branch or rollback-script mechanics; no pattern-to-mirror. (Verification run commands are allowed; they belong in *Verification approach & commands*.)
 - **Every question answered.** No unfilled `< >` placeholder. Timing is complete across the brief's *Rollout / cutover gate*, *Blast radius & reversibility*, and *When it happens*: triggers, ordering, rollout condition and mechanics, reversibility. The brief's *Blocking open questions* are empty, or each item is explicitly deferred with a revisit trigger.
 - **Every success criterion is testable and technology-agnostic.** (Cross-checks Verification trustworthiness.)
-- **Grounded on the project spec.** If the spec names a `parent`, it resolves to a real project spec; every invariant or shared contract it leans on is cited by `INV-NNN`/name, not restated; and no fact that belongs to the whole system is defined locally. A locally-invented shared fact is a BLOCKING finding: it belongs in the project spec by amendment.
+- **Respects the constitution.** No requirement contradicts a house rule in the constitution (`standards.md` / `CLAUDE.md` / `AGENTS.md`); where a requirement leans on one, it cites the rule rather than restating it as a local invention. A contract that violates a house rule is a BLOCKING finding.
 
 ## Output: a structured report
 

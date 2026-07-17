@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """spec-lint — mechanical checks for spec-monkey specs.
 
-Rides the parse contract the templates define (frontmatter scalars, FR/SC/INV
-join keys, canonical section homes) to catch the defects a script settles faster
-and cheaper than an LLM reviewer: unfilled placeholders, duplicate or unpaired
-IDs, dangling INV citations, unresolved parents, bad status values, a missing
-gate record on an approved spec, missing frontmatter. It judges no engineering —
-that stays with reviewing-specs.
+Rides the parse contract the templates define (frontmatter scalars, FR/SC join
+keys, canonical section homes) to catch the defects a script settles faster and
+cheaper than an LLM reviewer: unfilled placeholders, duplicate or unpaired IDs,
+bad status or profile values, a missing gate record on an approved spec, missing
+frontmatter. It judges no engineering — that stays with reviewing-specs.
 
 Not part of the portable skills; it's optional tooling. Stdlib only, no install.
 
@@ -25,7 +24,6 @@ import sys
 from pathlib import Path
 
 WORK_ITEM_STATUS = {"draft", "approved", "implemented", "shipped", "archived"}
-PROJECT_STATUS = {"draft", "approved"}
 DESIGN_STATUS = {"draft", "approved"}
 PROFILES = {"full", "light"}
 REQUIRED_FRONTMATTER = ("spec_monkey", "id", "kind", "status", "created", "updated")
@@ -39,8 +37,6 @@ GATED_STATUS = {"approved", "implemented", "shipped"}
 PLACEHOLDER_RE = re.compile(r"<[^<>\n]*\s[^<>\n]*>")
 FR_DEF_RE = re.compile(r"^\s*-\s+\*\*(FR-\d+)\*\*")
 SC_DEF_RE = re.compile(r"^\s*-\s+\*\*(SC-\d+)\*\*")
-INV_DEF_RE = re.compile(r"\*\*(INV-\d+)\*\*")
-INV_REF_RE = re.compile(r"\bINV-\d+\b")
 HEADING_RE = re.compile(r"^(#{1,6})\s")
 
 
@@ -167,36 +163,13 @@ def check_ids_and_pairing(path: Path, text: str, rep: Report) -> None:
             )
 
 
-def load_project(root: Path) -> tuple[Path | None, str | None, set[str]]:
-    """Locate the project spec; return (path, id, defined INV ids)."""
-    proj = root / "project" / "spec.md"
-    if not proj.is_file():
-        # search one level down for any kind: project
-        for cand in root.glob("*/spec.md"):
-            fm = parse_frontmatter(cand.read_text(encoding="utf-8"))
-            if fm and fm.get("kind") == "project":
-                proj = cand
-                break
-        else:
-            return None, None, set()
-    text = proj.read_text(encoding="utf-8")
-    fm = parse_frontmatter(text) or {}
-    invs = set(INV_DEF_RE.findall(strip_html_comments(text)))
-    return proj, fm.get("id"), invs
-
-
 def check_frontmatter(path: Path, fm: dict[str, str], rep: Report) -> str:
     for key in REQUIRED_FRONTMATTER:
         if not fm.get(key):
             rep.error(path, f"frontmatter missing required key {key!r}")
     kind = fm.get("kind", "")
     status = fm.get("status", "")
-    if kind == "project":
-        allowed = PROJECT_STATUS
-    elif kind == "design":
-        allowed = DESIGN_STATUS
-    else:
-        allowed = WORK_ITEM_STATUS
+    allowed = DESIGN_STATUS if kind == "design" else WORK_ITEM_STATUS
     if status and status not in allowed:
         rep.error(path, f"invalid status {status!r} for kind {kind!r} (allowed: {sorted(allowed)})")
     profile = fm.get("profile", "full")
@@ -211,7 +184,7 @@ def check_frontmatter(path: Path, fm: dict[str, str], rep: Report) -> str:
     return kind
 
 
-def lint_spec(path: Path, rep: Report, project_id: str | None, project_invs: set[str]) -> None:
+def lint_spec(path: Path, rep: Report) -> None:
     text = path.read_text(encoding="utf-8")
     fm = parse_frontmatter(text)
     if fm is None:
@@ -228,25 +201,14 @@ def lint_spec(path: Path, rep: Report, project_id: str | None, project_invs: set
     for f in files:
         find_placeholders(f, f.read_text(encoding="utf-8"), rep)
 
-    # The design.md (shaping's output) is a separately gated artifact. When it's
+    # The design.md (ideation's output) is a separately gated artifact. When it's
     # present with its own frontmatter, validate its keys, design status, and gate
-    # record; placeholders and INV citations are already covered by the loops above.
+    # record; placeholders are already covered by the loop above.
     design = detail / "design.md"
     if design.is_file():
         dfm = parse_frontmatter(design.read_text(encoding="utf-8"))
         if dfm is not None:
             check_frontmatter(design, dfm, rep)
-
-    if kind == "project":
-        return
-
-    # work-item checks
-    if not fm.get("parent"):
-        rep.warn(path, "work-item spec has no parent (fine only for a one-off with no project spec)")
-    elif project_id is None:
-        rep.error(path, f"parent {fm['parent']!r} set but no project spec found under the root")
-    elif fm["parent"] != project_id:
-        rep.error(path, f"parent {fm['parent']!r} does not resolve to the project spec id {project_id!r}")
 
     # A light-lane spec (frontmatter profile: light) is a single spec.md that
     # carries the FR/SC directly, with no detail/ split; a full spec keeps the
@@ -257,15 +219,6 @@ def lint_spec(path: Path, rep: Report, project_id: str | None, project_invs: set
         contract = detail / "contract.md"
         if contract.is_file():
             check_ids_and_pairing(contract, contract.read_text(encoding="utf-8"), rep)
-
-    # dangling INV citations across all files of the spec
-    for f in files:
-        cited = set(INV_REF_RE.findall(strip_html_comments(f.read_text(encoding="utf-8"))))
-        for inv in sorted(cited):
-            if project_id is None:
-                rep.warn(f, f"{inv} cited but no project spec to resolve it against")
-            elif inv not in project_invs:
-                rep.error(f, f"cites {inv}, which the project spec does not define")
 
 
 def discover(root: Path) -> list[Path]:
@@ -289,7 +242,7 @@ def status_rollup(roots: list[Path]) -> int:
                 str(spec.parent.name),
                 fm.get("id", "?"),
                 fm.get("kind", "?"),
-                fm.get("profile", "full") if fm.get("kind") != "project" else "—",
+                fm.get("profile", "full"),
                 fm.get("status", "?"),
                 gate,
             ))
@@ -317,10 +270,8 @@ def main(argv: list[str]) -> int:
         if not root.exists():
             rep.error(root, "path does not exist")
             continue
-        base = root if root.is_dir() else root.parent
-        project_path, project_id, project_invs = load_project(base)
         for spec in discover(root):
-            lint_spec(spec, rep, project_id, project_invs)
+            lint_spec(spec, rep)
     total = rep.errors + rep.warns
     if total == 0:
         print("spec-lint: clean")

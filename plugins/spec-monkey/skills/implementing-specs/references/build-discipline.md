@@ -1,6 +1,6 @@
-# Build discipline: honest tests and a real self-review
+# Build discipline: honest tests
 
-Two disciplines the workflow leans on: the test-first loop (SKILL step 3) and the diff self-review (step 5). Both guard the same thing — that "implemented" means built and proven, not built and asserted. The anti-patterns below are the exact defects `auditing-specs` hunts; ship one and the audit sends it back. Cheaper to refuse it here.
+The test-first loop (SKILL step 3) and the faked-done anti-patterns the build must refuse. Both guard the same thing — that "implemented" means built and proven, not built and asserted. These are the exact defects `auditing-specs` hunts from a fresh context; ship one and the audit sends it back. Cheaper to refuse it here.
 
 ## Test-first: red before green
 
@@ -22,15 +22,3 @@ Each of these produces a green check that proves nothing. The auditor's check 3 
 - **Happy-path only.** The risk lenses surfaced failure and edge cases; if success is defined only for the golden path, the failure paths are unproven.
 - **Loosening or deleting a failing check to reach green.** Relaxing a bound, widening a tolerance, `skip`-ping the case, catching the exception the test should see. This fakes the result instead of meeting it. Fix the code, not the check.
 
-## Self-review: read your own diff as a hostile reviewer (step 5)
-
-Before you set `status: implemented`, read the whole diff against the spec as if you were auditing someone else's work:
-
-- **Trace.** Every FR maps to a real change in the diff; every SC maps to a test that would flip to failing if the behavior broke. Every entry in *Artifacts to author* exists in the diff, the NEEDS-INFRA ones included. An FR with no corresponding change, an SC whose test can't fail, or a listed artifact with no file is a hole — even if another test covers the same SC.
-- **Scope.** Nothing on *Out of scope* got built; no requirement got quietly dropped; no adjacent feature crept in.
-- **Seams.** At least one non-mocked test crosses each real boundary the change touches (a database, an HTTP call, a queue, a contract between two modules). An all-unit, all-mocked diff over a change with real seams is weak.
-- **Invariants.** Every cited `INV-NNN` still holds in the assembled code. A local fix that satisfies an FR by breaking an invariant is not done.
-- **Honesty.** No anti-pattern from the list above survived. No `TODO`/stub left on a path an FR needs. No commented-out failing assertion.
-- **Simplicity.** You reused what the codebase already had rather than rebuilding it; the fix lives once at the root, not patched per caller.
-
-This rubric is deliberately the same standard `auditing-specs` applies from a fresh context. Meeting it yourself first means the independent audit confirms rather than corrects — and when it doesn't, the gap is real, not a difference of taste.

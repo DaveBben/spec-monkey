@@ -1,18 +1,18 @@
-# Optional session bootstrap: auto-start the lifecycle
+# Optional session bootstrap: auto-start the flow
 
-This directory is **not part of the portable plugin.** It holds the optional session-start bootstrap that auto-starts the `running-lifecycle` skill from the first message of a session, plus the per-harness glue that wires it in. It is opt-in and off by default, so `plugins/spec-monkey/` stays plain, portable Markdown that depends on no hook anywhere.
+This directory is **not part of the portable plugin.** It holds the optional session-start bootstrap that auto-starts the flow at its entry point — the `ideation` skill — from the first message of a session, plus the per-harness glue that wires it in. It is opt-in and off by default, so `plugins/spec-monkey/` stays plain, portable Markdown that depends on no hook anywhere.
 
 ## Why it lives here, not in the plugin
 
 spec-monkey's skills are portable: they must run in any harness, so they never depend on a hook, a subagent, or context forking. Auto-triggering a skill needs a session hook, which only some harnesses have. The portable pattern (the same one superpowers uses) keeps a single skills directory as the source of truth and puts each harness's integration in separate files outside the skills. The skill stays universal; this directory is the harness-specific glue you can choose to add. The per-harness *tool* mappings live next door in [`docs/harness-tools/`](../docs/harness-tools/), and the full architecture is in [`docs/porting-to-a-new-harness.md`](../docs/porting-to-a-new-harness.md).
 
-The `metadata.best-in: claude-code` field on the `running-lifecycle` skill records that this glue exists; the skill itself still runs anywhere without it.
+No skill declares this hook; the skills themselves still run anywhere without it.
 
 ## What it does
 
-On session start, [`session-start.sh`](session-start.sh) injects one short router line so an agent recognizes a build request and reaches for `running-lifecycle` instead of jumping to code:
+On session start, [`session-start.sh`](session-start.sh) injects one short router line so an agent recognizes a build request and reaches for `ideation` instead of jumping to code:
 
-> If the user is starting to build a project or feature, invoke the `running-lifecycle` skill to drive the full spec-monkey flow (ground → shape → review-design → write → review-spec → implement → audit), pausing at every human approval gate. For a single phase, invoke that phase's skill directly.
+> If the user is starting to build a project or feature, invoke the `ideation` skill to think it through — it is the entry point to the spec-monkey flow (ideation → reviewing-designs → writing-specs → reviewing-specs → implementing-specs → auditing-specs), where each skill hands off to the next and pauses at every human approval gate. For a single phase, invoke that phase's skill directly.
 
 ## One script, many harnesses
 
@@ -37,7 +37,7 @@ hooks/install-hook.sh            # this project only: ./.claude/settings.json
 hooks/install-hook.sh --user     # every session:     ~/.claude/settings.json
 ```
 
-It is **idempotent** (run it twice, the second run is a no-op), it **merges** into an existing settings file rather than overwriting it, and it prints how to undo it (delete the one `SessionStart` entry it added). Restart Claude Code, or start a new session, and "let's build X" now reaches for `running-lifecycle`. Needs `python3` (already a dependency of `tools/spec-lint.py`).
+It is **idempotent** (run it twice, the second run is a no-op), it **merges** into an existing settings file rather than overwriting it, and it prints how to undo it (delete the one `SessionStart` entry it added). Restart Claude Code, or start a new session, and "let's build X" now reaches for `ideation`. Needs `python3` (already a dependency of `tools/spec-lint.py`).
 
 Preview without changing anything:
 
@@ -55,7 +55,7 @@ Note Cursor's hook-config schema is its own (`"version": 1`, lowercase `sessionS
 
 ### Codex (no hook, by design)
 
-Codex runs no session-start hook; its adapter (`.codex-plugin/plugin.json`) declares an empty `hooks` object to say so explicitly. Start the flow by invoking `running-lifecycle` by name.
+Codex runs no session-start hook; its adapter (`.codex-plugin/plugin.json`) declares an empty `hooks` object to say so explicitly. Start the flow by invoking `ideation` by name.
 
 ### Other shell-hook harnesses
 

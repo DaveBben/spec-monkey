@@ -9,14 +9,12 @@
     {
       "name": "spec-monkey",
       "source": "./plugins/spec-monkey",
-      "description": "Eight skills for spec-driven development: running-lifecycle drives the full flow, and grounding-specs, shaping-specs, reviewing-design, writing-specs, reviewing-specs, implementing-specs, and auditing-specs are its phases.",
+      "description": "Six skills for spec-driven development, each handing off to the next: ideation, reviewing-designs, writing-specs, reviewing-specs, implementing-specs, and auditing-specs.",
       "version": "2.0.0",
       "license": "MIT",
       "skills": [
-        "./skills/running-lifecycle",
-        "./skills/grounding-specs",
-        "./skills/shaping-specs",
-        "./skills/reviewing-design",
+        "./skills/ideation",
+        "./skills/reviewing-designs",
         "./skills/writing-specs",
         "./skills/reviewing-specs",
         "./skills/implementing-specs",

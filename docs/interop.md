@@ -10,9 +10,8 @@ So a spec-monkey `detail/contract.md` (WHAT/WHEN) can feed a superpowers `writin
 
 | Phase | Owner | Why |
 |---|---|---|
-| Project / architecture spec, invariants | **spec-monkey** `grounding-specs` | superpowers has no cross-feature grounding layer |
-| Shape a fuzzy ask into a design, weigh approaches | **spec-monkey** `shaping-specs` (or superpowers `brainstorming`) | either works; pick one, don't run both |
-| Review the design before a contract exists | **spec-monkey** `reviewing-design` | catches a wrong approach cheaply, before the contract |
+| Shape a fuzzy ask into a design, weigh approaches, decompose a large ask | **spec-monkey** `ideation` (or superpowers `brainstorming`) | either works; pick one, don't run both |
+| Review the design before a contract exists | **spec-monkey** `reviewing-designs` | catches a wrong approach cheaply, before the contract |
 | The binding FR/SC contract | **spec-monkey** `writing-specs` | the reader-split spec is the durable artifact |
 | Review the contract before build | **spec-monkey** `reviewing-specs` | the self-consistency sweep with a decomposition gate |
 | Turn the contract into a HOW-carrying plan | **superpowers** `writing-plans` | exact file paths + code, dispatchable to cheap models |
@@ -37,14 +36,14 @@ implementation plan.
 Source of truth (WHAT/WHEN — do not restate, read and cite):
   docs/specs/<slug>/detail/contract.md
   docs/specs/<slug>/spec.md            (the decision brief)
-  docs/specs/project/spec.md           (the INV-NNN and shared contracts this grounds on)
+  <the repo constitution>              (standards.md / CLAUDE.md / AGENTS.md — the house rules this respects)
 
 Write the plan as HOW: the files, the symbols, and the code that satisfy the
 contract. Two rules make the audit still work afterward:
   1. Tag each plan task with the FR/SC ids it satisfies (e.g. "satisfies FR-003,
      SC-003"), so auditing-specs can trace every requirement to the change.
-  2. Treat every cited INV-NNN and the "Verification approach & commands" block
-     as binding. The plan may add detail; it may not drop or weaken an obligation.
+  2. Treat every constitution house rule and the "Verification approach & commands"
+     block as binding. The plan may add detail; it may not drop or weaken an obligation.
 
 The contract is signed and frozen. If building reveals it is wrong, do not fix it
 in the plan — stop and route it back to writing-specs as an amend-spec (the
@@ -55,7 +54,7 @@ Then superpowers owns execution (its TDD, subagents, worktrees, `systematic-debu
 
 ## If you don't run superpowers
 
-spec-monkey's middle is deliberately lean but not empty. `implementing-specs` builds slice by slice, test-first, on an isolated branch or worktree, keeping a slice ledger so a killed session recovers which slice is done; the design's *Approach* carries the high-level shape across the gap (`references/build-workspace.md`). `references/build-discipline.md` carries the faked-done anti-patterns and a self-review rubric; `references/debugging.md` is the root-cause escape hatch for a slice that won't go green. On a subagent-capable harness, `references/subagent-mode.md` runs an orchestrated build with a per-group review gate. That is enough to build a spec-monkey spec end to end without another framework. superpowers deepens the middle — mature TDD, `systematic-debugging`, richer worktree flows — but it no longer gates it.
+spec-monkey's middle is deliberately lean but not empty. `implementing-specs` builds slice by slice, test-first, on an isolated branch or worktree, keeping a slice ledger so a killed session recovers which slice is done; the design's *Approach* carries the high-level shape across the gap (`references/build-workspace.md`). `references/build-discipline.md` carries the faked-done anti-patterns; `references/debugging.md` is the root-cause escape hatch for a slice that won't go green. It builds and verifies only — the independent check is `auditing-specs`. That is enough to build a spec-monkey spec end to end without another framework. superpowers deepens the middle — mature TDD, `systematic-debugging`, richer worktree flows — but it no longer gates it.
 
 ## Cost note
 

@@ -1,6 +1,6 @@
 ---
 name: auditing-specs
-version: "1.7.0"
+version: "1.8.0"
 description: "Audit an implementation against its spec. Use after a spec has been implemented to confirm whether it was truly built to match its requirements. Do NOT use to author or review a spec, or for generic code review or bug hunting."
 license: MIT
 compatibility: any-agent
@@ -21,7 +21,7 @@ You audit a finished implementation against its spec. Your one question is: **wa
 ## Inputs
 
 - **The spec** (`docs/specs/{slug}/`: `spec.md` plus `detail/contract.md` and `detail/design.md`), `status: implemented`: the binding contract you audit against. `spec.md` and `detail/contract.md` carry everything that binds; open `detail/design.md` for the *Failure modes* index that check 7 traces through its contract homes.
-- **The project spec** (`docs/specs/project/spec.md`), when the spec names a `parent`: the `INV-NNN` and shared contracts this work item grounds on. They bind the build and are audited in check 9.
+- **The constitution** (`standards.md` / `CLAUDE.md` / `AGENTS.md`): the house rules a spec's constraints may lean on; the build must respect them.
 - **The diff** (e.g. `git diff <base>...HEAD`): what was actually built.
 - **The codebase** (read-only) and its verification commands: to trace requirements and run the checks.
 
@@ -39,19 +39,14 @@ The checks in one line each:
 6. Scope discipline: nothing on *Out of scope* was built, no requirement dropped, no silent scope creep.
 7. Edge cases handled: every *Failure modes* case marked HANDLE is handled in the code.
 8. Ordering & triggers: where *When it happens* pins order, triggers, or rollout conditions, the build honors them.
-9. Invariants upheld: every `INV-NNN` the spec grounds on still holds in the built code.
 
-Output a **Verdict** (COMPLIANT / NON_COMPLIANT), deviations by check with `file:line` evidence and a *fix code* / *amend spec* / *amend project spec* recommendation, anything you couldn't determine as REVIEW, and a one-line "what's verified." **Report only. Never edit the spec or the code.**
-
-## Optional: fix-and-re-audit (opt-in)
-
-The default audit reports and stops. When the user explicitly asks you to fix and re-audit, not before, load [`references/remediation.md`](references/remediation.md) and run the loop it defines. One rule governs it: you may auto-apply only `fix-code` deviations. An `amend-spec` or `amend-project-spec` deviation changes the contract the human signed and waits for a human; never auto-apply it.
+Output a **Verdict** (COMPLIANT / NON_COMPLIANT), deviations by check with `file:line` evidence and a *fix code* / *amend spec* recommendation, anything you couldn't determine as REVIEW, and a one-line "what's verified." **Report only. Never edit the spec or the code.**
 
 ## Next step
 
 The audit closes the loop; where it points next depends on the verdict.
 
-- COMPLIANT: the build is proven. Closing it out is the human's step — merge or open the PR, then set `status: shipped` (a superseded or abandoned spec goes `archived` instead). The build stopped before pushing, so name this step; don't take it. If items remain in the project spec's *Work items & sequencing*, the next one starts back at `shaping-specs`.
-- NON_COMPLIANT: route each deviation by its tag. *fix code* goes back to `implementing-specs`; *amend spec* goes back to `writing-specs` (or `shaping-specs` for an approach change, or `grounding-specs` for a shared-fact change). Then re-audit.
+- COMPLIANT: the build is proven. Closing it out is the human's step — merge or open the PR, then set `status: shipped` (a superseded or abandoned spec goes `archived` instead). The build stopped before pushing, so name this step; don't take it. If a sibling work item is still unbuilt, the next one starts back at `ideation`.
+- NON_COMPLIANT: route each deviation by its tag. *fix code* goes back to `implementing-specs`; *amend spec* goes back to `writing-specs` (or `ideation` for an approach change). Then re-audit.
 
 Report only; you name the step, you don't take it.

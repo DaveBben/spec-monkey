@@ -1,6 +1,6 @@
 # Scenario: a confident PRD with unstated assumptions
 
-**Skill under test:** shaping-specs + `references/ingesting-briefs.md`
+**Skill under test:** ideation + `references/ingesting-briefs.md`
 **Failure form:** shaping (the fast path launders inferences into facts, or skips the lenses) → positive recipe.
 
 ## Setup

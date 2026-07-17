@@ -1,12 +1,16 @@
 <!--
-THE DESIGN FILE — shaping-specs' output format, self-contained.
+THE DESIGN FILE — ideation's output format, self-contained.
 
-design.md is the whole product of shaping-specs: the converged reasoning a change rests on, worked out from a
+design.md is the whole product of ideation: the converged reasoning a change rests on, worked out from a
 fuzzy ask by weighing approaches, then drafted so writing-specs can compose the spec without re-interviewing.
-It lives at docs/specs/{slug}/detail/design.md. shaping-specs writes this file and only this file;
-writing-specs reads it (with the project spec) and composes spec.md and detail/contract.md from it.
+It lives at docs/specs/{slug}/detail/design.md. ideation writes this file and only this file;
+writing-specs reads it and composes spec.md and detail/contract.md from it.
 
-It is a reviewable, gated artifact: reviewing-design critiques it, and a human approves it (status: approved)
+A large ask decomposes into SEVERAL work items, and ideation writes one design.md per work item, each with its
+own slug and SPEC-NNN id. Link them by frontmatter: depends_on (a hard ship-order) and relates_to (a soft
+sibling link). One design still covers exactly one decision.
+
+It is a reviewable, gated artifact: reviewing-designs critiques it, and a human approves it (status: approved)
 before writing-specs turns it into a contract. That is why it carries its own light frontmatter and gate
 record.
 
@@ -18,11 +22,9 @@ to say gets a justified "N/A — reason", never silence.
 -->
 
 ---
-spec_monkey: "1.7.0"             # spec-monkey format version; also marks this as a spec-monkey artifact
+spec_monkey: "1.8.0"             # spec-monkey format version; also marks this as a spec-monkey artifact
 id: SPEC-NNN                     # the work item's handle; the design and the spec.md it feeds share it
-kind: design                     # this file (shaping's output). The spec.md it feeds is kind: work-item.
-parent: SPEC-000                 # the project spec this grounds on; cite its INV-NNN, never restate them.
-                                 # Omit only for a one-off change with no project spec.
+kind: design                     # this file (ideation's output). The spec.md it feeds is kind: work-item.
 title: <short imperative title>
 status: draft                    # draft → approved. The design gate: a human approves the converged design
                                  # before writing-specs composes the contract. Regresses to draft on a
@@ -33,6 +35,9 @@ approved_by: []                  # who approved the design; filled when status r
 approved_date:                   # YYYY-MM-DD the human approved; set and cleared with approved_by.
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
+depends_on: []                   # other SPEC-NNN that must ship first (a hard order) — feeds "When it happens"
+relates_to: []                   # other SPEC-NNN this is a sibling of (a soft link, no ship-order); set when a
+                                 # large ask decomposes into several work items that don't gate each other
 ---
 
 # The design
@@ -68,7 +73,7 @@ carries design intent into implementing-specs, so make it real — but keep it a
   approach.
 - Survey the landscape, then converge. Name the genuinely different design philosophies open here — 2-3 real
   ones, not one plan and two strawmen — and for each its tradeoff and cost (runtime, complexity, operational
-  burden, dollars, what it forecloses later). Then say why the chosen one wins. This is the heart of shaping:
+  burden, dollars, what it forecloses later). Then say why the chosen one wins. This is the heart of ideation:
   an ask that arrived fuzzy ("extract prefills with an LLM") leaves as a defended choice among the real
   alternatives. If only one sane approach exists, say so rather than manufacturing options.
 
@@ -77,7 +82,7 @@ call against the real code. "A background worker drains a durable queue and retr
 altitude; "retry_worker.py polls RetryQueue every 5s" is HOW, and it does not belong here.
 
 This section records the *engineer's* reasoning, sharpened by critique — not the AI's reasoning presented for
-approval. If the engineer can't defend a choice here in their own words, that's a signal the shaping isn't
+approval. If the engineer can't defend a choice here in their own words, that's a signal the ideation isn't
 done, not a formatting gap to paper over. -->
 
 ## Failure modes
@@ -138,7 +143,7 @@ with its Approach or its FR. -->
 - **Open:** <question>; deferred, revisit if <SC-0xx fails>.
 
 <!--
-WHAT WRITING-SPECS DOES WITH THIS FILE (for reference; not shaping's job):
+WHAT WRITING-SPECS DOES WITH THIS FILE (for reference; not ideation's job):
 - carries The request, Goal, and Drivers into spec.md's brief, refining only on real drift;
 - turns the Approach's weighed decisions into the brief's Decisions to sign off;
 - turns the Verification strategy into the contract's concrete Verification approach & commands;

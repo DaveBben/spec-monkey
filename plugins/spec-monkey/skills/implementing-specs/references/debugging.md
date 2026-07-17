@@ -16,7 +16,7 @@ The failure it exists to stop is the shotgun edit: changing things half-understo
 
 5. **Fix the root cause, not the symptom.** A `try/except` that swallows the error, a retry that hides a race, an `if` that special-cases the one input that broke — these move the symptom, not the cause. Fix it once, in the shared place every caller routes through, so it can't recur two callers over.
 
-6. **Know when it's the spec, not the code.** If the failure traces to a contract that is ambiguous, self-contradictory, impossible as written, or in conflict with a cited `INV-NNN`, stop — this is not a code bug. It is an `amend-spec` (or `amend-project-spec`) situation. Raise it with the human with the evidence; do **not** silently reinterpret the contract to make the test pass. Reinterpreting a spec you signed under is how "a missing field turns into a redefined interface."
+6. **Know when it's the spec, not the code.** If the failure traces to a contract that is ambiguous, self-contradictory, impossible as written, or in conflict with a constitution house rule, stop — this is not a code bug. It is an `amend-spec` situation. Raise it with the human with the evidence; do **not** silently reinterpret the contract to make the test pass. Reinterpreting a spec you signed under is how "a missing field turns into a redefined interface."
 
 7. **Cap the loop.** After a few full cycles with no narrowing — the failure hasn't moved toward a cause — stop and hand the human what you have: the repro, the hypotheses you killed, and where you're stuck. More solo cycles past that point burn tokens and start the shotgun edits. A fresh context or a human eye is cheaper than the tenth guess.
 

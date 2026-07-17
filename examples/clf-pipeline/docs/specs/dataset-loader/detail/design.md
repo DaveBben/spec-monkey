@@ -1,14 +1,15 @@
 ---
-spec_monkey: "1.7.0"
+spec_monkey: "1.8.0"
 id: SPEC-001
 kind: design
-parent: SPEC-000
 title: Ingest a HuggingFace dataset into leak-free versioned splits
 status: approved
 approved_by: [@dave]
 approved_date: 2026-07-14
 created: 2026-07-14
 updated: 2026-07-14
+depends_on: []
+relates_to: [SPEC-002]
 ---
 
 # The design
@@ -26,7 +27,7 @@ example, so the trainer and evaluator have a reproducible input.
 
 ## Drivers
 
-- The trainer and evaluator (SPEC-000 work items) have no input to consume; nothing produces a Dataset today.
+- The trainer and evaluator work items have no input to consume; nothing produces a Dataset today.
 - A hand-rolled split risks leakage between train and test, which silently inflates every downstream metric.
 
 ## What's true today
@@ -44,10 +45,10 @@ the same three files and the label balance holds even on a smaller dataset. A Sp
 alongside the splits, so the trainer and evaluator locate a version without re-deriving the split.
 
 The non-obvious things:
-- The leak-free guarantee (INV-001) comes from splitting a deduplicated row set once, up front — not from
+- The leak-free guarantee comes from splitting a deduplicated row set once, up front — not from
   checking for overlap after the fact. An implementer who splits first and dedups each file separately breaks
   it.
-- Determinism (INV-003) rests on both the pinned source revision and the seed. Pin only one and
+- Determinism rests on both the pinned source revision and the seed. Pin only one and
   reproducibility is lost.
 - Validation runs before the split, so a malformed row never lands in a split and never skews the balance.
 
@@ -69,13 +70,13 @@ concurrency, partial failure mid-operation, retries / idempotency; empty, huge, 
 **Operational readiness**: how it's observed live (logs, metrics, alerts); how a break is noticed; what
 config or environment it needs.
 - A silent bad run is only caught if counts are visible: HANDLE (FR-001, and the no-text bound) — emit
-  `dropped_row_count` and per-split counts as structured metrics, with no raw `text` per INV-004.
+  `dropped_row_count` and per-split counts as structured metrics, with no raw `text` in logs (a house rule).
 
 **Trust boundary**: where untrusted input crosses into trusted code; who is authorized and what happens on
 denied or expired credentials; what sensitive or personal data is touched and protected.
 - Untrusted `text` and `label` values from the public dataset: HANDLE (FR-001) — schema, label-set, and
-  length validation at ingestion. This is the loader's half of SPEC-000's *HuggingFace ingestion* boundary.
-  No raw text reaches logs (INV-004).
+  length validation at ingestion. Malformed rows are dropped and counted, never silently ingested. No raw
+  text reaches logs (a house rule).
 
 **Implied work**: callers or consumers that must change too; migrations or backfills forced; docs, configs,
 or types that go stale; what was assumed free but isn't.
@@ -94,13 +95,13 @@ approach wins.
 
 ## Verification strategy
 
-- Prove the leak-free property (INV-001) end-to-end: build a Dataset version from a known input and confirm
+- Prove the leak-free property end-to-end: build a Dataset version from a known input and confirm
   no example appears in more than one split. This is the load-bearing guarantee; a unit test on the splitter
   alone is not enough — verify it on a written version.
-- Prove determinism (INV-003): run the loader twice with the same revision and seed, and confirm the three
+- Prove determinism: run the loader twice with the same revision and seed, and confirm the three
   splits come out identical.
 - Prove validation: feed malformed and out-of-label rows, confirm they are dropped with an accurate
-  `dropped_row_count`, and confirm no raw `text` reaches logs (INV-004).
+  `dropped_row_count`, and confirm no raw `text` reaches logs (the no-raw-text-in-logs house rule).
 - The stratified balance bound is checkable only where the dataset is large enough; it holds at ≥1,000 rows
   and is best-effort below that.
 

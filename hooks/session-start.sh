@@ -2,8 +2,9 @@
 # Optional multi-harness session-start bootstrap for spec-monkey.
 #
 # It injects one router line so an agent recognizes a build request and reaches
-# for `running-lifecycle` instead of jumping straight to code. Opt-in and off by
-# default; the portable plugin depends on nothing here. See this directory's README.
+# for `ideation` (the flow's entry point) instead of jumping straight to code.
+# Opt-in and off by default; the portable plugin depends on nothing here. See
+# this directory's README.
 #
 # The same script serves every shell-hook harness by sniffing environment
 # variables and emitting the JSON shape that harness consumes (the pattern
@@ -25,7 +26,7 @@
 #   any unrecognized harness.
 set -euo pipefail
 
-router='If the user is starting to build a project or feature, invoke the running-lifecycle skill to drive the full spec-monkey flow (ground, shape, review-design, write, review-spec, implement, audit), pausing at every human approval gate. For a single phase, invoke that phase skill directly.'
+router='If the user is starting to build a project or feature, invoke the ideation skill to think it through — it is the entry point to the spec-monkey flow (ideation, reviewing-designs, writing-specs, reviewing-specs, implementing-specs, auditing-specs), where each skill hands off to the next and pauses at every human approval gate. For a single phase, invoke that phase skill directly.'
 
 if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
   printf '{"additional_context":"%s"}\n' "$router"

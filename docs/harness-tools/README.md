@@ -10,9 +10,9 @@ Every mapping file covers these actions, in this order:
 
 | Action (as the skills say it) | Where the skills say it |
 |---|---|
-| **Invoke a skill** | every `## Next step`; `running-lifecycle` throughout |
-| **Dispatch a subagent** (fresh agent, isolated context, result read back) | the fresh-context reviews and audit; `implementing-specs`' opt-in orchestrated build and its three dispatch prompts |
-| **Open a new session with an empty context** (the no-subagent fallback for fresh context) | `running-lifecycle` "Running a phase in fresh context"; `shaping-specs` and `writing-specs` "Next step" |
+| **Invoke a skill** | every `## Next step` handoff |
+| **Dispatch a subagent** (fresh agent, isolated context, result read back) | the fresh-context reviews and the audit (`implementing-specs` optionally dispatches `auditing-specs` when done) |
+| **Open a new session with an empty context** (the no-subagent fallback for fresh context) | `ideation` and `writing-specs` "Next step"; the two reviews and the audit |
 | **Run the spec linter** (optional) | `reviewing-specs` "How to review" |
 | **Read / write files, run shell commands** | everywhere; specs are files and verification is commands |
 

@@ -1,6 +1,6 @@
 # Scenario: a source document full of file paths and code
 
-**Skill under test:** writing-specs (WHAT/WHEN-not-HOW altitude), and `shaping-specs/references/ingesting-briefs.md`
+**Skill under test:** writing-specs (WHAT/WHEN-not-HOW altitude), and `ideation/references/ingesting-briefs.md`
 **Failure form:** shaping (the spec comes out with HOW in it) → tests a positive recipe, not a prohibition.
 
 ## Setup

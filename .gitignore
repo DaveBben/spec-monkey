@@ -1,6 +1,7 @@
 .DS_Store
 
-# spec-intents: per-change working files stay local; config and PR template are committed
-.spec-intents/*
-!.spec-intents/config.json
-!.spec-intents/pr-template.md
+# tests-as-specs: task list and plans/ stay local (gitignored); config, plan template, and the ADR files are committed
+.tests-as-specs/*
+!.tests-as-specs/config.json
+!.tests-as-specs/plan-template.md
+!.tests-as-specs/adrs/

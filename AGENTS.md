@@ -4,17 +4,17 @@ Guidance for AI coding agents (Claude Code, Codex, opencode, Cursor, and others)
 
 ## What this repo is
 
-This repo is the `spec-intents` plugin: three portable skills for intent-first agentic coding, `scoping`, `build`, and `check`, each handing off to the next through its `## Next step`. There is no orchestrator. Each skill is plain Markdown: a `SKILL.md` with YAML frontmatter and an instruction body, plus a reference file or two. There is no build step and nothing to compile. A skill must run in any harness that can load Markdown skills, so keep the wording harness-neutral. Name specific harnesses only as examples.
+This repo is the `tests-as-specs` plugin: three portable skills for intent-first agentic coding, `scoping`, `building-from-plans`, and `verifying-work`, each handing off to the next through its `## Next step`. There is no orchestrator. Each skill is plain Markdown: a `SKILL.md` with YAML frontmatter and an instruction body, plus a reference file or two. There is no build step and nothing to compile. A skill must run in any harness that can load Markdown skills, so keep the wording harness-neutral. Name specific harnesses only as examples.
 
 The method these skills enact is written up in [`method-brief.md`](method-brief.md). The problems they answer are in [`problems-with-spec-driven-development.md`](problems-with-spec-driven-development.md). Keep the "why" in those documents, not in the skills.
 
 ## Key files
 
-- `plugins/spec-intents/skills/<name>/SKILL.md`: the three skills. Frontmatter (`name`, `version`, `description`, `license`, `compatibility`, `metadata`) followed by the instruction body. These are the source of truth for behavior.
-- `plugins/spec-intents/skills/scoping/references/`: `interview-questions.md` (uncover functional and non-functional requirements from the human) and `edge-cases.md` (the systematic edge-case walk). Loaded on demand.
-- `plugins/spec-intents/skills/build/references/honest-tests.md`: the five properties of an honest check and the faked-done anti-patterns to refuse.
-- `.spec-intents/config.json`: the three team knobs, `decision_review`, `task_list`, and `pr_template`. Committed, repo-scoped. Each skill reads this first.
-- `.claude-plugin/marketplace.json` and `plugins/spec-intents/.claude-plugin/plugin.json`: the install manifests.
+- `plugins/tests-as-specs/skills/<name>/SKILL.md`: the three skills. Frontmatter (`name`, `version`, `description`, `license`, `compatibility`, `metadata`) followed by the instruction body. These are the source of truth for behavior.
+- `plugins/tests-as-specs/skills/scoping/references/`: `interview-questions.md` (uncover functional and non-functional requirements from the human), `edge-cases.md` (the systematic edge-case walk), and `handoff.md` (harness-specific dispatch from scoping to building-from-plans to verifying-work). Loaded on demand.
+- `plugins/tests-as-specs/skills/building-from-plans/references/honest-tests.md`: the five properties of an honest check and the faked-done anti-patterns to refuse.
+- `.tests-as-specs/config.json`: the team knobs, `task_list`, `plan_dir`, `plan_template`, and `adr_dir`. Committed, repo-scoped. Each skill reads this first.
+- `.claude-plugin/marketplace.json` and `plugins/tests-as-specs/.claude-plugin/plugin.json`: the install manifests.
 - `README.md`: for humans. The flow, the config, install steps, and the problem-to-solution mapping.
 
 ## The maintenance contract
@@ -22,10 +22,10 @@ The method these skills enact is written up in [`method-brief.md`](method-brief.
 Behavior lives in the skills; the README and manifests describe them. Change one, change the others in the same commit.
 
 - **Skill set:** the plugin ships three skills. If you add, remove, or rename one, update the README's skill table, the `skills` array in `marketplace.json`, and the plugin and marketplace descriptions together. A skill's `name` must match its directory name.
-- **Handoffs are the orchestration.** There is no orchestrator skill. Each skill's `## Next step` names the next skill by directory name, and the chain (`scoping → build → check`) drives the flow. If you rename a skill, update every `## Next step` line that names it, in the same commit.
-- **Config lives in `.spec-intents/config.json`, not the manifest.** Three knobs sit there: `decision_review`, `task_list`, and `pr_template`. Each skill reads the file as its first operational step, falls back to a value in `CLAUDE.md` / `AGENTS.md`, then to a hardcoded default. `config.json` and `pr-template.md` are committed team settings; the task list (default `.spec-intents/task-list.md`) is gitignored per-change scratch, and the repo's `.gitignore` encodes that split. Do not put config in `plugin.json`: the manifest is off-schema for arbitrary keys and never reaches the agent at runtime. If you add a knob, add it in three places: `config.json`, the reading skill's first step, and the README config section.
+- **Handoffs are the orchestration.** There is no orchestrator skill. Each skill's `## Next step` names the next skill by directory name, and the chain (`scoping → building-from-plans → verifying-work`) drives the flow. If you rename a skill, update every `## Next step` line that names it, in the same commit.
+- **Config lives in `.tests-as-specs/config.json`, not the manifest.** Four knobs sit there: `task_list`, `plan_dir`, `plan_template`, and `adr_dir`. Each skill reads the file as its first operational step, falls back to a value in `CLAUDE.md` / `AGENTS.md`, then to a hardcoded default. `config.json`, `plan-template.md`, and the ADR files (one per decision, default under `.tests-as-specs/adrs/`) are committed and durable; the per-change plan files (default under `.tests-as-specs/plans/`) and the task list (default `.tests-as-specs/task-list.md`) are gitignored per-change scratch, and the repo's `.gitignore` encodes that split. Do not put config in `plugin.json`: the manifest is off-schema for arbitrary keys and never reaches the agent at runtime. If you add a knob, add it in three places: `config.json`, the reading skill's first step, and the README config section.
 - **Versions.** The package version lives in `plugin.json` and the `marketplace.json` entry; the two must match, and you bump them together on any shipped change. Each `SKILL.md` carries its own skill `version`; bump it when that skill's behavior changes. The package line and the skill lines are independent by design.
-- **Portability.** Keep install and usage language harness-neutral. Never require a subagent or a hook from inside a skill; use capability-conditional wording ("if your harness can launch a subagent, do so; otherwise drive it inline"). Harness-specific hints go under `metadata`, where a harness that does not read them just skips them.
+- **Portability.** Keep install and usage language harness-neutral. Never require a subagent or a hook from inside a skill; use capability-conditional wording ("if your harness can launch a subagent, do so; otherwise drive it inline"). Small harness-specific hints go under `metadata`; larger harness-specific orchestration (for example, how a subagent-capable harness dispatches the next skill) goes in a reference file the `## Next step` points to, loaded on demand, so a harness that ignores it still gets the neutral hand-off.
 - **Descriptions.** `name` and `description` load at startup for every skill, so every token earns its place. Lead with the trigger, keep the description near 130 tokens, and push detail into the body and reference files.
 
 ## Editing a skill

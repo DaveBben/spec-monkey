@@ -1,21 +1,21 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "spec-intents",
+  "name": "tests-as-specs",
   "owner": {
     "name": "DaveBben"
   },
-  "description": "Intent-first agentic coding: the human authors intent, the agent never invents requirements. Three skills — scoping, build, check.",
+  "description": "tests-as-specs: the failing tests are the spec. Three skills, scoping, building-from-plans, and verifying-work.",
   "plugins": [
     {
-      "name": "spec-intents",
-      "source": "./plugins/spec-intents",
-      "description": "Intent-first agentic coding: the human authors intent, the agent never invents requirements. Ships scoping (interview the human to uncover requirements, surface edge cases, emit a one-page intent to the PR body plus a why-receipt to the decision log), build (implement in thin slices, each check written before the code and proven against real behavior, on an isolated branch), and check (an independent fresh-context Gate B that audits the diff against the intent, PASS/FAIL). No generated prose spec, no lifecycle. The code and its tests are the only source of truth.",
-      "version": "0.4.0",
+      "name": "tests-as-specs",
+      "source": "./plugins/tests-as-specs",
+      "description": "tests-as-specs: the failing tests are the spec, so there is no prose spec to rot. The human's intent becomes a contract of failing test stubs, each pinning a concrete expected outcome; the build makes them pass; an independent fresh-context review checks the diff against them. Ships scoping (explore the change, interview the human, author a failing stub per requirement, write a short plan and an ADR receipt), building-from-plans (wire each stub into a real assertion and pass it in thin slices, proving each against real behavior, conventional commits), and verifying-work (audit the diff against the plan and its contract, PASS/FAIL). The code and its tests are the only source of truth.",
+      "version": "1.0.0",
       "license": "MIT",
       "skills": [
         "./skills/scoping",
-        "./skills/build",
-        "./skills/check"
+        "./skills/building-from-plans",
+        "./skills/verifying-work"
       ],
       "author": {
         "name": "DaveBben"

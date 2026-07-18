@@ -59,5 +59,5 @@ Worth asking out loud in the interview:
 - **State transition diagrams:** draw the states, then draw every arrow that *shouldn't* exist and ask what happens.
 - **Pre-mortem:** "It's six months from now and this feature failed badly. Write the postmortem." Surfaces risks people won't volunteer directly.
 
-## One process note
-Edge cases surface late because stakeholders describe the happy path by default; they're picturing the demo, not the incident. Two habits help: sketch the flow visually during the interview so gaps become literal blank space, and follow up with people who *aren't* the requester. Support, ops, and QA carry the edge-case knowledge; the person who requested the feature usually doesn't.
+## Two habits that help
+Sketch the flow visually during the interview, so gaps become literal blank space. Follow up with people who *aren't* the requester: support, ops, and QA usually carry the edge-case knowledge the requester doesn't.

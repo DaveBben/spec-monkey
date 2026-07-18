@@ -1,0 +1,6 @@
+{
+  "task_list": ".tests-as-specs/task-list.md",
+  "plan_dir": ".tests-as-specs/plans",
+  "plan_template": ".tests-as-specs/plan-template.md",
+  "adr_dir": ".tests-as-specs/adrs"
+}
